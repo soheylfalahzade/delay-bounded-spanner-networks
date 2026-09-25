@@ -16,7 +16,7 @@ r = 1500\text{ m}), at t = 1.5:
     but completely fails certification, with empirical worst-case dilation
     exploding to 9.50×.
 
-1. Mathematical Problem Formulation
+1. Problem Formulation
 
 Let G = (V, E) be a directed geometric road network. Each directed edge e
 carries physical length \ell(e) and an hourly diurnal speed profile v(e, \tau)
@@ -144,11 +144,6 @@ python run_spanner_benchmark.py                    # Complete evaluation: Focus 
 python run_spanner_benchmark.py --quick             # Rapid smoke test
 python run_spanner_benchmark.py --synthetic         # Deterministic morphology-parameterized synthetic offline mode
 python run_spanner_benchmark.py --skip-crosscity    # Focus city evaluation only
-
-[!NOTE] If Overpass/OSMnx is unreachable, the pipeline falls back to a
-deterministic, morphology-parameterized synthetic network and explicitly marks
-the used_real_osm flag in results/spanner_report.json — ensuring real and
-synthetic data are never confounded.
 
 8. Repository Structure
 
