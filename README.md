@@ -8,7 +8,6 @@
 [![OSMnx](https://img.shields.io/badge/OSMnx-Live%20OSM-darkgreen.svg)](https://osmnx.readthedocs.io/)
 [![Status](https://img.shields.io/badge/Status-Formally%20Verified%20(24h)-brightgreen.svg)]()
 [![Validation](https://img.shields.io/badge/Validation-6%20Real%20Metros-blueviolet.svg)]()
-[![Research Track](https://img.shields.io/badge/Target-Q1%20Submission%20Track-orange.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 <p align="center">
