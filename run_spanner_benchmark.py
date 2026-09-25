@@ -4,95 +4,75 @@
 ================================================================================
  Delay-Bounded Time-Varying Geometric t-Spanners for Urban Road Networks
  ------------------------------------------------------------------------------
- Reference implementation + Q1-grade experimental protocol (single file).
+ v2.1.0 -- single-file pipeline with cross-city generalization study,
+ a classical-geometric-spanner baseline, street-morphology regression, and a
+ sensitivity/robustness analysis against congestion-model misspecification.
 ================================================================================
 
-PROBLEM
--------
-G = (V, E) is a directed geometric road network. Every edge e carries a length
-l(e) and an hourly speed profile v(e, tau), tau in T = {0,...,23}, giving the
-time-sliced cost
+WHAT CHANGED SINCE v2.0.0 (reviewer-driven revision)
+------------------------------------------------------------------------------
+The v2.0.0 draft fixed the temporal model, the sparsification unit, the
+parameter range, censored metrics, the hierarchical baseline and added
+bootstrap CIs -- but a single-city study cannot support a generalizability
+claim, and there was no bridge to the classical computational-geometry
+spanner literature. This revision adds:
 
-        w(e, tau) = l(e) / v(e, tau).
-
-We seek a sparse backbone H subset of E certified to satisfy
-
-        forall u,v in V, forall tau in T :
-            dist_H(u, v, tau) <= t * dist_G(u, v, tau).
-
-THEOREM 1 (edge-wise certificate lifts to all pairs, all hours)
----------------------------------------------------------------
-If  dist_H(u,v,tau) <= t * w((u,v),tau)  for every (u,v) in E and every tau in T,
-then H is a delay-bounded time-varying t-spanner of G.
-Proof: fix tau. w(.,tau) is a fixed non-negative weighting, so G_tau is a static
-digraph. Concatenating the edge-wise invariant along a tau-optimal u->v path and
-using the triangle inequality of shortest-path distances in H_tau gives the
-all-pairs bound. The argument is independent across tau.  []
-
-Consequence: the |V|^2 |T| pairwise constraints collapse to |E| |T| *local*
-constraints, each decided by a Dijkstra pruned to the ball of radius t*w(e,tau).
-
-PROPOSITION 2 (continuous-time transfer)
-----------------------------------------
-Let w~(e, .) be the cyclic piecewise-linear interpolant of w(e, .) and assume
-FIFO, i.e. d/ds (s + w~(e,s)) >= 0 (verified numerically here). If H satisfies
-the snapshot certificate for parameter t and
-    kappa = max_e max_s  w~(e,s) / min(w(e,floor(s)), w(e,ceil(s))) ,
-then the departure-time-dependent dilation of H is at most kappa * t. Because
-the interpolant is convex-free between consecutive hourly samples, kappa = 1 for
-piecewise-linear profiles, so the snapshot certificate transfers exactly. This
-is validated empirically by a FIFO time-dependent Dijkstra (Section 9).
-
-WHAT THIS REVISION FIXES RELATIVE TO A NAIVE IMPLEMENTATION
------------------------------------------------------------
-R1. Degenerate temporal model. A per-class multiplicative congestion factor makes
-    w(.,tau) = c(tau) * w(.,0): every snapshot is homothetic, so the static and
-    the delay-bounded spanner coincide by construction and the experiment cannot
-    discriminate them. Here congestion is *edge-heterogeneous*: it depends on the
-    CBD distance field, on the edge's orientation relative to the centre
-    (inbound-morning / outbound-evening tidal flow), on functional class, and on
-    a deterministic per-edge idiosyncratic component.
-R2. Topological unit of sparsification. Sparsifying the raw OSM node graph is
-    meaningless: most vertices are geometry-carrying degree-2 shape points and
-    their edges are non-redundant by construction. The network is contracted to
-    its junction graph (geometry preserved as polylines) before spanner
-    construction, which is the correct combinatorial object.
-R3. Parameter range. t in [1.2, 1.8] sits below the detour spectrum of an urban
-    grid; the reported 0.8-3.2% edge removal is an artefact of the range, not a
-    result. The sweep now spans t in [1.05, 3.0].
-R4. Censored metrics. Assigning a sentinel dilation (e.g. 25.0) to unreachable
-    pairs poisons every aggregate (a reported "mean dilation" of 23.9 is a
-    sentinel average, not a dilation). Reachability is now reported as its own
-    metric and dilation statistics are computed on reachable pairs only.
-R5. Broken hierarchical baseline. Component re-attachment that terminates on a
-    round cap leaves a disconnected graph. Replaced by last-mile access
-    attachment to the largest arterial SCC via multi-source Dijkstra, which is
-    both correct and what practitioners actually do.
-R6. No control for density. Certified sparsity is only meaningful against
-    equal-budget alternatives: matched-density random and betweenness-top-k
-    sparsifiers are added, yielding a proper Pareto front.
-R7. Certificate reported as a bare boolean. The *attained* worst-case temporal
-    stretch of every construction is now measured, so "not certified" comes with
-    a magnitude.
-R8. No uncertainty, no ablation, no scaling. Added: multi-seed OD resampling with
-    bootstrap CIs, a Wilcoxon signed-rank test against the matched-density
-    control, an edge-ordering ablation, and an empirical runtime/probe scaling
-    study.
+R9.  Cross-city replication. The pipeline is re-run, end-to-end, on SIX
+     metropolitan areas with distinct street-network morphologies (historic-
+     organic cores, radial-grid metros, a hill-terrain organic city, a
+     modern planned grid). Each city attempts a live OSMnx/Overpass fetch
+     first and only falls back to a deterministic, morphology-parameterized
+     synthetic generator when the API is unreachable -- so the script
+     produces real OpenStreetMap results outdoors and reproducible synthetic
+     results in an offline sandbox, and it always reports, per city, which
+     one it used ("data provenance").
+R10. A classical-geometric-spanner baseline. `yao_cone_sparsifier` is a
+     network-constrained adaptation of the Yao graph (partition each node's
+     incident edges into k angular cones, keep the cheapest edge per cone).
+     This is explicitly NOT the textbook unconstrained-point-set Yao graph
+     (whose stretch factor 1/(1-2 sin(pi/k)) is a theorem, not an empirical
+     claim) -- the docstring says so -- but it gives referees a bridge to a
+     named, citable construction rather than only ad hoc engineering
+     baselines.
+R11. Morphology regression. Per-city street-orientation entropy (the
+     Boeing 2019 grid-vs-organic legibility metric) and mean edge circuity
+     are correlated (Pearson r, p) against attained worst-case stretch and
+     edge retention, to test whether the method's advantage is an artifact
+     of one city's geometry or holds across morphologies.
+R12. City-level paired significance. A second, independent Wilcoxon
+     signed-rank test compares city-level worst-case OD dilation (ours vs.
+     the matched-density betweenness control) across the 6 cities, on top
+     of the existing within-city, pair-level test -- flagged low-power
+     given n=6, but directionally informative and honestly reported as such.
+R13. Sensitivity to congestion-model misspecification. Because the diurnal
+     congestion field is a parametric model and not fitted to floating-car
+     or loop-detector telemetry, the congestion-severity scalar alpha is
+     perturbed by -30%..+30% and the full construction + certification is
+     repeated at each scale, to show the qualitative ranking (ours >
+     matched-density control) is not an artifact of one parameter choice.
+R14. Honesty about scope. The report's `known_limitations` block is
+     extended to state plainly that (a) congestion is a parametric model,
+     not measured telemetry, (b) when Overpass is unreachable the synthetic
+     fallback is used and is clearly labelled, and (c) n=6 cities supports
+     a directional generalization claim, not a definitive one -- a
+     multi-country, telemetry-fitted replication remains future work.
 
 USAGE
 -----
-    python run_spanner_benchmark.py
-    python run_spanner_benchmark.py --quick
-    python run_spanner_benchmark.py --synthetic
-    python run_spanner_benchmark.py --lat 35.6892 --lon 51.3890 --dist 2000
+    python run_spanner_benchmark.py                    # full run
+    python run_spanner_benchmark.py --quick             # fast smoke test
+    python run_spanner_benchmark.py --synthetic          # force offline mode
+    python run_spanner_benchmark.py --skip-crosscity     # focus city only
 
-OUTPUTS
--------
-    results/spanner_benchmark.png    7-panel publication figure
-    results/spanner_report.json      full machine-readable record
-    results/benchmark_table.md       main benchmark table
-    results/ablation_table.md        edge-ordering ablation
-    results/per_pair_dilation.csv    per-OD-pair dilation at the peak hour
+OUTPUTS (results/)
+-------------------
+    spanner_benchmark.png       7-panel focus-city figure
+    spanner_crosscity.png       4-panel cross-city generalization figure
+    spanner_report.json         full machine-readable record
+    benchmark_table.md          focus-city benchmark table
+    ablation_table.md           edge-ordering ablation
+    crosscity_table.md          cross-city summary table
+    per_pair_dilation.csv       per-OD-pair dilation at the focus city's peak hour
 """
 
 from __future__ import annotations
@@ -146,31 +126,32 @@ NETWORK_TYPE: str = "drive"
 HOURS: List[int] = list(range(24))
 SEC_PER_HOUR: float = 3600.0
 
-# Dilation sweep: spans the full detour spectrum of an urban street grid.
-T_VALUES: List[float] = [1.05, 1.15, 1.30, 1.50, 1.80, 2.20, 2.60, 3.00]
+# Dilation sweep spans the detour spectrum of an urban street grid.
+T_VALUES: List[float] = [1.10, 1.30, 1.50, 1.80, 2.20, 3.00]
 T_FOCUS: float = 1.50
 
-N_SOURCES: int = 14
-N_TARGETS_PER_SOURCE: int = 12
-N_REPEATS: int = 3                       # independent OD resamplings
+N_SOURCES: int = 12
+N_TARGETS_PER_SOURCE: int = 10
+N_REPEATS: int = 2                       # independent OD resamplings
 SEED: int = 42
-BOOTSTRAP_N: int = 2000
+BOOTSTRAP_N: int = 1500
 
 EPS: float = 1e-9
 INF: float = float("inf")
 
-CERT_REFINE_CAP: int = 400               # max violating edges refined for magnitude
-CERT_REFINE_MULT: float = 8.0            # refinement search budget = mult * w(e,tau)
+CERT_REFINE_CAP: int = 300
+CERT_REFINE_MULT: float = 8.0
 
 ROOT: str = os.path.dirname(os.path.abspath(__file__))
 RESULTS_DIR: str = os.path.join(ROOT, "results")
 FIGURE_PATH: str = os.path.join(RESULTS_DIR, "spanner_benchmark.png")
+CROSSCITY_FIGURE_PATH: str = os.path.join(RESULTS_DIR, "spanner_crosscity.png")
 REPORT_PATH: str = os.path.join(RESULTS_DIR, "spanner_report.json")
 TABLE_PATH: str = os.path.join(RESULTS_DIR, "benchmark_table.md")
 ABLATION_PATH: str = os.path.join(RESULTS_DIR, "ablation_table.md")
+CROSSCITY_TABLE_PATH: str = os.path.join(RESULTS_DIR, "crosscity_table.md")
 PERPAIR_PATH: str = os.path.join(RESULTS_DIR, "per_pair_dilation.csv")
 
-# class -> (free-flow speed km/h, baseline congestion susceptibility, tier)
 HIGHWAY_PROFILES: Dict[str, Tuple[float, float, str]] = {
     "motorway":       (100.0, 0.20, "arterial"),
     "motorway_link":  ( 70.0, 0.26, "arterial"),
@@ -203,7 +184,7 @@ ARTERIAL_CLASSES: Set[str] = {
     "primary", "primary_link", "secondary", "secondary_link",
 }
 
-SPEED_FLOOR_FRAC: float = 0.18           # congestion never drops below this share of v_ff
+SPEED_FLOOR_FRAC: float = 0.18
 
 METHOD_STYLE: Dict[str, Tuple[str, str, str, str]] = {
     "delay_bounded":  ("Delay-Bounded Spanner (ours)",   "#c0392b", "-",  "o"),
@@ -211,9 +192,31 @@ METHOD_STYLE: Dict[str, Tuple[str, str, str, str]] = {
     "static_len":     ("Static Geometric Spanner",       "#8e44ad", "--", "v"),
     "mean_temporal":  ("Mean-Temporal Spanner",          "#16a085", "-.", "P"),
     "hierarchical":   ("Hierarchical Road Classifier",   "#27ae60", "-.", "^"),
+    "yao_cone":       ("Yao-Cone Sparsifier (k=8)",      "#34495e", "-.", "h"),
     "matched_random": ("Matched-Density Random",         "#f39c12", ":",  "X"),
     "matched_btw":    ("Matched-Density Betweenness",    "#d35400", ":",  "*"),
     "full":           ("Full Network (ground truth)",    "#7f8c8d", ":",  "D"),
+}
+
+# ---- Cross-city registry ------------------------------------------------------
+CITY_REGISTRY: List[Dict] = [
+    {"name": "Yazd",    "lat": 31.8974, "lon": 54.3569, "dist": 1500, "archetype": "historic-organic"},
+    {"name": "Tehran",  "lat": 35.6892, "lon": 51.3890, "dist": 1500, "archetype": "radial-grid"},
+    {"name": "Isfahan", "lat": 32.6546, "lon": 51.6680, "dist": 1500, "archetype": "historic-organic"},
+    {"name": "Shiraz",  "lat": 29.5918, "lon": 52.5837, "dist": 1500, "archetype": "hill-organic"},
+    {"name": "Mashhad", "lat": 36.2605, "lon": 59.6168, "dist": 1500, "archetype": "radial-grid"},
+    {"name": "Qom",     "lat": 34.6401, "lon": 50.8764, "dist": 1500, "archetype": "modern-grid"},
+]
+
+ARCHETYPE_PARAMS: Dict[str, Dict] = {
+    "historic-organic": dict(irregularity=0.55, ring_count=1, oneway_density=0.16,
+                             arterial_period=7, collector_period=3),
+    "hill-organic":     dict(irregularity=0.70, ring_count=1, oneway_density=0.20,
+                             arterial_period=8, collector_period=3),
+    "radial-grid":      dict(irregularity=0.15, ring_count=3, oneway_density=0.05,
+                             arterial_period=5, collector_period=2),
+    "modern-grid":      dict(irregularity=0.05, ring_count=1, oneway_density=0.03,
+                             arterial_period=6, collector_period=3),
 }
 
 
@@ -231,7 +234,6 @@ def haversine_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 
 
 def local_metric_factors(lat0: float) -> Tuple[float, float]:
-    """Metres per degree latitude / longitude at latitude lat0."""
     mlat = 111320.0
     mlon = 111320.0 * max(0.15, math.cos(math.radians(lat0)))
     return mlat, mlon
@@ -267,7 +269,7 @@ def stable_unit(key: str) -> float:
 
 
 # ==============================================================================
-# SECTION 3 - SPATIO-TEMPORAL CONGESTION MODEL  (fixes R1)
+# SECTION 3 - SPATIO-TEMPORAL CONGESTION MODEL
 # ==============================================================================
 
 MORNING_PEAK, MORNING_SIGMA = 8.0, 1.30
@@ -282,13 +284,10 @@ def _gauss(tau: float, mu: float, sigma: float) -> float:
 def edge_congestion_curve(inbound: float, cbd: float, jitter: float) -> List[float]:
     """c_e(tau) in [0,1]: tidal, CBD-weighted, edge-idiosyncratic congestion.
 
-    inbound in [0,1] : 1 = edge points toward the centre, 0 = away from it.
-    cbd     in [0,1] : proximity of the edge midpoint to the centre.
-    jitter  in [0,1] : deterministic per-edge idiosyncrasy.
-
     Morning peaks load inbound edges, evening peaks load outbound edges; the
-    amplitude of both scales with CBD proximity. This breaks the homothety
-    w(.,tau) = c(tau) w(.,0) that makes static and temporal spanners identical.
+    amplitude scales with CBD proximity. This is a PARAMETRIC model, not
+    fitted to floating-car or loop-detector telemetry -- see Section 16 for
+    the sensitivity analysis that quantifies how much this matters.
     """
     outbound = 1.0 - inbound
     am = (0.35 + 0.95 * inbound) * (0.45 + 0.85 * cbd)
@@ -306,7 +305,6 @@ def edge_congestion_curve(inbound: float, cbd: float, jitter: float) -> List[flo
 
 
 def speed_curve(free_flow_kmh: float, alpha: float, congestion: Sequence[float]) -> List[float]:
-    """v(e, tau) in km/h, floored at SPEED_FLOOR_FRAC of free flow."""
     floor = SPEED_FLOOR_FRAC * free_flow_kmh
     return [max(floor, free_flow_kmh * (1.0 - alpha * c)) for c in congestion]
 
@@ -326,12 +324,8 @@ def build_adjacency(G: nx.DiGraph, attr: str = "tt") -> Adjacency:
 
 
 def bounded_dijkstra(adj: Adjacency, source, target, tau: int, budget: float) -> float:
-    """Pruned single-pair Dijkstra on snapshot tau.
-
-    Explores only the ball of radius `budget` around `source`, returning inf if
-    no path of cost <= budget exists. Because the budget is a single edge cost
-    scaled by t, each probe settles O(|B|) nodes with |B| << |V|.
-    """
+    """Pruned single-pair Dijkstra on snapshot tau, restricted to the ball of
+    radius `budget` around `source` (Theorem 1's local certificate probe)."""
     if source == target:
         return 0.0
     if not adj.get(source):
@@ -385,7 +379,6 @@ def single_source_snapshot(G: nx.DiGraph, source, tau: int,
 
 
 def multi_source_pred(G: nx.DiGraph, sources: Set, attr: str = "free_flow") -> Dict[object, object]:
-    """Dijkstra from a virtual super-source; returns predecessor map."""
     dist: Dict[object, float] = {}
     seen: Dict[object, float] = {s: 0.0 for s in sources}
     pred: Dict[object, object] = {}
@@ -467,12 +460,9 @@ def largest_strongly_connected(G: nx.DiGraph) -> nx.DiGraph:
 
 
 def contract_degree_two(G: nx.DiGraph, max_passes: int = 40) -> nx.DiGraph:
-    """Contract shape points into the junction graph (fixes R2).
-
-    Removes interior degree-2 vertices of directed chains (one-way) and of
-    bidirectional chains (two-way), summing lengths and concatenating polyline
-    geometry so the drawn map is unchanged.
-    """
+    """Contract shape points into the junction graph. Sparsifying the raw OSM
+    node graph is meaningless (most vertices are non-redundant geometry
+    carriers); this is the correct combinatorial object to spanify."""
     H = G.copy()
     for _ in range(max_passes):
         changed = False
@@ -522,7 +512,9 @@ def contract_degree_two(G: nx.DiGraph, max_passes: int = 40) -> nx.DiGraph:
 
 
 def fetch_osm_network(center: Tuple[float, float], dist: int) -> Optional[nx.DiGraph]:
-    """Overpass via OSMnx; returns None on any failure (timeout, DNS, rate limit)."""
+    """Overpass via OSMnx; returns None on any failure. In a sandboxed
+    environment with no route to overpass-api.de this always returns None and
+    the caller transparently falls back to the synthetic generator below."""
     try:
         import osmnx as ox
     except Exception as exc:
@@ -551,9 +543,18 @@ def fetch_osm_network(center: Tuple[float, float], dist: int) -> Optional[nx.DiG
         return None
 
 
-def synthetic_arterial_grid(center: Tuple[float, float], dist: int, n: int = 23) -> nx.DiGraph:
-    """Deterministic stratified arterial / collector / local grid with one-way pockets,
-    two trunk diagonals (ring corridor) and randomly severed local links (blocks)."""
+def synthetic_arterial_grid(center: Tuple[float, float], dist: int, n: int = 19,
+                            arterial_period: int = 6, collector_period: int = 3,
+                            irregularity: float = 0.0, oneway_density: float = 0.07,
+                            ring_count: int = 1, seed_key: str = "grid") -> nx.DiGraph:
+    """Deterministic, morphology-parameterized arterial/collector/local grid.
+
+    `irregularity` jitters node positions (0 = perfect grid, ~0.7 = organic
+    historic core). `ring_count` adds concentric bypass diagonals (radial
+    metros). `oneway_density` controls block severing and one-way pockets on
+    local streets. All randomness is a deterministic hash of `seed_key` so
+    each named city is reproducible without a global RNG.
+    """
     lat0, lon0 = center
     step = (2.0 * dist) / (n - 1)
     mlat, mlon = local_metric_factors(lat0)
@@ -564,14 +565,19 @@ def synthetic_arterial_grid(center: Tuple[float, float], dist: int, n: int = 23)
         for j in range(n):
             k = i * n + j
             nid[(i, j)] = k
-            G.add_node(k,
-                       x=float(lon0 + (j - (n - 1) / 2.0) * step / mlon),
-                       y=float(lat0 + (i - (n - 1) / 2.0) * step / mlat))
+            base_lon = lon0 + (j - (n - 1) / 2.0) * step / mlon
+            base_lat = lat0 + (i - (n - 1) / 2.0) * step / mlat
+            if irregularity > 0:
+                jlon = irregularity * 0.4 * (step / mlon) * (2 * stable_unit(f"{seed_key}|jx|{i}|{j}") - 1)
+                jlat = irregularity * 0.4 * (step / mlat) * (2 * stable_unit(f"{seed_key}|jy|{i}|{j}") - 1)
+            else:
+                jlon = jlat = 0.0
+            G.add_node(k, x=float(base_lon + jlon), y=float(base_lat + jlat))
 
     def line_class(idx: int) -> str:
-        if idx % 7 == 0:
+        if idx % arterial_period == 0:
             return "primary"
-        if idx % 3 == 0:
+        if idx % collector_period == 0:
             return "secondary"
         return "residential"
 
@@ -580,36 +586,58 @@ def synthetic_arterial_grid(center: Tuple[float, float], dist: int, n: int = 23)
         xb, yb = G.nodes[b]["x"], G.nodes[b]["y"]
         length = haversine_m(ya, xa, yb, xb)
         if length > 0.0:
-            G.add_edge(a, b, length=length, highway=hw,
-                       coords=[(xa, ya), (xb, yb)], n_base=1)
+            G.add_edge(a, b, length=length, highway=hw, coords=[(xa, ya), (xb, yb)], n_base=1)
 
     for i in range(n):
         for j in range(n):
             a = nid[(i, j)]
             if j + 1 < n:
                 hw = line_class(i)
-                if not (hw == "residential" and stable_unit(f"h{i}-{j}") < 0.07):
+                sever = hw == "residential" and stable_unit(f"{seed_key}|sv|h|{i}|{j}") < oneway_density * 0.5
+                if not sever:
                     b = nid[(i, j + 1)]
                     link(a, b, hw)
-                    if not (hw == "residential" and (i + j) % 7 == 0):
+                    oneway = hw == "residential" and stable_unit(f"{seed_key}|ow|h|{i}|{j}") < oneway_density
+                    if not oneway:
                         link(b, a, hw)
             if i + 1 < n:
                 hw = line_class(j)
-                if not (hw == "residential" and stable_unit(f"v{i}-{j}") < 0.07):
+                sever = hw == "residential" and stable_unit(f"{seed_key}|sv|v|{i}|{j}") < oneway_density * 0.5
+                if not sever:
                     b = nid[(i + 1, j)]
                     link(a, b, hw)
-                    if not (hw == "residential" and (3 * i + j) % 9 == 0):
+                    oneway = hw == "residential" and stable_unit(f"{seed_key}|ow|v|{i}|{j}") < oneway_density
+                    if not oneway:
                         link(b, a, hw)
 
-    for k in range(n - 1):
-        a, b = nid[(k, k)], nid[(k + 1, k + 1)]
-        link(a, b, "trunk"); link(b, a, "trunk")
-        c, d = nid[(k, n - 1 - k)], nid[(k + 1, n - 2 - k)]
-        link(c, d, "trunk"); link(d, c, "trunk")
+    def add_diagonal(offset: int) -> None:
+        span = n - 1 - offset
+        if span < 1:
+            return
+        for k in range(span):
+            i0, j0 = k + offset, k
+            i1, j1 = i0 + 1, j0 + 1
+            if i1 < n and j1 < n:
+                a, b = nid[(i0, j0)], nid[(i1, j1)]
+                link(a, b, "trunk"); link(b, a, "trunk")
+            i0b, j0b = k + offset, n - 1 - k
+            i1b, j1b = i0b + 1, j0b - 1
+            if 0 <= j1b < n and i1b < n:
+                c, d = nid[(i0b, j0b)], nid[(i1b, j1b)]
+                link(c, d, "trunk"); link(d, c, "trunk")
+
+    offset_step = max(1, (n - 2) // max(1, ring_count))
+    for r in range(ring_count):
+        add_diagonal(min(n - 2, r * offset_step))
 
     G = largest_strongly_connected(G)
-    G.graph.update({"source": "synthetic", "center": list(center), "dist": dist})
-    print(f"[network] Synthetic grid: {G.number_of_nodes()} nodes / "
+    G.graph.update({"source": "synthetic", "center": list(center), "dist": dist,
+                    "archetype_params": {"arterial_period": arterial_period,
+                                         "collector_period": collector_period,
+                                         "irregularity": irregularity,
+                                         "oneway_density": oneway_density,
+                                         "ring_count": ring_count}})
+    print(f"[network] Synthetic grid ({seed_key}): {G.number_of_nodes()} nodes / "
           f"{G.number_of_edges()} directed edges.")
     return G
 
@@ -630,7 +658,6 @@ def enrich_temporal_costs(G: nx.DiGraph) -> nx.DiGraph:
         x1, y1 = coords[-1]
         mx, my = 0.5 * (x0 + x1), 0.5 * (y0 + y1)
 
-        # local planar frame (metres) centred on the CBD
         ex = (x1 - x0) * mlon
         ey = (y1 - y0) * mlat
         cx = (mx - lon0) * mlon
@@ -643,7 +670,7 @@ def enrich_temporal_costs(G: nx.DiGraph) -> nx.DiGraph:
         if norm_e < 1e-9 or norm_c < 1e-9:
             inbound = 0.5
         else:
-            cosang = -(ex * cx + ey * cy) / (norm_e * norm_c)   # toward centre => +1
+            cosang = -(ex * cx + ey * cy) / (norm_e * norm_c)
             inbound = 0.5 * (1.0 + max(-1.0, min(1.0, cosang)))
 
         jitter = stable_unit(f"{u}->{v}|{hw}")
@@ -656,23 +683,12 @@ def enrich_temporal_costs(G: nx.DiGraph) -> nx.DiGraph:
         ff = length / (v_ff * 1000.0 / SEC_PER_HOUR)
 
         data.update({
-            "highway": hw,
-            "tier": tier,
-            "coords": coords,
-            "v_ff": v_ff,
-            "alpha": alpha,
-            "cbd": cbd,
-            "inbound": inbound,
-            "congestion": congestion,
-            "speeds": speeds,
-            "tt": tt,                                   # 24-slice temporal cost
-            "free_flow": ff,
-            "tt_ff": [ff],                              # static free-flow view
-            "len_vec": [length],                        # static geometric view
-            "tt_mean_vec": [float(sum(tt) / len(tt))],  # time-averaged view
-            "w_max": max(tt),
-            "w_min": min(tt),
-            "peak_ratio": max(tt) / min(tt),
+            "highway": hw, "tier": tier, "coords": coords,
+            "v_ff": v_ff, "alpha": alpha, "cbd": cbd, "inbound": inbound,
+            "congestion": congestion, "speeds": speeds, "tt": tt,
+            "free_flow": ff, "tt_ff": [ff], "len_vec": [length],
+            "tt_mean_vec": [float(sum(tt) / len(tt))],
+            "w_max": max(tt), "w_min": min(tt), "peak_ratio": max(tt) / min(tt),
         })
 
     G.graph["hours"] = list(HOURS)
@@ -680,11 +696,11 @@ def enrich_temporal_costs(G: nx.DiGraph) -> nx.DiGraph:
 
 
 def build_network(center: Tuple[float, float], dist: int,
-                  force_synthetic: bool = False,
-                  contract: bool = True) -> nx.DiGraph:
+                  force_synthetic: bool = False, contract: bool = True,
+                  grid_n: int = 19) -> nx.DiGraph:
     G = None if force_synthetic else fetch_osm_network(center, dist)
     if G is None:
-        G = synthetic_arterial_grid(center, dist)
+        G = synthetic_arterial_grid(center, dist, n=grid_n, seed_key="focus")
     raw_nodes, raw_edges = G.number_of_nodes(), G.number_of_edges()
     if contract:
         G = contract_degree_two(G)
@@ -692,6 +708,26 @@ def build_network(center: Tuple[float, float], dist: int,
               f"{raw_edges} -> {G.number_of_edges()} edges.")
     G.graph["raw_nodes"] = raw_nodes
     G.graph["raw_edges"] = raw_edges
+    return enrich_temporal_costs(G)
+
+
+def build_city_network(spec: Dict, grid_n: int = 15, contract: bool = True,
+                       force_synthetic: bool = False) -> nx.DiGraph:
+    """Cross-city loader: real OSM first, morphology-aware synthetic fallback."""
+    center = (spec["lat"], spec["lon"])
+    G = None if force_synthetic else fetch_osm_network(center, spec["dist"])
+    used_real = G is not None
+    if G is None:
+        params = ARCHETYPE_PARAMS[spec["archetype"]]
+        G = synthetic_arterial_grid(center, spec["dist"], n=grid_n, seed_key=spec["name"], **params)
+    raw_nodes, raw_edges = G.number_of_nodes(), G.number_of_edges()
+    if contract:
+        G = contract_degree_two(G)
+    G.graph["raw_nodes"] = raw_nodes
+    G.graph["raw_edges"] = raw_edges
+    G.graph["city"] = spec["name"]
+    G.graph["archetype"] = spec["archetype"]
+    G.graph["used_real_osm"] = used_real
     return enrich_temporal_costs(G)
 
 
@@ -724,12 +760,12 @@ def network_summary(G: nx.DiGraph) -> dict:
 
 
 def temporal_heterogeneity_index(G: nx.DiGraph) -> float:
-    """Departure from homothety: if w(.,tau) = c(tau) w(.,0) for all e, this is 0.
+    """Mean coefficient of variation of r_e(tau)=w(e,tau)/w(e,0) across edges.
 
-    Defined as the mean over tau of the coefficient of variation of the
-    normalised edge cost ratios r_e(tau) = w(e,tau)/w(e,0). A strictly positive
-    value certifies that no static (single-snapshot) spanner can be optimal for
-    every hour.
+    Strictly positive iff the temporal field is NOT homothetic (i.e. NOT
+    w(.,tau) = c(tau) w(.,0)); a homothetic field would make the static and
+    delay-bounded spanners provably identical, so this value certifies the
+    experiment is not degenerate.
     """
     ratios = np.array([[d["tt"][tau] / d["tt"][0] for tau in HOURS]
                        for _, _, d in G.edges(data=True)], dtype=float)
@@ -747,6 +783,53 @@ def subgraph_by_radius(G: nx.DiGraph, frac: float) -> nx.DiGraph:
     S = largest_strongly_connected(G.subgraph(keep).copy())
     S.graph.update(G.graph)
     return S
+
+
+def network_morphology(G: nx.DiGraph) -> Dict:
+    """Street-network morphology descriptors used for the cross-city
+    regression: mean edge circuity and street-orientation entropy (the
+    Boeing 2019 grid-vs-organic legibility metric, 0 = perfectly gridded,
+    1 = uniformly random orientations)."""
+    lat0 = G.graph["center"][0]
+    mlat, mlon = local_metric_factors(lat0)
+
+    lengths, straight = [], []
+    bin_weights = np.zeros(36)
+    for _, _, d in G.edges(data=True):
+        coords = d.get("coords")
+        if not coords or len(coords) < 2:
+            continue
+        x0, y0 = coords[0]
+        x1, y1 = coords[-1]
+        L = float(d["length"])
+        S = haversine_m(y0, x0, y1, x1)
+        if S > 1e-6:
+            lengths.append(L)
+            straight.append(S)
+        ex = (x1 - x0) * mlon
+        ey = (y1 - y0) * mlat
+        if abs(ex) + abs(ey) > 1e-9:
+            brg = math.degrees(math.atan2(ex, ey)) % 180.0
+            bin_weights[int(brg // 5.0) % 36] += L
+
+    circuity = float(np.mean(np.asarray(lengths) / np.maximum(1e-6, np.asarray(straight)))) \
+        if lengths else float("nan")
+    p = bin_weights / max(1e-12, bin_weights.sum())
+    p_nonzero = p[p > 0]
+    orientation_entropy = float(-(p_nonzero * np.log(p_nonzero)).sum() / math.log(36)) if p_nonzero.size else float("nan")
+
+    degs = [G.degree(n) for n in G.nodes()]
+    length_arr = np.asarray([d["length"] for _, _, d in G.edges(data=True)], dtype=float)
+
+    return {
+        "circuity_mean": round(circuity, 4),
+        "orientation_entropy": round(orientation_entropy, 4),
+        "mean_degree": round(float(np.mean(degs)), 3) if degs else float("nan"),
+        "edge_length_cv": round(float(np.std(length_arr) / max(1e-6, np.mean(length_arr))), 4)
+        if length_arr.size else float("nan"),
+        "n_nodes": int(G.number_of_nodes()),
+        "n_edges": int(G.number_of_edges()),
+    }
 
 
 # ==============================================================================
@@ -770,34 +853,28 @@ def _edge_order(G: nx.DiGraph, mode: str, attr: str,
             c = cent.get((u, v), 0.0)
             score = max(d[attr][h] for h in hours) / (1.0 + 6.0 * c)
             keyed.append(((score, str(u), str(v)), (u, v, d)))
-    else:  # temporal_max (classical greedy analogue)
+    else:  # temporal_max
         keyed = [((max(d[attr][h] for h in hours), str(u), str(v)), (u, v, d))
                  for u, v, d in edges]
     keyed.sort(key=lambda kv: kv[0])
     return [payload for _, payload in keyed]
 
 
-def delay_bounded_greedy_spanner(G: nx.DiGraph,
-                                 t: float,
+def delay_bounded_greedy_spanner(G: nx.DiGraph, t: float,
                                  hours: Optional[Iterable[int]] = None,
-                                 attr: str = "tt",
-                                 order: str = "temporal_max",
+                                 attr: str = "tt", order: str = "temporal_max",
                                  show_progress: bool = True,
                                  label: str = "delay_bounded") -> nx.DiGraph:
-    """Delay-Bounded Greedy Spanner.
+    """Delay-Bounded Greedy Spanner (Theorem 1 certificate by construction):
 
         1  order E ascending by max_tau w(e,tau)
         2  H <- empty
         3  for (u,v) in E in that order:
-        4      for tau ordered by ascending w((u,v),tau):      # tightest budget first
+        4      for tau ordered by ascending w((u,v),tau):
         5          beta <- t * w((u,v),tau)
         6          if BoundedDijkstra(H, u->v, tau, beta) > beta:
-        7              H <- H + {(u,v)}; break                 # early exit
+        7              H <- H + {(u,v)}; break
         8  return H
-
-    Complexity O(|E| |T| |B| log|B|); the tightest-budget-first slice order makes
-    the |T| loop terminate after ~1 probe for every edge that is retained, so the
-    full 24 probes are paid only for genuinely redundant edges.
     """
     hours = list(HOURS) if hours is None else list(hours)
     t = float(t)
@@ -844,16 +921,9 @@ def delay_bounded_greedy_spanner(G: nx.DiGraph,
 
 def temporal_stretch_certificate(G: nx.DiGraph, H: nx.DiGraph, t: float,
                                  hours: Optional[Iterable[int]] = None,
-                                 attr: str = "tt",
-                                 refine_cap: int = CERT_REFINE_CAP,
+                                 attr: str = "tt", refine_cap: int = CERT_REFINE_CAP,
                                  refine_mult: float = CERT_REFINE_MULT) -> dict:
-    """Exhaustive Theorem-1 certificate + magnitude of the worst violation (fixes R7).
-
-    Phase 1 decides the invariant for every (e, tau) with budget t*w(e,tau).
-    Phase 2 re-probes violating edges with budget refine_mult*w(e,tau) to recover
-    the attained stretch, so a failed certificate is reported with a number and
-    not merely as a boolean.
-    """
+    """Exhaustive Theorem-1 certificate + magnitude of the worst violation."""
     hours = list(HOURS) if hours is None else list(hours)
     adj = build_adjacency(H, attr)
 
@@ -868,8 +938,7 @@ def temporal_stretch_certificate(G: nx.DiGraph, H: nx.DiGraph, t: float,
 
     max_stretch = float(t)
     censored = 0
-    refined = violating[:refine_cap]
-    for u, v, tau, w in refined:
+    for u, v, tau, w in violating[:refine_cap]:
         big = refine_mult * w
         d = bounded_dijkstra(adj, u, v, tau, big)
         if d == INF:
@@ -903,41 +972,113 @@ def full_network(G: nx.DiGraph) -> nx.DiGraph:
 
 
 def static_freeflow_spanner(G: nx.DiGraph, t: float, show_progress: bool = True) -> nx.DiGraph:
-    """Greedy t-spanner certified only on the free-flow snapshot (traffic-blind)."""
-    H = delay_bounded_greedy_spanner(G, t, hours=[0], attr="tt_ff",
-                                     order="temporal_max",
+    H = delay_bounded_greedy_spanner(G, t, hours=[0], attr="tt_ff", order="temporal_max",
                                      show_progress=show_progress, label="static_ff")
     H.graph.update({"method": "static_ff", "t": t})
     return H
 
 
 def static_geometric_spanner(G: nx.DiGraph, t: float, show_progress: bool = True) -> nx.DiGraph:
-    """Classical Euclidean-length greedy t-spanner (geometry-only)."""
-    H = delay_bounded_greedy_spanner(G, t, hours=[0], attr="len_vec",
-                                     order="temporal_max",
+    H = delay_bounded_greedy_spanner(G, t, hours=[0], attr="len_vec", order="temporal_max",
                                      show_progress=show_progress, label="static_len")
     H.graph.update({"method": "static_len", "t": t})
     return H
 
 
 def mean_temporal_spanner(G: nx.DiGraph, t: float, show_progress: bool = True) -> nx.DiGraph:
-    """Spanner on the 24-hour *averaged* cost: the natural aggregation strawman."""
-    H = delay_bounded_greedy_spanner(G, t, hours=[0], attr="tt_mean_vec",
-                                     order="temporal_max",
+    H = delay_bounded_greedy_spanner(G, t, hours=[0], attr="tt_mean_vec", order="temporal_max",
                                      show_progress=show_progress, label="mean_temporal")
     H.graph.update({"method": "mean_temporal", "t": t})
     return H
 
 
-def hierarchical_backbone(G: nx.DiGraph, keep: Optional[Set[str]] = None) -> nx.DiGraph:
-    """Functional-class heuristic with correct last-mile attachment (fixes R5).
+def yao_cone_sparsifier(G: nx.DiGraph, k: int = 8, attr: str = "free_flow") -> nx.DiGraph:
+    """Network-constrained adaptation of the classical Yao graph.
 
-    The arterial subgraph is reduced to its largest SCC; every remaining junction
-    is then attached to that core by its cheapest free-flow access path in both
-    directions (multi-source Dijkstra forward and on the reverse graph). The
-    result is strongly connected by construction, but carries no dilation
-    certificate whatsoever - which is exactly the gap the proposed method closes.
+    The textbook Yao graph (Yao, 1982) is built on a COMPLETE point set: for
+    each point, partition all other points into k angular cones of 360/k
+    degrees and keep the nearest point per cone, which yields a proven
+    stretch factor of 1/(1 - 2 sin(pi/k)). A road network is not a complete
+    point set -- edges are constrained by existing infrastructure -- so here
+    each node's EXISTING outgoing edges are partitioned into k cones by
+    bearing and the cheapest (free-flow) edge per cone is kept. This carries
+    no closed-form stretch guarantee, but it is the standard adaptation used
+    when candidate edges are fixed, and gives referees a named bridge to the
+    classical computational-geometry spanner family rather than only
+    engineering heuristics.
     """
+    lat0 = G.graph["center"][0]
+    mlat, mlon = local_metric_factors(lat0)
+    t0 = time.perf_counter()
+
+    H = nx.DiGraph()
+    H.add_nodes_from(G.nodes(data=True))
+    cone_width = 360.0 / k
+    for u in G.nodes():
+        best: Dict[int, Tuple[object, float]] = {}
+        for v, d in G[u].items():
+            coords = d.get("coords") or [(G.nodes[u]["x"], G.nodes[u]["y"]),
+                                         (G.nodes[v]["x"], G.nodes[v]["y"])]
+            x0, y0 = coords[0]
+            x1, y1 = coords[-1]
+            ex = (x1 - x0) * mlon
+            ey = (y1 - y0) * mlat
+            brg = math.degrees(math.atan2(ex, ey)) % 360.0
+            cone = int(brg // cone_width)
+            cost = d[attr]
+            if cone not in best or cost < best[cone][1]:
+                best[cone] = (v, cost)
+        for _, (v, _cost) in best.items():
+            H.add_edge(u, v, **G[u][v])
+
+    H = augment_connectivity(G, H)
+    H.graph.update(G.graph)
+    H.graph.update({"method": "yao_cone", "t": None, "build_seconds": time.perf_counter() - t0,
+                    "dijkstra_probes": 0, "edges_parent": G.number_of_edges(), "cones": k})
+    return H
+
+
+def _bridge_isolated_nodes(G: nx.DiGraph, H: nx.DiGraph) -> None:
+    for n in list(H.nodes()):
+        if H.out_degree(n) == 0:
+            cands = [(d["free_flow"], str(v), v) for v, d in G[n].items()]
+            if cands:
+                _, _, v = min(cands)
+                H.add_edge(n, v, **G[n][v])
+        if H.in_degree(n) == 0:
+            cands = [(G[u][n]["free_flow"], str(u), u) for u in G.predecessors(n)]
+            if cands:
+                _, _, u = min(cands)
+                H.add_edge(u, n, **G[u][n])
+
+
+def augment_connectivity(G: nx.DiGraph, H: nx.DiGraph, max_rounds: int = 500) -> nx.DiGraph:
+    _bridge_isolated_nodes(G, H)
+    for _ in range(max_rounds):
+        comps = list(nx.strongly_connected_components(H))
+        if len(comps) <= 1:
+            break
+        comp_of = {n: i for i, c in enumerate(comps) for n in c}
+        best = None
+        for u, v, d in G.edges(data=True):
+            cu, cv = comp_of.get(u), comp_of.get(v)
+            if cu is None or cv is None or cu == cv or H.has_edge(u, v):
+                continue
+            key = (d["free_flow"], str(u), str(v))
+            if best is None or key < best[0]:
+                best = (key, u, v, d)
+        if best is None:
+            break
+        H.add_edge(best[1], best[2], **best[3])
+    return H
+
+
+def hierarchical_backbone(G: nx.DiGraph, keep: Optional[Set[str]] = None) -> nx.DiGraph:
+    """Functional-class heuristic with correct last-mile attachment: the
+    arterial subgraph is reduced to its largest SCC, then every remaining
+    junction is attached by its cheapest free-flow access path (forward and
+    reverse multi-source Dijkstra), so the result is strongly connected by
+    construction -- but carries no dilation certificate whatsoever."""
     keep = ARTERIAL_CLASSES if keep is None else keep
     t0 = time.perf_counter()
 
@@ -950,9 +1091,9 @@ def hierarchical_backbone(G: nx.DiGraph, keep: Optional[Set[str]] = None) -> nx.
     comps = [c for c in nx.strongly_connected_components(H) if len(c) > 1]
     core: Set = max(comps, key=len) if comps else {min(G.nodes(), key=str)}
 
-    pred_out = multi_source_pred(G, core, "free_flow")                   # core -> node
+    pred_out = multi_source_pred(G, core, "free_flow")
     Grev = G.reverse(copy=False)
-    pred_in = multi_source_pred(Grev, core, "free_flow")                 # node -> core
+    pred_in = multi_source_pred(Grev, core, "free_flow")
 
     for n in G.nodes():
         if n in core:
@@ -964,7 +1105,7 @@ def hierarchical_backbone(G: nx.DiGraph, keep: Optional[Set[str]] = None) -> nx.
             cur, guard = p, guard + 1
         cur, guard = n, 0
         while cur not in core and cur in pred_in and guard < 10 ** 5:
-            p = pred_in[cur]                                             # edge cur -> p in G
+            p = pred_in[cur]
             if G.has_edge(cur, p):
                 H.add_edge(cur, p, **G[cur][p])
             cur, guard = p, guard + 1
@@ -980,12 +1121,6 @@ def hierarchical_backbone(G: nx.DiGraph, keep: Optional[Set[str]] = None) -> nx.
 
 
 def strong_connectivity_core(G: nx.DiGraph, weight: str = "free_flow") -> Set[Tuple]:
-    """Union of an out-arborescence and an in-arborescence rooted at a median node.
-
-    Guarantees strong connectivity with ~2(|V|-1) edges; used as the mandatory
-    skeleton of every matched-density control so that density comparisons are not
-    confounded by connectivity failure.
-    """
     root = min(G.nodes(), key=str)
     pred_out = multi_source_pred(G, {root}, weight)
     pred_in = multi_source_pred(G.reverse(copy=False), {root}, weight)
@@ -999,8 +1134,7 @@ def strong_connectivity_core(G: nx.DiGraph, weight: str = "free_flow") -> Set[Tu
     return core
 
 
-def _materialize(G: nx.DiGraph, edges: Iterable[Tuple], method: str,
-                 seconds: float) -> nx.DiGraph:
+def _materialize(G: nx.DiGraph, edges: Iterable[Tuple], method: str, seconds: float) -> nx.DiGraph:
     H = nx.DiGraph()
     H.add_nodes_from(G.nodes(data=True))
     for u, v in edges:
@@ -1013,7 +1147,6 @@ def _materialize(G: nx.DiGraph, edges: Iterable[Tuple], method: str,
 
 
 def matched_density_random(G: nx.DiGraph, budget_edges: int, seed: int = SEED) -> nx.DiGraph:
-    """Random sparsifier at exactly the proposed method's edge budget (fixes R6)."""
     t0 = time.perf_counter()
     rng = random.Random(seed)
     core = strong_connectivity_core(G)
@@ -1025,7 +1158,6 @@ def matched_density_random(G: nx.DiGraph, budget_edges: int, seed: int = SEED) -
 
 
 def matched_density_betweenness(G: nx.DiGraph, budget_edges: int, seed: int = SEED) -> nx.DiGraph:
-    """Top-k edge-betweenness sparsifier at the same edge budget."""
     t0 = time.perf_counter()
     core = strong_connectivity_core(G)
     k = min(128, G.number_of_nodes())
@@ -1041,7 +1173,7 @@ def matched_density_betweenness(G: nx.DiGraph, budget_edges: int, seed: int = SE
 
 
 # ==============================================================================
-# SECTION 8 - EVALUATION (uncensored, multi-seed, bootstrapped)  (fixes R4, R8)
+# SECTION 8 - EVALUATION (uncensored, multi-seed, bootstrapped)
 # ==============================================================================
 
 def sample_pairs(G: nx.DiGraph, n_sources: int, n_targets: int, seed: int) -> Dict:
@@ -1079,18 +1211,11 @@ def bootstrap_ci(values: Sequence[float], stat=np.mean, n: int = BOOTSTRAP_N,
 
 def evaluate_graph(H: nx.DiGraph, pair_sets: Sequence[Dict], hours: Sequence[int],
                    bases: Sequence[Dict], collect_pairs_at: Optional[int] = None) -> Dict:
-    """Empirical dilation over OD samples and all snapshots.
-
-    Unreachable pairs are reported separately and excluded from dilation
-    statistics; no sentinel value is ever mixed into an aggregate.
-    """
     per_hour_max = np.zeros((len(pair_sets), len(hours)), dtype=float)
     per_hour_mean = np.zeros((len(pair_sets), len(hours)), dtype=float)
     all_ratios: List[float] = []
     per_seed_worst: List[float] = []
-    per_seed_mean: List[float] = []
     collected: List[Tuple[str, str, float]] = []
-
     total = reachable = breaches = 0
     t_bound = H.graph.get("t")
 
@@ -1122,7 +1247,6 @@ def evaluate_graph(H: nx.DiGraph, pair_sets: Sequence[Dict], hours: Sequence[int
             seed_ratios.extend([x for x in arr.tolist() if not math.isnan(x)])
         if seed_ratios:
             per_seed_worst.append(float(np.max(seed_ratios)))
-            per_seed_mean.append(float(np.mean(seed_ratios)))
             all_ratios.extend(seed_ratios)
 
     allr = np.asarray(all_ratios, dtype=float) if all_ratios else np.asarray([np.nan])
@@ -1133,11 +1257,9 @@ def evaluate_graph(H: nx.DiGraph, pair_sets: Sequence[Dict], hours: Sequence[int
     return {
         "worst_dilation": float(np.nanmax(allr)),
         "worst_dilation_seed_mean": float(np.mean(per_seed_worst)) if per_seed_worst else float("nan"),
-        "worst_dilation_seed_std": float(np.std(per_seed_worst)) if per_seed_worst else float("nan"),
         "mean_dilation": float(np.nanmean(allr)),
         "mean_dilation_ci": [mean_lo, mean_hi],
         "p95_dilation": float(np.nanpercentile(allr, 95)),
-        "p99_dilation": float(np.nanpercentile(allr, 99)),
         "per_hour_max": hour_max_mean,
         "per_hour_max_std": hour_max_std,
         "per_hour_mean": np.nanmean(per_hour_mean, axis=0).tolist(),
@@ -1157,8 +1279,7 @@ def structural_metrics(G: nx.DiGraph, H: nx.DiGraph) -> Dict:
     len_h = sum(d["length"] for _, _, d in H.edges(data=True))
     arterial = sum(1 for _, _, d in H.edges(data=True) if d["tier"] == "arterial")
     return {
-        "edges": int(e_h),
-        "edges_parent": int(e_g),
+        "edges": int(e_h), "edges_parent": int(e_g),
         "edge_retention_pct": round(100.0 * e_h / max(1, e_g), 3),
         "edges_removed_pct": round(100.0 * (1.0 - e_h / max(1, e_g)), 3),
         "length_km": round(len_h / 1000.0, 3),
@@ -1169,12 +1290,32 @@ def structural_metrics(G: nx.DiGraph, H: nx.DiGraph) -> Dict:
     }
 
 
+def perturb_congestion(G: nx.DiGraph, alpha_scale: float) -> nx.DiGraph:
+    """Rescale every edge's congestion-severity coefficient alpha by
+    `alpha_scale` and recompute speeds/costs, holding the tidal SHAPE fixed.
+    Used by the sensitivity analysis (Section 16) to test whether the
+    method's ranking against baselines survives model misspecification."""
+    Gp = G.copy()
+    for _, _, d in Gp.edges(data=True):
+        alpha = float(min(0.97, d["alpha"] * alpha_scale))
+        speeds = speed_curve(d["v_ff"], alpha, d["congestion"])
+        length = d["length"]
+        tt = [length / (s * 1000.0 / SEC_PER_HOUR) for s in speeds]
+        d["alpha"] = alpha
+        d["speeds"] = speeds
+        d["tt"] = tt
+        d["tt_mean_vec"] = [float(sum(tt) / len(tt))]
+        d["w_max"] = max(tt)
+        d["w_min"] = min(tt)
+        d["peak_ratio"] = max(tt) / min(tt)
+    return Gp
+
+
 # ==============================================================================
-# SECTION 9 - FIFO TIME-DEPENDENT VALIDATION  (Proposition 2)
+# SECTION 9 - FIFO TIME-DEPENDENT VALIDATION (Proposition 2)
 # ==============================================================================
 
 def td_cost(costs: Sequence[float], abs_seconds: float) -> float:
-    """Cyclic piecewise-linear interpolation of the hourly cost profile."""
     h = (abs_seconds / SEC_PER_HOUR) % 24.0
     i = int(math.floor(h))
     f = h - i
@@ -1182,7 +1323,6 @@ def td_cost(costs: Sequence[float], abs_seconds: float) -> float:
 
 
 def fifo_violation_rate(G: nx.DiGraph, samples: int = 24 * 4) -> float:
-    """Fraction of (edge, time) samples where s + w~(e,s) is non-monotone."""
     bad = tot = 0
     step = 24.0 * SEC_PER_HOUR / samples
     for _, _, d in G.edges(data=True):
@@ -1198,9 +1338,7 @@ def fifo_violation_rate(G: nx.DiGraph, samples: int = 24 * 4) -> float:
     return float(bad / max(1, tot))
 
 
-def td_dijkstra(G: nx.DiGraph, source, departure: float,
-                targets: Set) -> Dict[object, float]:
-    """FIFO time-dependent Dijkstra; returns travel times (not arrival times)."""
+def td_dijkstra(G: nx.DiGraph, source, departure: float, targets: Set) -> Dict[object, float]:
     arrival = {source: departure}
     settled: Dict[object, float] = {}
     pq: List[Tuple[float, int, object]] = [(departure, 0, source)]
@@ -1242,8 +1380,7 @@ def time_dependent_validation(G: nx.DiGraph, H: nx.DiGraph, pairs: Dict,
                 ratios.append(dh[x] / dg[x])
     arr = np.asarray(ratios, dtype=float) if ratios else np.asarray([np.nan])
     return {
-        "departures_hours": list(departures_h),
-        "pairs": int(arr.size),
+        "departures_hours": list(departures_h), "pairs": int(arr.size),
         "unreachable": int(unreachable),
         "worst_td_dilation": float(np.nanmax(arr)),
         "mean_td_dilation": float(np.nanmean(arr)),
@@ -1252,7 +1389,7 @@ def time_dependent_validation(G: nx.DiGraph, H: nx.DiGraph, pairs: Dict,
 
 
 # ==============================================================================
-# SECTION 10 - FIGURE
+# SECTION 10 - FOCUS-CITY FIGURE
 # ==============================================================================
 
 def _edge_segments(G: nx.DiGraph, edges: Optional[Iterable[Tuple]] = None):
@@ -1263,50 +1400,37 @@ def _edge_segments(G: nx.DiGraph, edges: Optional[Iterable[Tuple]] = None):
         if c and len(c) >= 2:
             segs.append([(float(x), float(y)) for x, y in c])
         else:
-            segs.append([(G.nodes[u]["x"], G.nodes[u]["y"]),
-                         (G.nodes[v]["x"], G.nodes[v]["y"])])
+            segs.append([(G.nodes[u]["x"], G.nodes[u]["y"]), (G.nodes[v]["x"], G.nodes[v]["y"])])
     return segs
 
 
-def make_figure(G: nx.DiGraph, results: Dict, backbone: nx.DiGraph,
-                hours: Sequence[int], t_focus: float, t_values: Sequence[float],
-                scaling: List[Dict], pair_frames: Dict[str, pd.DataFrame],
-                path: str) -> None:
+def make_figure(G: nx.DiGraph, results: Dict, backbone: nx.DiGraph, hours: Sequence[int],
+                t_focus: float, t_values: Sequence[float], scaling: List[Dict],
+                pair_frames: Dict[str, pd.DataFrame], path: str) -> None:
     sns.set_theme(style="whitegrid", context="talk",
                   rc={"axes.edgecolor": "#2b2b2b", "grid.alpha": 0.30,
-                      "axes.titlesize": 17, "axes.labelsize": 15,
-                      "legend.fontsize": 10.5})
+                      "axes.titlesize": 17, "axes.labelsize": 15, "legend.fontsize": 10.5})
 
     fig = plt.figure(figsize=(23, 20.5))
-    gs = fig.add_gridspec(3, 3, height_ratios=[1.0, 1.0, 1.45],
-                          hspace=0.36, wspace=0.26)
-    axA = fig.add_subplot(gs[0, 0])
-    axB = fig.add_subplot(gs[0, 1])
-    axC = fig.add_subplot(gs[0, 2])
-    axD = fig.add_subplot(gs[1, 0])
-    axE = fig.add_subplot(gs[1, 1])
-    axF = fig.add_subplot(gs[1, 2])
+    gs = fig.add_gridspec(3, 3, height_ratios=[1.0, 1.0, 1.45], hspace=0.36, wspace=0.26)
+    axA = fig.add_subplot(gs[0, 0]); axB = fig.add_subplot(gs[0, 1]); axC = fig.add_subplot(gs[0, 2])
+    axD = fig.add_subplot(gs[1, 0]); axE = fig.add_subplot(gs[1, 1]); axF = fig.add_subplot(gs[1, 2])
     axG = fig.add_subplot(gs[2, :])
 
-    # ---- (a) spatio-temporal speed field -------------------------------------
     rows = []
     for _, _, d in G.edges(data=True):
         orient = "inbound" if d["inbound"] >= 0.5 else "outbound"
         for tau in hours:
-            rows.append({"hour": tau,
-                         "speed_ratio": d["speeds"][tau] / d["v_ff"],
-                         "tier": d["tier"], "orientation": orient})
+            rows.append({"hour": tau, "speed_ratio": d["speeds"][tau] / d["v_ff"],
+                        "tier": d["tier"], "orientation": orient})
     dfA = pd.DataFrame(rows)
     sns.lineplot(data=dfA, x="hour", y="speed_ratio", hue="tier", style="orientation",
                  errorbar=("ci", 95), ax=axA, linewidth=2.2,
                  palette={"arterial": "#7b0d1e", "collector": "#c0392b", "local": "#e08e79"})
-    axA.set_xlabel(r"Hour of day $\tau$")
-    axA.set_ylabel(r"$v(e,\tau)\,/\,v_{\mathrm{ff}}(e)$")
+    axA.set_xlabel(r"Hour of day $\tau$"); axA.set_ylabel(r"$v(e,\tau)\,/\,v_{\mathrm{ff}}(e)$")
     axA.set_title("(a) Tidal spatio-temporal speed field", loc="left")
-    axA.set_xticks(range(0, 24, 4))
-    axA.legend(fontsize=9.5, ncol=2, loc="lower left", framealpha=0.9)
+    axA.set_xticks(range(0, 24, 4)); axA.legend(fontsize=9.5, ncol=2, loc="lower left", framealpha=0.9)
 
-    # ---- (b) worst-case dilation vs hour --------------------------------------
     axB.axvspan(6.5, 9.5, color="#f1c40f", alpha=0.13, zorder=0)
     axB.axvspan(15.5, 19.5, color="#e67e22", alpha=0.13, zorder=0)
     ymax = t_focus
@@ -1326,13 +1450,10 @@ def make_figure(G: nx.DiGraph, results: Dict, backbone: nx.DiGraph,
     axB.axhline(t_focus, color="#111111", linestyle=(0, (4, 3)), linewidth=2.0,
                 label=f"Certified bound $t={t_focus}$", zorder=4)
     axB.set_ylim(0.97, min(6.0, 1.12 * ymax))
-    axB.set_xlabel(r"Hour of day $\tau$")
-    axB.set_ylabel(r"Worst-case dilation $\max\ d_H/d_G$")
+    axB.set_xlabel(r"Hour of day $\tau$"); axB.set_ylabel(r"Worst-case dilation $\max\ d_H/d_G$")
     axB.set_title("(b) Temporal dilation stability", loc="left")
-    axB.set_xticks(range(0, 24, 4))
-    axB.legend(fontsize=9, loc="upper left", framealpha=0.92)
+    axB.set_xticks(range(0, 24, 4)); axB.legend(fontsize=9, loc="upper left", framealpha=0.92)
 
-    # ---- (c) sparsification vs t ----------------------------------------------
     for method in ("delay_bounded", "static_ff", "mean_temporal"):
         xs, ys, zs = [], [], []
         for t in sorted(t_values):
@@ -1343,21 +1464,20 @@ def make_figure(G: nx.DiGraph, results: Dict, backbone: nx.DiGraph,
                 zs.append(100.0 - entry["structure"]["length_retention_pct"])
         if xs:
             label, color, ls, marker = METHOD_STYLE[method]
-            axC.plot(xs, ys, label=label, color=color, linestyle=ls,
-                     marker=marker, markersize=8, linewidth=2.5)
+            axC.plot(xs, ys, label=label, color=color, linestyle=ls, marker=marker,
+                     markersize=8, linewidth=2.5)
             axC.plot(xs, zs, color=color, linestyle=":", linewidth=1.4, alpha=0.75)
     hier = results.get(("hierarchical", None))
     if hier:
         label, color, ls, _ = METHOD_STYLE["hierarchical"]
-        axC.axhline(hier["structure"]["edges_removed_pct"], color=color,
-                    linestyle=ls, linewidth=2.2, label=label + r" ($t$-free)")
+        axC.axhline(hier["structure"]["edges_removed_pct"], color=color, linestyle=ls,
+                    linewidth=2.2, label=label + r" ($t$-free)")
     axC.set_xlabel(r"Dilation parameter $t$")
     axC.set_ylabel("Removed (%)  [solid: edges, dotted: length]")
     axC.set_title("(c) Sparsification vs. permitted dilation", loc="left")
     axC.legend(fontsize=9, loc="upper left", framealpha=0.92)
 
-    # ---- (d) Pareto front at matched density ----------------------------------
-    for method in ("delay_bounded", "static_ff", "static_len", "mean_temporal",
+    for method in ("delay_bounded", "static_ff", "static_len", "mean_temporal", "yao_cone",
                    "matched_random", "matched_btw", "hierarchical"):
         pts = [(k[1], v) for k, v in results.items() if k[0] == method]
         if not pts:
@@ -1369,47 +1489,39 @@ def make_figure(G: nx.DiGraph, results: Dict, backbone: nx.DiGraph,
         ys = [min(y, 12.0) if np.isfinite(y) else 12.0 for y in ys]
         order = np.argsort(xs)
         xs = list(np.asarray(xs)[order]); ys = list(np.asarray(ys)[order])
-        axD.plot(xs, ys, color=color, linestyle=ls, marker=marker,
-                 markersize=9, linewidth=2.0, label=label, alpha=0.9)
+        axD.plot(xs, ys, color=color, linestyle=ls, marker=marker, markersize=9,
+                 linewidth=2.0, label=label, alpha=0.9)
     axD.axhline(t_focus, color="#111111", linestyle=(0, (4, 3)), linewidth=1.8)
     axD.set_yscale("log")
-    axD.set_xlabel("Edges retained (%)")
-    axD.set_ylabel("Attained worst-case temporal stretch")
+    axD.set_xlabel("Edges retained (%)"); axD.set_ylabel("Attained worst-case temporal stretch")
     axD.set_title("(d) Sparsity / fidelity Pareto front", loc="left")
-    axD.legend(fontsize=8.5, loc="upper right", framealpha=0.92)
+    axD.legend(fontsize=8, loc="upper right", framealpha=0.92)
 
-    # ---- (e) runtime and probe scaling ----------------------------------------
     if scaling:
-        se = [s["edges"] for s in scaling]
-        st = [s["seconds"] for s in scaling]
+        se = [s["edges"] for s in scaling]; st = [s["seconds"] for s in scaling]
         sp = [s["probes_per_edge"] for s in scaling]
         axE.plot(se, st, color="#c0392b", marker="o", linewidth=2.4, label="build time (s)")
         axE.set_xscale("log"); axE.set_yscale("log")
-        axE.set_xlabel(r"$|E|$ (junction edges)")
-        axE.set_ylabel("Construction time (s)")
+        axE.set_xlabel(r"$|E|$ (junction edges)"); axE.set_ylabel("Construction time (s)")
         if len(se) >= 2:
-            k = np.polyfit(np.log(se), np.log(np.maximum(1e-6, st)), 1)[0]
-            axE.plot(se, np.exp(np.polyval(np.polyfit(np.log(se), np.log(np.maximum(1e-6, st)), 1),
-                                           np.log(se))),
+            logse, logst = np.log(se), np.log(np.maximum(1e-6, st))
+            k = np.polyfit(logse, logst, 1)[0]
+            axE.plot(se, np.exp(np.polyval(np.polyfit(logse, logst, 1), logse)),
                      color="#7f8c8d", linestyle="--", linewidth=1.6,
                      label=fr"fit: $T \propto |E|^{{{k:.2f}}}$")
         ax2 = axE.twinx()
         ax2.plot(se, sp, color="#2980b9", marker="s", linewidth=2.0, linestyle="-.")
-        ax2.set_ylabel("Dijkstra probes per edge", color="#2980b9")
-        ax2.grid(False)
+        ax2.set_ylabel("Dijkstra probes per edge", color="#2980b9"); ax2.grid(False)
         axE.set_title(f"(e) Empirical scaling ($t={t_focus}$)", loc="left")
         axE.legend(fontsize=9, loc="upper left", framealpha=0.92)
 
-    # ---- (f) dilation ECDF at the peak hour ------------------------------------
     if pair_frames:
         dfF = pd.concat(list(pair_frames.values()), ignore_index=True)
         palette = {METHOD_STYLE[m][0]: METHOD_STYLE[m][1] for m in pair_frames}
-        sns.ecdfplot(data=dfF, x="dilation", hue="method", ax=axF,
-                     linewidth=2.3, palette=palette)
+        sns.ecdfplot(data=dfF, x="dilation", hue="method", ax=axF, linewidth=2.3, palette=palette)
         axF.axvline(t_focus, color="#111111", linestyle=(0, (4, 3)), linewidth=1.8)
         axF.set_xlim(0.98, min(5.0, float(dfF["dilation"].quantile(0.999)) * 1.05 + 0.02))
-        axF.set_xlabel(r"OD dilation $d_H/d_G$ at peak hour")
-        axF.set_ylabel("Empirical CDF")
+        axF.set_xlabel(r"OD dilation $d_H/d_G$ at peak hour"); axF.set_ylabel("Empirical CDF")
         axF.set_title("(f) Dilation distribution at the worst hour", loc="left")
         leg = axF.get_legend()
         if leg is not None:
@@ -1417,38 +1529,30 @@ def make_figure(G: nx.DiGraph, results: Dict, backbone: nx.DiGraph,
             for txt in leg.get_texts():
                 txt.set_fontsize(9)
 
-    # ---- (g) spatial backbone ---------------------------------------------------
     kept_edges = set(backbone.edges())
     removed = [(u, v) for u, v in G.edges() if (u, v) not in kept_edges]
     axG.add_collection(LineCollection(_edge_segments(G, removed), colors="#c3cbd4",
                                       linewidths=0.8, alpha=0.9, zorder=1))
-    by_tier = {"arterial": [], "collector": [], "local": []}
+    by_tier: Dict[str, List] = {"arterial": [], "collector": [], "local": []}
     for u, v, d in backbone.edges(data=True):
-        by_tier.setdefault(d["tier"], []).append(
-            _edge_segments(backbone, [(u, v)])[0])
+        by_tier.setdefault(d["tier"], []).append(_edge_segments(backbone, [(u, v)])[0])
     axG.add_collection(LineCollection(by_tier.get("local", []), colors="#e07b5f",
                                       linewidths=1.2, alpha=0.9, zorder=2))
     axG.add_collection(LineCollection(by_tier.get("collector", []), colors="#c0392b",
                                       linewidths=1.9, alpha=0.95, zorder=3))
     axG.add_collection(LineCollection(by_tier.get("arterial", []), colors="#6d0d1c",
                                       linewidths=3.0, alpha=1.0, zorder=4))
-    xs = [G.nodes[n]["x"] for n in G.nodes()]
-    ys = [G.nodes[n]["y"] for n in G.nodes()]
-    padx = 0.02 * (max(xs) - min(xs) + 1e-6)
-    pady = 0.02 * (max(ys) - min(ys) + 1e-6)
-    axG.set_xlim(min(xs) - padx, max(xs) + padx)
-    axG.set_ylim(min(ys) - pady, max(ys) + pady)
+    xs = [G.nodes[n]["x"] for n in G.nodes()]; ys = [G.nodes[n]["y"] for n in G.nodes()]
+    padx = 0.02 * (max(xs) - min(xs) + 1e-6); pady = 0.02 * (max(ys) - min(ys) + 1e-6)
+    axG.set_xlim(min(xs) - padx, max(xs) + padx); axG.set_ylim(min(ys) - pady, max(ys) + pady)
     lat0 = float(np.mean(ys))
     axG.set_aspect(1.0 / max(0.15, math.cos(math.radians(lat0))), adjustable="box")
-    axG.grid(False)
-    axG.set_facecolor("#fcfcfd")
-    axG.set_xlabel("Longitude")
-    axG.set_ylabel("Latitude")
+    axG.grid(False); axG.set_facecolor("#fcfcfd")
+    axG.set_xlabel("Longitude"); axG.set_ylabel("Latitude")
     keep_pct = 100.0 * backbone.number_of_edges() / max(1, G.number_of_edges())
     axG.set_title(f"(g) Certified emergency backbone $H \\subseteq G$  "
                   f"($t={t_focus}$, {keep_pct:.1f}% of junction edges, "
-                  f"{100.0-keep_pct:.1f}% pruned, source: {G.graph.get('source','?')})",
-                  loc="left")
+                  f"{100.0-keep_pct:.1f}% pruned, source: {G.graph.get('source','?')})", loc="left")
     axG.legend(handles=[
         Line2D([0], [0], color="#c3cbd4", lw=2, label="Pruned from $G$"),
         Line2D([0], [0], color="#e07b5f", lw=2, label="$H$ — local"),
@@ -1458,16 +1562,257 @@ def make_figure(G: nx.DiGraph, results: Dict, backbone: nx.DiGraph,
 
     fig.suptitle("Delay-Bounded Time-Varying Geometric $t$-Spanners for Urban Road Networks",
                  fontsize=24, y=0.975)
-    fig.savefig(path, dpi=200, bbox_inches="tight", facecolor="white")
+    fig.savefig(path, dpi=190, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     print(f"[figure] wrote {path}")
 
 
 # ==============================================================================
-# SECTION 11 - REPORTING
+# SECTION 11 - CROSS-CITY GENERALIZATION STUDY
 # ==============================================================================
 
-def _fmt(x: float, nd: int = 3) -> str:
+def run_cross_city_study(args, t_focus: float) -> List[Dict]:
+    grid_n = 11 if args.quick else args.city_grid_n
+    n_cities = 3 if args.quick else len(CITY_REGISTRY)
+    n_src = 5 if args.quick else args.city_sources
+    n_tgt = 5 if args.quick else args.city_targets
+
+    print(f"\n[cross-city] {n_cities} cities, grid_n={grid_n}, "
+          f"{n_src}x{n_tgt} OD pairs each, t_focus={t_focus}")
+
+    out: List[Dict] = []
+    for spec in CITY_REGISTRY[:n_cities]:
+        print(f"  --- {spec['name']} ({spec['archetype']}) ---")
+        G = build_city_network(spec, grid_n=grid_n, force_synthetic=args.synthetic)
+        morph = network_morphology(G)
+        pairs = sample_pairs(G, n_src, n_tgt, args.seed)
+        base = baseline_distances(G, pairs, HOURS)
+
+        def cert_eval(H, tval):
+            H.graph["t"] = tval
+            c = temporal_stretch_certificate(G, H, tval, HOURS, refine_cap=60) if tval else {}
+            m = evaluate_graph(H, [pairs], HOURS, [base])
+            return {"structure": structural_metrics(G, H), "certificate": c, "metrics": m,
+                    "build_seconds": round(float(H.graph.get("build_seconds", 0.0)), 3)}
+
+        methods: Dict[str, Dict] = {}
+        Hd = delay_bounded_greedy_spanner(G, t_focus, hours=HOURS, order="temporal_max",
+                                          show_progress=False)
+        methods["delay_bounded"] = cert_eval(Hd, t_focus)
+        budget = methods["delay_bounded"]["structure"]["edges"]
+
+        Hs = static_freeflow_spanner(G, t_focus, show_progress=False)
+        methods["static_ff"] = cert_eval(Hs, t_focus)
+
+        Hy = yao_cone_sparsifier(G, k=8)
+        methods["yao_cone"] = cert_eval(Hy, t_focus)
+
+        Hh = hierarchical_backbone(G)
+        methods["hierarchical"] = cert_eval(Hh, t_focus)
+
+        Hb = matched_density_betweenness(G, budget, args.seed)
+        methods["matched_btw"] = cert_eval(Hb, t_focus)
+
+        entry = {"city": spec["name"], "archetype": spec["archetype"],
+                 "used_real_osm": bool(G.graph.get("used_real_osm", False)),
+                 **morph, "methods": methods}
+        out.append(entry)
+        print(f"    keep(ours)={methods['delay_bounded']['structure']['edge_retention_pct']:.1f}% | "
+              f"stretch={methods['delay_bounded']['certificate']['attained_worst_edge_stretch']:.3f} | "
+              f"worstOD(ours)={methods['delay_bounded']['metrics']['worst_dilation']:.3f} | "
+              f"worstOD(matched-btw)={methods['matched_btw']['metrics']['worst_dilation']:.3f} | "
+              f"orient.entropy={morph['orientation_entropy']:.3f} | circuity={morph['circuity_mean']:.3f}")
+    return out
+
+
+def cross_city_regression(city_results: List[Dict]) -> Dict:
+    """Correlate street-morphology descriptors against method QUALITY, not
+    against the certified spanner's own attained stretch: for a construction
+    that certifies successfully, attained_worst_edge_stretch collapses to t
+    by definition (zero variance across cities), which is a degenerate
+    regression target. The informative, non-degenerate targets are (i) edge
+    retention and (ii) the empirical advantage over the matched-density
+    control, i.e. how much morphology modulates the method's payoff."""
+    if len(city_results) < 4 or not _HAVE_SCIPY:
+        return {"available": False,
+                "reason": "need >=4 cities and scipy for a Pearson correlation"}
+    ents = [c["orientation_entropy"] for c in city_results]
+    circ = [c["circuity_mean"] for c in city_results]
+    retain = [c["methods"]["delay_bounded"]["structure"]["edge_retention_pct"] for c in city_results]
+    ours_dil = [c["methods"]["delay_bounded"]["metrics"]["worst_dilation"] for c in city_results]
+    btw_dil = [c["methods"]["matched_btw"]["metrics"]["worst_dilation"] for c in city_results]
+    advantage = [b / max(1e-9, o) for o, b in zip(ours_dil, btw_dil)]
+
+    out: Dict = {"available": True, "n_cities": len(city_results)}
+    targets = (("edge_retention_pct", retain),
+              ("worst_od_dilation", ours_dil),
+              ("advantage_ratio_vs_matched_btw", advantage))
+    for xname, x in (("orientation_entropy", ents), ("circuity_mean", circ)):
+        for yname, y in targets:
+            try:
+                if np.std(y) < 1e-9:
+                    out[f"{xname}_vs_{yname}"] = {"r": float("nan"), "p": float("nan"),
+                                                  "note": "zero variance in y across cities"}
+                    continue
+                r, p = sps.pearsonr(x, y)
+                out[f"{xname}_vs_{yname}"] = {"r": float(r), "p": float(p)}
+            except Exception as exc:
+                out[f"{xname}_vs_{yname}"] = {"error": str(exc)}
+    return out
+
+
+def cross_city_significance(city_results: List[Dict]) -> Dict:
+    if not _HAVE_SCIPY or len(city_results) < 5:
+        return {"available": False,
+                "reason": f"n_cities={len(city_results)} < 5: Wilcoxon needs more cities for power; "
+                          "reported directionally in the table instead."}
+    a = np.array([c["methods"]["delay_bounded"]["metrics"]["worst_dilation"] for c in city_results])
+    b = np.array([c["methods"]["matched_btw"]["metrics"]["worst_dilation"] for c in city_results])
+    try:
+        stat, p = sps.wilcoxon(a, b, alternative="less", zero_method="zsplit")
+        return {"available": True, "test": "Wilcoxon signed-rank (one-sided), city-level",
+                "comparison": "delay_bounded < matched_density_betweenness",
+                "n_cities": len(city_results), "statistic": float(stat), "p_value": float(p),
+                "note": "Low power at this n; treat as directional evidence, not confirmatory."}
+    except Exception as exc:
+        return {"available": False, "error": f"{type(exc).__name__}: {exc}"}
+
+
+def sensitivity_analysis(G: nx.DiGraph, t_focus: float, pairs: Dict, seed: int,
+                         scales: Sequence[float] = (0.70, 0.85, 1.00, 1.15, 1.30)) -> List[Dict]:
+    rows: List[Dict] = []
+    for sc in scales:
+        Gp = perturb_congestion(G, sc)
+        basep = baseline_distances(Gp, pairs, HOURS)
+        H = delay_bounded_greedy_spanner(Gp, t_focus, hours=HOURS, show_progress=False)
+        cert = temporal_stretch_certificate(Gp, H, t_focus, HOURS, refine_cap=60)
+        met = evaluate_graph(H, [pairs], HOURS, [basep])
+        budget = structural_metrics(Gp, H)["edges"]
+        MB = matched_density_betweenness(Gp, budget, seed)
+        MB.graph["t"] = t_focus
+        metMB = evaluate_graph(MB, [pairs], HOURS, [basep])
+        rows.append({
+            "alpha_scale": sc,
+            "ours_edge_retention_pct": structural_metrics(Gp, H)["edge_retention_pct"],
+            "ours_certified": bool(cert["certified"]),
+            "ours_worst_dilation": met["worst_dilation"],
+            "matched_btw_worst_dilation": metMB["worst_dilation"],
+        })
+        print(f"  [sensitivity alpha x{sc:.2f}] ours worstOD={met['worst_dilation']:.3f} "
+              f"(certified={cert['certified']}) vs matched-btw={metMB['worst_dilation']:.3f}")
+    return rows
+
+
+def build_crosscity_table(city_results: List[Dict]) -> str:
+    head = ("| City | Archetype | Data | Nodes | Edges | Orient.entropy | Circuity | "
+            "Ours keep% | Certified | Ours worstOD | Matched-Btw worstOD | Advantage (x) | "
+            "Static-FF keep% | Yao-Cone keep% | Matched-Btw keep% | Hierarchical keep% |")
+    rows = [head, "|" + "---|" * 16]
+    for c in city_results:
+        mo = c["methods"]
+        ours_od = mo["delay_bounded"]["metrics"]["worst_dilation"]
+        btw_od = mo["matched_btw"]["metrics"]["worst_dilation"]
+        adv = btw_od / max(1e-9, ours_od)
+        rows.append(
+            f"| {c['city']} | {c['archetype']} | {'OSM' if c['used_real_osm'] else 'synthetic'} | "
+            f"{c['n_nodes']} | {c['n_edges']} | {c['orientation_entropy']:.3f} | "
+            f"{c['circuity_mean']:.3f} | {mo['delay_bounded']['structure']['edge_retention_pct']:.1f} | "
+            f"{'yes' if mo['delay_bounded']['certificate']['certified'] else 'no'} | "
+            f"{ours_od:.3f} | {btw_od:.3f} | {adv:.2f} | "
+            f"{mo['static_ff']['structure']['edge_retention_pct']:.1f} | "
+            f"{mo['yao_cone']['structure']['edge_retention_pct']:.1f} | "
+            f"{mo['matched_btw']['structure']['edge_retention_pct']:.1f} | "
+            f"{mo['hierarchical']['structure']['edge_retention_pct']:.1f} |"
+        )
+    return "\n".join(rows)
+
+
+def make_crosscity_figure(city_results: List[Dict], regression: Dict, sensitivity: List[Dict],
+                          t_focus: float, path: str) -> None:
+    sns.set_theme(style="whitegrid", context="talk",
+                  rc={"axes.edgecolor": "#2b2b2b", "grid.alpha": 0.30})
+    fig, axes = plt.subplots(2, 2, figsize=(16.5, 13.5))
+    axH, axI, axJ, axK = axes[0, 0], axes[0, 1], axes[1, 0], axes[1, 1]
+
+    rows = []
+    for c in city_results:
+        for m in ("delay_bounded", "static_ff", "yao_cone", "matched_btw", "hierarchical"):
+            if m in c["methods"]:
+                rows.append({"city": c["city"], "method": METHOD_STYLE[m][0],
+                            "retention": c["methods"][m]["structure"]["edge_retention_pct"]})
+    if rows:
+        dfH = pd.DataFrame(rows)
+        pal = {METHOD_STYLE[m][0]: METHOD_STYLE[m][1]
+              for m in ("delay_bounded", "static_ff", "yao_cone", "matched_btw", "hierarchical")}
+        sns.barplot(data=dfH, x="city", y="retention", hue="method", ax=axH, palette=pal)
+        axH.set_ylabel("Edges retained (%)"); axH.set_xlabel("")
+        axH.set_title(f"(h) Cross-city sparsification at $t={t_focus}$", loc="left")
+        axH.tick_params(axis="x", rotation=20)
+        axH.legend(fontsize=7.5, ncol=2, loc="lower right")
+
+    names = [c["city"] for c in city_results]
+    ents = [c["orientation_entropy"] for c in city_results]
+    ours_dil = [c["methods"]["delay_bounded"]["metrics"]["worst_dilation"] for c in city_results]
+    btw_dil = [c["methods"]["matched_btw"]["metrics"]["worst_dilation"] for c in city_results]
+    advantage = [b / max(1e-9, o) for o, b in zip(ours_dil, btw_dil)]
+    axI.scatter(ents, advantage, s=100, color="#c0392b", zorder=3)
+    for x, y, nm in zip(ents, advantage, names):
+        axI.annotate(nm, (x, y), fontsize=9, xytext=(5, 5), textcoords="offset points")
+    axI.axhline(1.0, color="#7f8c8d", linestyle=":", linewidth=1.4)
+    if len(ents) >= 2 and np.std(advantage) > 1e-9:
+        kk, bb = np.polyfit(ents, advantage, 1)
+        xs = np.linspace(min(ents), max(ents), 20)
+        axI.plot(xs, kk * xs + bb, color="#7f8c8d", linestyle="--")
+    reg = regression.get("orientation_entropy_vs_advantage_ratio_vs_matched_btw", {})
+    title = "(i) Orientation entropy vs. advantage over matched-density"
+    if "r" in reg and not (isinstance(reg.get("r"), float) and math.isnan(reg.get("r", float("nan")))):
+        title += f"  (r={reg['r']:.2f}, p={reg['p']:.2f})"
+    axI.set_title(title, loc="left")
+    axI.set_xlabel("Orientation entropy (0=grid, 1=organic)")
+    axI.set_ylabel("Worst-OD-dilation ratio: matched-btw / ours  (>1 = we win)")
+
+    circ = [c["circuity_mean"] for c in city_results]
+    retain = [c["methods"]["delay_bounded"]["structure"]["edge_retention_pct"] for c in city_results]
+    axJ.scatter(circ, retain, s=100, color="#2980b9", zorder=3)
+    for x, y, nm in zip(circ, retain, names):
+        axJ.annotate(nm, (x, y), fontsize=9, xytext=(5, 5), textcoords="offset points")
+    if len(circ) >= 2:
+        kk, bb = np.polyfit(circ, retain, 1)
+        xs = np.linspace(min(circ), max(circ), 20)
+        axJ.plot(xs, kk * xs + bb, color="#7f8c8d", linestyle="--")
+    reg2 = regression.get("circuity_mean_vs_edge_retention_pct", {})
+    title2 = "(j) Mean circuity vs. sparsification"
+    if "r" in reg2:
+        title2 += f"  (r={reg2['r']:.2f}, p={reg2['p']:.2f})"
+    axJ.set_title(title2, loc="left")
+    axJ.set_xlabel("Mean edge circuity"); axJ.set_ylabel("Edges retained (%) (ours)")
+
+    if sensitivity:
+        sdf = pd.DataFrame(sensitivity)
+        axK.plot(sdf["alpha_scale"], sdf["ours_worst_dilation"], marker="o", color="#c0392b",
+                 linewidth=2.4, label="Delay-Bounded (ours)")
+        axK.plot(sdf["alpha_scale"], sdf["matched_btw_worst_dilation"], marker="X", color="#d35400",
+                 linewidth=2.0, label="Matched-Density Betweenness")
+        axK.axhline(t_focus, color="#111111", linestyle=(0, (4, 3)), linewidth=1.8,
+                    label=f"Certified bound $t={t_focus}$")
+        axK.set_xlabel(r"Congestion-severity scale ($\alpha \times$)")
+        axK.set_ylabel("Worst OD dilation")
+        axK.set_title("(k) Robustness to congestion-model misspecification", loc="left")
+        axK.legend(fontsize=9)
+
+    fig.suptitle("Cross-City Generalization and Robustness of the Delay-Bounded Spanner",
+                 fontsize=18, y=1.01)
+    fig.tight_layout()
+    fig.savefig(path, dpi=190, bbox_inches="tight", facecolor="white")
+    plt.close(fig)
+    print(f"[figure] wrote {path}")
+
+
+# ==============================================================================
+# SECTION 12 - REPORTING (focus city)
+# ==============================================================================
+
+def _fmt(x, nd: int = 3) -> str:
     if x is None or (isinstance(x, float) and (math.isnan(x) or math.isinf(x))):
         return "—"
     return f"{x:.{nd}f}"
@@ -1477,14 +1822,12 @@ def build_table(results: Dict, t_values: Sequence[float]) -> str:
     head = ("| Method | t | Edges kept (%) | Length kept (%) | Attained worst "
             "edge stretch | Certified (24 h) | Worst OD dilation | Mean OD dilation "
             "[95% CI] | Reach (%) | Build (s) | Probes/edge |")
-    sep = "|" + "---|" * 11
-    rows = [head, sep]
-
+    rows = [head, "|" + "---|" * 11]
     order: List[Tuple[str, Optional[float]]] = []
     for t in sorted(t_values):
         for m in ("delay_bounded", "static_ff", "mean_temporal"):
             order.append((m, t))
-    for m in ("static_len", "matched_random", "matched_btw"):
+    for m in ("static_len", "yao_cone", "matched_random", "matched_btw"):
         order.extend([k for k in results if k[0] == m])
     order.append(("hierarchical", None))
     order.append(("full", None))
@@ -1499,14 +1842,12 @@ def build_table(results: Dict, t_values: Sequence[float]) -> str:
         name = METHOD_STYLE[key[0]][0]
         tstr = f"{key[1]:.2f}" if key[1] is not None else "—"
         stretch = c.get("attained_worst_edge_stretch")
-        cert = "—" if not c else ("**yes**" if c.get("certified") else
-                                  f"no ({c.get('violating_edges')} edges)")
+        cert = "—" if not c else ("**yes**" if c.get("certified") else f"no ({c.get('violating_edges')} edges)")
         ci = m.get("mean_dilation_ci", [np.nan, np.nan])
         ppe = e["dijkstra_probes"] / max(1, s["edges_parent"])
         rows.append(
-            f"| {name} | {tstr} | {s['edge_retention_pct']:.1f} | "
-            f"{s['length_retention_pct']:.1f} | {_fmt(stretch)} | {cert} | "
-            f"{_fmt(m['worst_dilation'])} | {_fmt(m['mean_dilation'])} "
+            f"| {name} | {tstr} | {s['edge_retention_pct']:.1f} | {s['length_retention_pct']:.1f} | "
+            f"{_fmt(stretch)} | {cert} | {_fmt(m['worst_dilation'])} | {_fmt(m['mean_dilation'])} "
             f"[{_fmt(ci[0])}, {_fmt(ci[1])}] | {100*m['reachability']:.1f} | "
             f"{e['build_seconds']:.2f} | {ppe:.2f} |"
         )
@@ -1514,13 +1855,12 @@ def build_table(results: Dict, t_values: Sequence[float]) -> str:
 
 
 def build_ablation_table(ablation: List[Dict]) -> str:
-    rows = ["| Edge ordering | Edges kept (%) | Length kept (%) | Certified | "
-            "Probes/edge | Build (s) |", "|---|---|---|---|---|---|"]
+    rows = ["| Edge ordering | Edges kept (%) | Length kept (%) | Certified | Probes/edge | Build (s) |",
+            "|---|---|---|---|---|---|"]
     for a in ablation:
-        rows.append(f"| `{a['order']}` | {a['edge_retention_pct']:.1f} | "
-                    f"{a['length_retention_pct']:.1f} | "
-                    f"{'yes' if a['certified'] else 'no'} | "
-                    f"{a['probes_per_edge']:.2f} | {a['build_seconds']:.2f} |")
+        rows.append(f"| `{a['order']}` | {a['edge_retention_pct']:.1f} | {a['length_retention_pct']:.1f} | "
+                    f"{'yes' if a['certified'] else 'no'} | {a['probes_per_edge']:.2f} | "
+                    f"{a['build_seconds']:.2f} |")
     return "\n".join(rows)
 
 
@@ -1537,7 +1877,7 @@ def _json_default(o):
 
 
 # ==============================================================================
-# SECTION 12 - MAIN PIPELINE
+# SECTION 13 - MAIN PIPELINE
 # ==============================================================================
 
 def main() -> None:
@@ -1546,18 +1886,24 @@ def main() -> None:
     ap.add_argument("--lat", type=float, default=CENTER_POINT[0])
     ap.add_argument("--lon", type=float, default=CENTER_POINT[1])
     ap.add_argument("--dist", type=int, default=DEFAULT_DIST)
-    ap.add_argument("--synthetic", action="store_true", help="skip Overpass entirely")
+    ap.add_argument("--grid-n", type=int, default=19)
+    ap.add_argument("--synthetic", action="store_true", help="skip Overpass entirely (all cities)")
     ap.add_argument("--no-contract", action="store_true", help="disable junction contraction")
     ap.add_argument("--quick", action="store_true", help="reduced smoke-test footprint")
     ap.add_argument("--order", type=str, default="temporal_max",
                     choices=["temporal_max", "temporal_mean", "centrality"])
     ap.add_argument("--repeats", type=int, default=N_REPEATS)
     ap.add_argument("--seed", type=int, default=SEED)
+    ap.add_argument("--skip-crosscity", action="store_true")
+    ap.add_argument("--city-grid-n", type=int, default=15)
+    ap.add_argument("--city-sources", type=int, default=7)
+    ap.add_argument("--city-targets", type=int, default=7)
     args = ap.parse_args()
 
     os.makedirs(RESULTS_DIR, exist_ok=True)
 
     dist = 800 if args.quick else args.dist
+    grid_n = 13 if args.quick else args.grid_n
     n_src = 6 if args.quick else N_SOURCES
     n_tgt = 6 if args.quick else N_TARGETS_PER_SOURCE
     repeats = 1 if args.quick else max(1, args.repeats)
@@ -1567,12 +1913,12 @@ def main() -> None:
 
     banner = "=" * 90
     print(banner)
-    print("  Delay-Bounded Time-Varying Geometric t-Spanner — experimental protocol")
+    print("  Delay-Bounded Time-Varying Geometric t-Spanner — focus-city protocol")
     print(banner)
 
-    # ---------------- network -------------------------------------------------
-    G = build_network((args.lat, args.lon), dist,
-                      force_synthetic=args.synthetic, contract=not args.no_contract)
+    # ---------------- focus-city network ---------------------------------
+    G = build_network((args.lat, args.lon), dist, force_synthetic=args.synthetic,
+                      contract=not args.no_contract, grid_n=grid_n)
     summary = network_summary(G)
     summary["temporal_heterogeneity_index"] = round(temporal_heterogeneity_index(G), 5)
     summary["fifo_violation_rate"] = round(fifo_violation_rate(G), 6)
@@ -1580,7 +1926,6 @@ def main() -> None:
     if summary["temporal_heterogeneity_index"] < 1e-6:
         print("[warn] temporal field is homothetic; static and temporal spanners coincide.")
 
-    # ---------------- OD samples ---------------------------------------------
     pair_sets, bases = [], []
     for r in range(repeats):
         p = sample_pairs(G, n_src, n_tgt, args.seed + 1000 * r)
@@ -1592,172 +1937,118 @@ def main() -> None:
 
     results: Dict[Tuple[str, Optional[float]], Dict] = {}
 
-    def record(key, H, cert_t: Optional[float], collect_at: Optional[int] = None):
+    def record(key, H, cert_t, collect_at=None):
         cert = temporal_stretch_certificate(G, H, cert_t, hours) if cert_t else {}
         met = evaluate_graph(H, pair_sets, hours, bases, collect_pairs_at=collect_at)
-        results[key] = {
-            "metrics": met,
-            "structure": structural_metrics(G, H),
-            "certificate": cert,
-            "build_seconds": round(float(H.graph.get("build_seconds", 0.0)), 3),
-            "dijkstra_probes": int(H.graph.get("dijkstra_probes", 0)),
-        }
+        results[key] = {"metrics": met, "structure": structural_metrics(G, H), "certificate": cert,
+                        "build_seconds": round(float(H.graph.get("build_seconds", 0.0)), 3),
+                        "dijkstra_probes": int(H.graph.get("dijkstra_probes", 0))}
         s = results[key]["structure"]
         print(f"  [{key[0]:<15} t={('%.2f' % key[1]) if key[1] else '  — '}] "
-              f"keep={s['edge_retention_pct']:5.1f}% | "
-              f"worstOD={met['worst_dilation']:.3f} | "
-              f"reach={100*met['reachability']:5.1f}% | "
-              f"cert={cert.get('certified') if cert else '—'} | "
+              f"keep={s['edge_retention_pct']:5.1f}% | worstOD={met['worst_dilation']:.3f} | "
+              f"reach={100*met['reachability']:5.1f}% | cert={cert.get('certified') if cert else '—'} | "
               f"stretch={_fmt(cert.get('attained_worst_edge_stretch')) if cert else '—'} | "
               f"{results[key]['build_seconds']:.2f}s")
-        return met
 
-    # ---------------- sweep ---------------------------------------------------
     print("\n[sweep] constructing spanners over the dilation grid ...")
     for t in t_values:
-        H = delay_bounded_greedy_spanner(G, t, hours=hours, order=args.order)
-        record(("delay_bounded", t), H, t)
+        record(("delay_bounded", t), delay_bounded_greedy_spanner(G, t, hours=hours, order=args.order), t)
+        record(("static_ff", t), static_freeflow_spanner(G, t), t)
+        record(("mean_temporal", t), mean_temporal_spanner(G, t), t)
 
-        S = static_freeflow_spanner(G, t)
-        record(("static_ff", t), S, t)
+    record(("static_len", t_focus), static_geometric_spanner(G, t_focus), t_focus)
+    record(("yao_cone", t_focus), yao_cone_sparsifier(G, k=8), t_focus)
+    record(("hierarchical", None), hierarchical_backbone(G), t_focus)
+    record(("full", None), full_network(G), None)
 
-        M = mean_temporal_spanner(G, t)
-        record(("mean_temporal", t), M, t)
-
-    L = static_geometric_spanner(G, t_focus)
-    record(("static_len", t_focus), L, t_focus)
-
-    # ---------------- t-independent baselines ---------------------------------
-    Hh = hierarchical_backbone(G)
-    record(("hierarchical", None), Hh, t_focus)
-
-    Hf = full_network(G)
-    record(("full", None), Hf, None)
-
-    # ---------------- matched-density controls --------------------------------
     budget = results[("delay_bounded", t_focus)]["structure"]["edges"]
-    Hr = matched_density_random(G, budget, args.seed)
-    record(("matched_random", t_focus), Hr, t_focus)
-    Hb = matched_density_betweenness(G, budget, args.seed)
-    record(("matched_btw", t_focus), Hb, t_focus)
+    record(("matched_random", t_focus), matched_density_random(G, budget, args.seed), t_focus)
+    record(("matched_btw", t_focus), matched_density_betweenness(G, budget, args.seed), t_focus)
 
-    # ---------------- per-pair distribution at the worst hour -----------------
     worst_hour = int(results[("delay_bounded", t_focus)]["metrics"]["worst_hour"])
     print(f"\n[eval] peak-hour analysis at tau = {worst_hour}")
     pair_frames: Dict[str, pd.DataFrame] = {}
     per_pair_lookup: Dict[str, Dict[Tuple[str, str], float]] = {}
-    for method, key in (("delay_bounded", ("delay_bounded", t_focus)),
-                        ("static_ff", ("static_ff", t_focus)),
-                        ("matched_btw", ("matched_btw", t_focus)),
-                        ("hierarchical", ("hierarchical", None))):
-        if key not in results:
-            continue
-        graph = {"delay_bounded": None}.get(method)
-        H = {"delay_bounded": None}  # placeholder, rebuilt below
-        # recompute the collected pairs for this method
-        src_graph = {
-            ("delay_bounded", t_focus): None,
-        }
-        # rebuild the corresponding graph object
-        if key[0] == "delay_bounded":
-            Hx = delay_bounded_greedy_spanner(G, t_focus, hours=hours,
-                                              order=args.order, show_progress=False)
-        elif key[0] == "static_ff":
-            Hx = static_freeflow_spanner(G, t_focus, show_progress=False)
-        elif key[0] == "matched_btw":
-            Hx = matched_density_betweenness(G, budget, args.seed)
-        else:
-            Hx = hierarchical_backbone(G)
+    for mkey, builder in (
+        ("delay_bounded", lambda: delay_bounded_greedy_spanner(G, t_focus, hours=hours,
+                                                               order=args.order, show_progress=False)),
+        ("static_ff", lambda: static_freeflow_spanner(G, t_focus, show_progress=False)),
+        ("matched_btw", lambda: matched_density_betweenness(G, budget, args.seed)),
+        ("hierarchical", lambda: hierarchical_backbone(G)),
+    ):
+        Hx = builder()
         Hx.graph["t"] = t_focus
-        met = evaluate_graph(Hx, pair_sets[:1], hours, bases[:1],
-                             collect_pairs_at=worst_hour)
+        met = evaluate_graph(Hx, pair_sets[:1], hours, bases[:1], collect_pairs_at=worst_hour)
         recs = met["collected_pairs"]
         if not recs:
             continue
-        label = METHOD_STYLE[key[0]][0]
-        pair_frames[key[0]] = pd.DataFrame(
+        label = METHOD_STYLE[mkey][0]
+        pair_frames[mkey] = pd.DataFrame(
             [{"source": a, "target": b, "dilation": r, "method": label} for a, b, r in recs])
-        per_pair_lookup[key[0]] = {(a, b): r for a, b, r in recs}
+        per_pair_lookup[mkey] = {(a, b): r for a, b, r in recs}
 
     if pair_frames:
         pd.concat(list(pair_frames.values()), ignore_index=True).to_csv(PERPAIR_PATH, index=False)
         print(f"[report] wrote {PERPAIR_PATH}")
 
-    # ---------------- inferential test ----------------------------------------
     test_out: Dict = {"available": False}
     if _HAVE_SCIPY and "delay_bounded" in per_pair_lookup and "matched_btw" in per_pair_lookup:
         a_map, b_map = per_pair_lookup["delay_bounded"], per_pair_lookup["matched_btw"]
         common = sorted(set(a_map) & set(b_map))
         if len(common) >= 10:
-            a = np.array([a_map[k] for k in common])
-            b = np.array([b_map[k] for k in common])
+            a = np.array([a_map[k] for k in common]); b = np.array([b_map[k] for k in common])
             try:
                 stat, p = sps.wilcoxon(a, b, alternative="less", zero_method="zsplit")
                 diff = b - a
                 eff = float(np.mean(diff) / (np.std(diff) + 1e-12))
-                test_out = {"available": True, "test": "Wilcoxon signed-rank (one-sided)",
+                test_out = {"available": True, "test": "Wilcoxon signed-rank (one-sided), pair-level",
                             "comparison": "delay_bounded < matched_density_betweenness",
-                            "n_pairs": int(len(common)), "statistic": float(stat),
-                            "p_value": float(p), "mean_delta": float(np.mean(diff)),
-                            "effect_size_dz": eff, "hour": worst_hour}
-                print(f"[stats] Wilcoxon (ours < matched-betweenness) at tau={worst_hour}: "
+                            "n_pairs": int(len(common)), "statistic": float(stat), "p_value": float(p),
+                            "mean_delta": float(np.mean(diff)), "effect_size_dz": eff, "hour": worst_hour}
+                print(f"[stats] Wilcoxon (ours < matched-betweenness) tau={worst_hour}: "
                       f"n={len(common)}, p={p:.3e}, dz={eff:.3f}")
             except Exception as exc:
                 test_out = {"available": False, "error": f"{type(exc).__name__}: {exc}"}
 
-    # ---------------- time-dependent (FIFO) validation ------------------------
     print("[validation] FIFO time-dependent check (Proposition 2) ...")
-    Hfoc = delay_bounded_greedy_spanner(G, t_focus, hours=hours,
-                                        order=args.order, show_progress=False)
+    Hfoc = delay_bounded_greedy_spanner(G, t_focus, hours=hours, order=args.order, show_progress=False)
     small_pairs = {s: v[:4] for s, v in list(pair_sets[0].items())[:6]}
     departures = [7.5, 8.5, 12.0, 17.0, 18.0] if not args.quick else [8.0, 17.5]
     td_ours = time_dependent_validation(G, Hfoc, small_pairs, departures)
-    td_static = time_dependent_validation(G, static_freeflow_spanner(G, t_focus, False),
-                                          small_pairs, departures)
+    td_static = time_dependent_validation(G, static_freeflow_spanner(G, t_focus, False), small_pairs, departures)
     print(f"[validation] TD worst dilation — ours: {td_ours['worst_td_dilation']:.3f} "
           f"(bound {t_focus}) | static free-flow: {td_static['worst_td_dilation']:.3f}")
 
-    # ---------------- ordering ablation ---------------------------------------
     print("[ablation] edge-ordering heuristics ...")
     ablation: List[Dict] = []
     for mode in ("temporal_max", "temporal_mean", "centrality"):
-        Ha = delay_bounded_greedy_spanner(G, t_focus, hours=hours, order=mode,
-                                          show_progress=False)
+        Ha = delay_bounded_greedy_spanner(G, t_focus, hours=hours, order=mode, show_progress=False)
         ca = temporal_stretch_certificate(G, Ha, t_focus, hours, refine_cap=0)
         sa = structural_metrics(G, Ha)
-        ablation.append({
-            "order": mode,
-            "edge_retention_pct": sa["edge_retention_pct"],
-            "length_retention_pct": sa["length_retention_pct"],
-            "certified": bool(ca["certified"]),
-            "probes_per_edge": Ha.graph["dijkstra_probes"] / max(1, G.number_of_edges()),
-            "build_seconds": round(Ha.graph["build_seconds"], 3),
-        })
-        print(f"  [{mode:<14}] keep={sa['edge_retention_pct']:5.1f}% | "
-              f"certified={ca['certified']} | {Ha.graph['build_seconds']:.2f}s")
+        ablation.append({"order": mode, "edge_retention_pct": sa["edge_retention_pct"],
+                         "length_retention_pct": sa["length_retention_pct"],
+                         "certified": bool(ca["certified"]),
+                         "probes_per_edge": Ha.graph["dijkstra_probes"] / max(1, G.number_of_edges()),
+                         "build_seconds": round(Ha.graph["build_seconds"], 3)})
+        print(f"  [{mode:<14}] keep={sa['edge_retention_pct']:5.1f}% | certified={ca['certified']} | "
+              f"{Ha.graph['build_seconds']:.2f}s")
 
-    # ---------------- runtime / probe scaling ---------------------------------
     print("[scaling] empirical construction-cost scaling ...")
     scaling: List[Dict] = []
-    fracs = [0.45, 0.7, 1.0] if args.quick else [0.35, 0.5, 0.65, 0.8, 1.0]
+    fracs = [0.45, 0.7, 1.0] if args.quick else [0.4, 0.6, 0.8, 1.0]
     for f in fracs:
         S = subgraph_by_radius(G, f) if f < 1.0 else G
         if S.number_of_edges() < 30:
             continue
-        Hs = delay_bounded_greedy_spanner(S, t_focus, hours=hours,
-                                          order="temporal_max", show_progress=False)
-        scaling.append({
-            "fraction": f, "nodes": S.number_of_nodes(), "edges": S.number_of_edges(),
-            "seconds": round(Hs.graph["build_seconds"], 4),
-            "probes": int(Hs.graph["dijkstra_probes"]),
-            "probes_per_edge": Hs.graph["dijkstra_probes"] / max(1, S.number_of_edges()),
-            "edge_retention_pct": structural_metrics(S, Hs)["edge_retention_pct"],
-        })
+        Hs = delay_bounded_greedy_spanner(S, t_focus, hours=hours, order="temporal_max", show_progress=False)
+        scaling.append({"fraction": f, "nodes": S.number_of_nodes(), "edges": S.number_of_edges(),
+                        "seconds": round(Hs.graph["build_seconds"], 4),
+                        "probes": int(Hs.graph["dijkstra_probes"]),
+                        "probes_per_edge": Hs.graph["dijkstra_probes"] / max(1, S.number_of_edges()),
+                        "edge_retention_pct": structural_metrics(S, Hs)["edge_retention_pct"]})
         print(f"  |E|={S.number_of_edges():5d} -> {scaling[-1]['seconds']:.3f}s, "
-              f"{scaling[-1]['probes_per_edge']:.2f} probes/edge, "
-              f"keep {scaling[-1]['edge_retention_pct']:.1f}%")
+              f"{scaling[-1]['probes_per_edge']:.2f} probes/edge, keep {scaling[-1]['edge_retention_pct']:.1f}%")
 
-    # ---------------- figure and tables ---------------------------------------
     make_figure(G, results, Hfoc, hours, t_focus, t_values, scaling, pair_frames, FIGURE_PATH)
 
     table = build_table(results, t_values)
@@ -1770,15 +2061,53 @@ def main() -> None:
         fh.write(abl_table + "\n")
     print(f"[report] wrote {ABLATION_PATH}")
 
+    # ---------------- cross-city generalization study -----------------------
+    city_results: List[Dict] = []
+    regression: Dict = {"available": False}
+    city_sig: Dict = {"available": False}
+    sensitivity: List[Dict] = []
+    crosscity_table = ""
+    if not args.skip_crosscity:
+        print("\n" + banner)
+        print("  Cross-city generalization study")
+        print(banner)
+        city_results = run_cross_city_study(args, t_focus)
+        regression = cross_city_regression(city_results)
+        city_sig = cross_city_significance(city_results)
+        print("\n[sensitivity] robustness to congestion-model misspecification "
+              "(focus city, alpha rescaled -30%..+30%)")
+        sensitivity = sensitivity_analysis(G, t_focus, pair_sets[0], args.seed)
+        make_crosscity_figure(city_results, regression, sensitivity, t_focus, CROSSCITY_FIGURE_PATH)
+        crosscity_table = build_crosscity_table(city_results)
+        with open(CROSSCITY_TABLE_PATH, "w", encoding="utf-8") as fh:
+            fh.write(crosscity_table + "\n")
+        print(f"[report] wrote {CROSSCITY_TABLE_PATH}")
+        if regression.get("available"):
+            for k, v in regression.items():
+                if isinstance(v, dict) and "r" in v:
+                    print(f"[regression] {k}: r={v['r']:.3f}, p={v['p']:.3f}")
+        if city_sig.get("available"):
+            print(f"[stats] city-level Wilcoxon: n={city_sig['n_cities']}, p={city_sig['p_value']:.3e}")
+        else:
+            print(f"[stats] city-level Wilcoxon skipped: {city_sig.get('reason')}")
+
     clean_results = {}
     for (m, t), v in results.items():
         vv = dict(v)
         vv["metrics"] = {k: val for k, val in v["metrics"].items() if k != "collected_pairs"}
         clean_results[f"{m}|{'' if t is None else t}"] = vv
 
+    clean_city_results = []
+    for c in city_results:
+        cc = dict(c)
+        cc["methods"] = {m: {kk: (vv if kk != "metrics" else
+                                  {k2: v2 for k2, v2 in vv.items() if k2 != "collected_pairs"})
+                             for kk, vv in md.items()} for m, md in c["methods"].items()}
+        clean_city_results.append(cc)
+
     report = {
         "framework": "Delay-Bounded Time-Varying Geometric t-Spanner",
-        "version": "2.0.0",
+        "version": "2.1.0",
         "generated_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "formulation": ("for all u,v in V, for all tau in {0..23}: "
                         "dist_H(u,v,tau) <= t * dist_G(u,v,tau)"),
@@ -1786,32 +2115,49 @@ def main() -> None:
                                   "dist_H(u,v,tau) <= t*w((u,v),tau) implies the "
                                   "all-pairs, all-hours guarantee."),
         "configuration": {
-            "center": [args.lat, args.lon], "dist_m": dist, "hours": hours,
+            "center": [args.lat, args.lon], "dist_m": dist, "grid_n": grid_n, "hours": hours,
             "t_values": t_values, "t_focus": t_focus, "edge_order": args.order,
-            "seed": args.seed, "repeats": repeats, "sources": n_src,
-            "targets_per_source": n_tgt, "junction_contraction": not args.no_contract,
-            "bootstrap_samples": BOOTSTRAP_N, "quick": bool(args.quick),
+            "seed": args.seed, "repeats": repeats, "sources": n_src, "targets_per_source": n_tgt,
+            "junction_contraction": not args.no_contract, "bootstrap_samples": BOOTSTRAP_N,
+            "quick": bool(args.quick), "crosscity_skipped": bool(args.skip_crosscity),
         },
         "network": summary,
         "peak_hour": worst_hour,
         "results": clean_results,
         "matched_density_budget_edges": int(budget),
-        "significance_test": test_out,
+        "significance_test_pair_level": test_out,
         "time_dependent_validation": {
             "delay_bounded": td_ours, "static_freeflow": td_static,
-            "note": ("FIFO piecewise-linear interpolation of the hourly profiles; "
-                     "a TD dilation at or below t empirically confirms Proposition 2."),
+            "note": ("FIFO piecewise-linear interpolation of the hourly profiles; a TD "
+                     "dilation at or below t empirically confirms Proposition 2."),
         },
         "ordering_ablation": ablation,
         "scaling_study": scaling,
+        "cross_city": {
+            "cities": clean_city_results,
+            "morphology_regression": regression,
+            "city_level_significance": city_sig,
+            "yao_cone_definition": ("Network-constrained adaptation of the classical Yao graph "
+                                    "(k=8 angular cones per node, cheapest free-flow edge per cone); "
+                                    "NOT the unconstrained-point-set construction with the closed-form "
+                                    "stretch bound 1/(1-2 sin(pi/k))."),
+        },
+        "congestion_sensitivity": sensitivity,
         "known_limitations": [
             "Snapshot (time-slice) model: no departure-time evolution within a single "
             "traversal; validated ex post by the FIFO time-dependent experiment.",
-            "Speed profiles are an analytic tidal model, not probe/loop-detector data; "
-            "replacing edge_congestion_curve() requires no algorithmic change.",
-            "Greedy construction gives no approximation guarantee on |H|; the reported "
-            "matched-density controls act as the empirical lower-bound proxy.",
-            "Single metropolitan area; external validity requires a multi-city replication.",
+            "The diurnal congestion field is a PARAMETRIC model (tidal Gaussian mixture, "
+            "CBD-weighted), not fitted to floating-car or loop-detector telemetry; "
+            "Section congestion_sensitivity quantifies robustness to this choice but does "
+            "not substitute for a telemetry-fitted replication.",
+            "Cities whose live OSMnx/Overpass fetch is unavailable (e.g. an offline sandbox) "
+            "fall back to a deterministic, morphology-parameterized synthetic generator; each "
+            "city's `used_real_osm` flag in `cross_city.cities` states which was used for that run.",
+            "n=6 cities supports a directional cross-morphology generalization claim (see "
+            "morphology_regression and city_level_significance), not a definitive one; a "
+            "larger, multi-country, telemetry-fitted replication remains future work.",
+            "Greedy construction gives no approximation guarantee on |H|; the matched-density "
+            "and Yao-cone controls are the empirical (not theoretical) lower-bound proxies used here.",
         ],
     }
     with open(REPORT_PATH, "w", encoding="utf-8") as fh:
@@ -1820,6 +2166,8 @@ def main() -> None:
 
     print("\n" + table + "\n")
     print(abl_table + "\n")
+    if crosscity_table:
+        print(crosscity_table + "\n")
     print("Done.")
 
 
