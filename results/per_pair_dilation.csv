@@ -1,481 +1,481 @@
 source,target,dilation,method
-5971869785,5964136944,1.0,Delay-Bounded Spanner (ours)
-5971869785,2997342470,1.0,Delay-Bounded Spanner (ours)
-5971869785,5968212764,1.0,Delay-Bounded Spanner (ours)
-5971869785,5058043923,1.0,Delay-Bounded Spanner (ours)
-5971869785,1319139934,1.0,Delay-Bounded Spanner (ours)
-5971869785,13181157932,1.0,Delay-Bounded Spanner (ours)
-5971869785,3275071580,1.0,Delay-Bounded Spanner (ours)
-5971869785,3866933699,1.0,Delay-Bounded Spanner (ours)
-5971869785,3866935982,1.0,Delay-Bounded Spanner (ours)
-5971869785,5167747909,1.0,Delay-Bounded Spanner (ours)
-3686514157,5968379566,1.0,Delay-Bounded Spanner (ours)
-3686514157,12050489668,1.0,Delay-Bounded Spanner (ours)
-3686514157,5966003308,1.0,Delay-Bounded Spanner (ours)
-3686514157,3842949368,1.0,Delay-Bounded Spanner (ours)
-3686514157,7451193131,1.0,Delay-Bounded Spanner (ours)
-3686514157,5982460282,1.0,Delay-Bounded Spanner (ours)
-3686514157,729757918,1.0,Delay-Bounded Spanner (ours)
-3686514157,5964136944,1.0,Delay-Bounded Spanner (ours)
-3686514157,5058043908,1.0,Delay-Bounded Spanner (ours)
-3686514157,3866935274,1.0,Delay-Bounded Spanner (ours)
-11649780056,5058207605,1.0,Delay-Bounded Spanner (ours)
-11649780056,5968184371,1.007332260226797,Delay-Bounded Spanner (ours)
-11649780056,4064823317,1.0114960419346892,Delay-Bounded Spanner (ours)
-11649780056,11228720453,1.0,Delay-Bounded Spanner (ours)
-11649780056,3700753721,1.007569733915559,Delay-Bounded Spanner (ours)
-11649780056,7106087708,1.0,Delay-Bounded Spanner (ours)
-11649780056,5058043930,1.0,Delay-Bounded Spanner (ours)
-11649780056,5057793417,1.0,Delay-Bounded Spanner (ours)
-11649780056,4064823316,1.0120588277165725,Delay-Bounded Spanner (ours)
-11649780056,3700753698,1.0079479124925008,Delay-Bounded Spanner (ours)
-7456876622,3859766094,1.0,Delay-Bounded Spanner (ours)
-7456876622,5057793379,1.0,Delay-Bounded Spanner (ours)
-7456876622,3686504887,1.0,Delay-Bounded Spanner (ours)
-7456876622,3275071574,1.0,Delay-Bounded Spanner (ours)
-7456876622,5057936854,1.0,Delay-Bounded Spanner (ours)
-7456876622,3296662733,1.0,Delay-Bounded Spanner (ours)
-7456876622,5057935947,1.0,Delay-Bounded Spanner (ours)
-7456876622,5057793579,1.0,Delay-Bounded Spanner (ours)
-7456876622,5968379572,1.0000298053471859,Delay-Bounded Spanner (ours)
-7456876622,4043078129,1.0,Delay-Bounded Spanner (ours)
-4064823279,1319148779,1.0,Delay-Bounded Spanner (ours)
-4064823279,7451854698,1.0,Delay-Bounded Spanner (ours)
-4064823279,5058207769,1.0,Delay-Bounded Spanner (ours)
-4064823279,5747062218,1.0,Delay-Bounded Spanner (ours)
-4064823279,3688721250,1.0,Delay-Bounded Spanner (ours)
-4064823279,5057936848,1.0,Delay-Bounded Spanner (ours)
-4064823279,2472417891,1.0,Delay-Bounded Spanner (ours)
-4064823279,5965868887,1.0,Delay-Bounded Spanner (ours)
-4064823279,4080896069,1.0,Delay-Bounded Spanner (ours)
-4064823279,5971712871,1.0,Delay-Bounded Spanner (ours)
-3888464942,5968568131,1.0,Delay-Bounded Spanner (ours)
-3888464942,5057935995,1.0,Delay-Bounded Spanner (ours)
-3888464942,5966393701,1.0,Delay-Bounded Spanner (ours)
-3888464942,3840730919,1.0,Delay-Bounded Spanner (ours)
-3888464942,7447864318,1.0,Delay-Bounded Spanner (ours)
-3888464942,2171888933,1.0,Delay-Bounded Spanner (ours)
-3888464942,1319460609,1.0,Delay-Bounded Spanner (ours)
-3888464942,6050457306,1.0,Delay-Bounded Spanner (ours)
-3888464942,3866935600,1.0,Delay-Bounded Spanner (ours)
-3888464942,4076359212,1.0,Delay-Bounded Spanner (ours)
-3866935503,2472417902,1.0,Delay-Bounded Spanner (ours)
-3866935503,3879369957,1.0,Delay-Bounded Spanner (ours)
-3866935503,3686504879,1.0,Delay-Bounded Spanner (ours)
-3866935503,5057936856,1.0,Delay-Bounded Spanner (ours)
-3866935503,4064823316,1.0,Delay-Bounded Spanner (ours)
-3866935503,5058207728,1.0,Delay-Bounded Spanner (ours)
-3866935503,5971822160,1.0,Delay-Bounded Spanner (ours)
-3866935503,5057936188,1.0,Delay-Bounded Spanner (ours)
-3866935503,3700753737,1.0,Delay-Bounded Spanner (ours)
-3866935503,5057936789,1.0,Delay-Bounded Spanner (ours)
-3691467294,5057935925,1.0,Delay-Bounded Spanner (ours)
-3691467294,3859766054,1.0,Delay-Bounded Spanner (ours)
-3691467294,6787262365,1.0,Delay-Bounded Spanner (ours)
-3691467294,4043078151,1.0,Delay-Bounded Spanner (ours)
-3691467294,729757927,1.0,Delay-Bounded Spanner (ours)
-3691467294,6853090144,1.0,Delay-Bounded Spanner (ours)
-3691467294,5981175002,1.0,Delay-Bounded Spanner (ours)
-3691467294,2171888966,1.0,Delay-Bounded Spanner (ours)
-3691467294,5968464428,1.0,Delay-Bounded Spanner (ours)
-3691467294,5971822157,1.0,Delay-Bounded Spanner (ours)
-7456853153,3734102723,1.0,Delay-Bounded Spanner (ours)
-7456853153,5684854574,1.0,Delay-Bounded Spanner (ours)
-7456853153,7451841777,1.0084197171902638,Delay-Bounded Spanner (ours)
-7456853153,3888464941,1.0,Delay-Bounded Spanner (ours)
-7456853153,3700753742,1.0077645611425763,Delay-Bounded Spanner (ours)
-7456853153,5058207805,1.0,Delay-Bounded Spanner (ours)
-7456853153,5057936851,1.0,Delay-Bounded Spanner (ours)
-7456853153,4064823205,1.0,Delay-Bounded Spanner (ours)
-7456853153,5971869789,1.0000267855040823,Delay-Bounded Spanner (ours)
-7456853153,6853119084,1.0,Delay-Bounded Spanner (ours)
-3686504889,5965956570,1.0,Delay-Bounded Spanner (ours)
-3686504889,3866933743,1.0,Delay-Bounded Spanner (ours)
-3686504889,6853092596,1.0,Delay-Bounded Spanner (ours)
-3686504889,5057793310,1.0,Delay-Bounded Spanner (ours)
-3686504889,2171637131,1.0,Delay-Bounded Spanner (ours)
-3686504889,3866935632,1.0030330943280878,Delay-Bounded Spanner (ours)
-3686504889,1319139935,1.0,Delay-Bounded Spanner (ours)
-3686504889,5057793258,1.0,Delay-Bounded Spanner (ours)
-3686504889,5057937046,1.0040456901980916,Delay-Bounded Spanner (ours)
-3686504889,4043078154,1.0,Delay-Bounded Spanner (ours)
-6853043266,2171888872,1.0044211720159535,Delay-Bounded Spanner (ours)
-6853043266,3859766065,1.0,Delay-Bounded Spanner (ours)
-6853043266,5966260784,1.0,Delay-Bounded Spanner (ours)
-6853043266,7451212153,1.0,Delay-Bounded Spanner (ours)
-6853043266,5057053291,1.0056904027768074,Delay-Bounded Spanner (ours)
-6853043266,3859766073,1.0,Delay-Bounded Spanner (ours)
-6853043266,5982522013,1.0,Delay-Bounded Spanner (ours)
-6853043266,5167747875,1.0238495450400935,Delay-Bounded Spanner (ours)
-6853043266,5057936965,1.0061575786118968,Delay-Bounded Spanner (ours)
-6853043266,5971893129,1.0,Delay-Bounded Spanner (ours)
-7456872000,5058207759,1.0,Delay-Bounded Spanner (ours)
-7456872000,3700603647,1.0,Delay-Bounded Spanner (ours)
-7456872000,4043078130,1.006805142982657,Delay-Bounded Spanner (ours)
-7456872000,3691467294,1.0,Delay-Bounded Spanner (ours)
-7456872000,3888465124,1.0,Delay-Bounded Spanner (ours)
-7456872000,7456983071,1.0,Delay-Bounded Spanner (ours)
-7456872000,5966003308,1.0,Delay-Bounded Spanner (ours)
-7456872000,5839464300,1.0,Delay-Bounded Spanner (ours)
-7456872000,4043078109,1.0308815690009623,Delay-Bounded Spanner (ours)
-7456872000,7457140728,1.0,Delay-Bounded Spanner (ours)
-5971869785,5964136944,1.0,Static Free-Flow Spanner
-5971869785,2997342470,1.0,Static Free-Flow Spanner
-5971869785,5968212764,1.0,Static Free-Flow Spanner
-5971869785,5058043923,1.0,Static Free-Flow Spanner
-5971869785,1319139934,1.0,Static Free-Flow Spanner
-5971869785,13181157932,1.0,Static Free-Flow Spanner
-5971869785,3275071580,1.0,Static Free-Flow Spanner
-5971869785,3866933699,1.0,Static Free-Flow Spanner
-5971869785,3866935982,1.0,Static Free-Flow Spanner
-5971869785,5167747909,1.0,Static Free-Flow Spanner
-3686514157,5968379566,1.0150213112683026,Static Free-Flow Spanner
-3686514157,12050489668,1.0202986702567016,Static Free-Flow Spanner
-3686514157,5966003308,1.0,Static Free-Flow Spanner
-3686514157,3842949368,1.0092974030580226,Static Free-Flow Spanner
-3686514157,7451193131,1.0178420737151832,Static Free-Flow Spanner
-3686514157,5982460282,1.0207792707872512,Static Free-Flow Spanner
-3686514157,729757918,1.007803354951769,Static Free-Flow Spanner
-3686514157,5964136944,1.0101081472210938,Static Free-Flow Spanner
-3686514157,5058043908,1.0104585139206255,Static Free-Flow Spanner
-3686514157,3866935274,1.0254607600650554,Static Free-Flow Spanner
-11649780056,5058207605,1.0147413354915307,Static Free-Flow Spanner
-11649780056,5968184371,1.007332260226797,Static Free-Flow Spanner
-11649780056,4064823317,1.0114960419346892,Static Free-Flow Spanner
-11649780056,11228720453,1.0,Static Free-Flow Spanner
-11649780056,3700753721,1.007569733915559,Static Free-Flow Spanner
-11649780056,7106087708,1.0,Static Free-Flow Spanner
-11649780056,5058043930,1.0,Static Free-Flow Spanner
-11649780056,5057793417,1.0,Static Free-Flow Spanner
-11649780056,4064823316,1.0120588277165725,Static Free-Flow Spanner
-11649780056,3700753698,1.0079479124925008,Static Free-Flow Spanner
-7456876622,3859766094,1.0,Static Free-Flow Spanner
-7456876622,5057793379,1.0,Static Free-Flow Spanner
-7456876622,3686504887,1.0,Static Free-Flow Spanner
-7456876622,3275071574,1.0,Static Free-Flow Spanner
-7456876622,5057936854,1.0,Static Free-Flow Spanner
-7456876622,3296662733,1.0,Static Free-Flow Spanner
-7456876622,5057935947,1.0,Static Free-Flow Spanner
-7456876622,5057793579,1.0,Static Free-Flow Spanner
-7456876622,5968379572,1.0000298053471859,Static Free-Flow Spanner
-7456876622,4043078129,1.0,Static Free-Flow Spanner
-4064823279,1319148779,1.0,Static Free-Flow Spanner
-4064823279,7451854698,1.0,Static Free-Flow Spanner
-4064823279,5058207769,1.0351441076047299,Static Free-Flow Spanner
-4064823279,5747062218,1.0,Static Free-Flow Spanner
-4064823279,3688721250,1.0,Static Free-Flow Spanner
-4064823279,5057936848,1.0,Static Free-Flow Spanner
-4064823279,2472417891,1.0,Static Free-Flow Spanner
-4064823279,5965868887,1.0,Static Free-Flow Spanner
-4064823279,4080896069,1.0330432694696337,Static Free-Flow Spanner
-4064823279,5971712871,1.0,Static Free-Flow Spanner
-3888464942,5968568131,1.0,Static Free-Flow Spanner
-3888464942,5057935995,1.0,Static Free-Flow Spanner
-3888464942,5966393701,1.0,Static Free-Flow Spanner
-3888464942,3840730919,1.0,Static Free-Flow Spanner
-3888464942,7447864318,1.0,Static Free-Flow Spanner
-3888464942,2171888933,1.0,Static Free-Flow Spanner
-3888464942,1319460609,1.0,Static Free-Flow Spanner
-3888464942,6050457306,1.0,Static Free-Flow Spanner
-3888464942,3866935600,1.0,Static Free-Flow Spanner
-3888464942,4076359212,1.0,Static Free-Flow Spanner
-3866935503,2472417902,1.0,Static Free-Flow Spanner
-3866935503,3879369957,1.0,Static Free-Flow Spanner
-3866935503,3686504879,1.0,Static Free-Flow Spanner
-3866935503,5057936856,1.0,Static Free-Flow Spanner
-3866935503,4064823316,1.0,Static Free-Flow Spanner
-3866935503,5058207728,1.0,Static Free-Flow Spanner
-3866935503,5971822160,1.0,Static Free-Flow Spanner
-3866935503,5057936188,1.0,Static Free-Flow Spanner
-3866935503,3700753737,1.0,Static Free-Flow Spanner
-3866935503,5057936789,1.0,Static Free-Flow Spanner
-3691467294,5057935925,1.0,Static Free-Flow Spanner
-3691467294,3859766054,1.0,Static Free-Flow Spanner
-3691467294,6787262365,1.0,Static Free-Flow Spanner
-3691467294,4043078151,1.0063885604631253,Static Free-Flow Spanner
-3691467294,729757927,1.0062984277774891,Static Free-Flow Spanner
-3691467294,6853090144,1.0,Static Free-Flow Spanner
-3691467294,5981175002,1.0,Static Free-Flow Spanner
-3691467294,2171888966,1.0,Static Free-Flow Spanner
-3691467294,5968464428,1.0,Static Free-Flow Spanner
-3691467294,5971822157,1.0,Static Free-Flow Spanner
-7456853153,3734102723,1.0,Static Free-Flow Spanner
-7456853153,5684854574,1.0,Static Free-Flow Spanner
-7456853153,7451841777,1.0084197171902638,Static Free-Flow Spanner
-7456853153,3888464941,1.0,Static Free-Flow Spanner
-7456853153,3700753742,1.0077645611425763,Static Free-Flow Spanner
-7456853153,5058207805,1.0,Static Free-Flow Spanner
-7456853153,5057936851,1.0,Static Free-Flow Spanner
-7456853153,4064823205,1.0,Static Free-Flow Spanner
-7456853153,5971869789,1.0000267855040823,Static Free-Flow Spanner
-7456853153,6853119084,1.0,Static Free-Flow Spanner
-3686504889,5965956570,1.0,Static Free-Flow Spanner
-3686504889,3866933743,1.0,Static Free-Flow Spanner
-3686504889,6853092596,1.0,Static Free-Flow Spanner
-3686504889,5057793310,1.0120049128367237,Static Free-Flow Spanner
-3686504889,2171637131,1.0,Static Free-Flow Spanner
-3686504889,3866935632,1.0030330943280878,Static Free-Flow Spanner
-3686504889,1319139935,1.0,Static Free-Flow Spanner
-3686504889,5057793258,1.0,Static Free-Flow Spanner
-3686504889,5057937046,1.0040456901980916,Static Free-Flow Spanner
-3686504889,4043078154,1.0,Static Free-Flow Spanner
-6853043266,2171888872,1.0044211720159535,Static Free-Flow Spanner
-6853043266,3859766065,1.0,Static Free-Flow Spanner
-6853043266,5966260784,1.0,Static Free-Flow Spanner
-6853043266,7451212153,1.0,Static Free-Flow Spanner
-6853043266,5057053291,1.0056904027768074,Static Free-Flow Spanner
-6853043266,3859766073,1.0,Static Free-Flow Spanner
-6853043266,5982522013,1.0,Static Free-Flow Spanner
-6853043266,5167747875,1.0238495450400935,Static Free-Flow Spanner
-6853043266,5057936965,1.0061575786118968,Static Free-Flow Spanner
-6853043266,5971893129,1.0,Static Free-Flow Spanner
-7456872000,5058207759,1.0,Static Free-Flow Spanner
-7456872000,3700603647,1.0,Static Free-Flow Spanner
-7456872000,4043078130,1.006805142982657,Static Free-Flow Spanner
-7456872000,3691467294,1.0,Static Free-Flow Spanner
-7456872000,3888465124,1.0,Static Free-Flow Spanner
-7456872000,7456983071,1.0,Static Free-Flow Spanner
-7456872000,5966003308,1.0,Static Free-Flow Spanner
-7456872000,5839464300,1.0,Static Free-Flow Spanner
-7456872000,4043078109,1.0308815690009623,Static Free-Flow Spanner
-7456872000,7457140728,1.0,Static Free-Flow Spanner
-5971869785,5964136944,1.0,Matched-Density Betweenness
-5971869785,2997342470,1.0,Matched-Density Betweenness
-5971869785,5968212764,1.0073190192296029,Matched-Density Betweenness
-5971869785,5058043923,1.0,Matched-Density Betweenness
-5971869785,1319139934,1.0,Matched-Density Betweenness
-5971869785,13181157932,1.0,Matched-Density Betweenness
-5971869785,3275071580,1.0,Matched-Density Betweenness
-5971869785,3866933699,1.0,Matched-Density Betweenness
-5971869785,3866935982,1.0,Matched-Density Betweenness
-5971869785,5167747909,1.0,Matched-Density Betweenness
-3686514157,5968379566,1.0,Matched-Density Betweenness
-3686514157,12050489668,1.0,Matched-Density Betweenness
-3686514157,5966003308,1.0,Matched-Density Betweenness
-3686514157,3842949368,1.0,Matched-Density Betweenness
-3686514157,7451193131,1.0,Matched-Density Betweenness
-3686514157,5982460282,1.0,Matched-Density Betweenness
-3686514157,729757918,1.0,Matched-Density Betweenness
-3686514157,5964136944,1.0,Matched-Density Betweenness
-3686514157,5058043908,1.0,Matched-Density Betweenness
-3686514157,3866935274,1.0,Matched-Density Betweenness
-11649780056,5058207605,1.0,Matched-Density Betweenness
-11649780056,5968184371,1.0,Matched-Density Betweenness
-11649780056,4064823317,1.0,Matched-Density Betweenness
-11649780056,11228720453,1.0,Matched-Density Betweenness
-11649780056,3700753721,1.0,Matched-Density Betweenness
-11649780056,7106087708,1.0,Matched-Density Betweenness
-11649780056,5058043930,1.0,Matched-Density Betweenness
-11649780056,5057793417,1.0,Matched-Density Betweenness
-11649780056,4064823316,1.0,Matched-Density Betweenness
-11649780056,3700753698,1.0,Matched-Density Betweenness
-7456876622,3859766094,1.0,Matched-Density Betweenness
-7456876622,5057793379,1.0,Matched-Density Betweenness
-7456876622,3686504887,1.0,Matched-Density Betweenness
-7456876622,3275071574,1.0,Matched-Density Betweenness
-7456876622,5057936854,1.0,Matched-Density Betweenness
-7456876622,3296662733,1.0,Matched-Density Betweenness
-7456876622,5057935947,1.0,Matched-Density Betweenness
-7456876622,5057793579,1.0,Matched-Density Betweenness
-7456876622,5968379572,1.0,Matched-Density Betweenness
-7456876622,4043078129,1.0,Matched-Density Betweenness
-4064823279,1319148779,1.0,Matched-Density Betweenness
-4064823279,7451854698,1.0,Matched-Density Betweenness
-4064823279,5058207769,1.0,Matched-Density Betweenness
-4064823279,5747062218,1.0,Matched-Density Betweenness
-4064823279,3688721250,1.0,Matched-Density Betweenness
-4064823279,5057936848,1.0,Matched-Density Betweenness
-4064823279,2472417891,1.0,Matched-Density Betweenness
-4064823279,5965868887,1.0,Matched-Density Betweenness
-4064823279,4080896069,1.0,Matched-Density Betweenness
-4064823279,5971712871,1.0,Matched-Density Betweenness
-3888464942,5968568131,1.0,Matched-Density Betweenness
-3888464942,5057935995,1.0,Matched-Density Betweenness
-3888464942,5966393701,1.0,Matched-Density Betweenness
-3888464942,3840730919,1.0,Matched-Density Betweenness
-3888464942,7447864318,1.0,Matched-Density Betweenness
-3888464942,2171888933,1.0,Matched-Density Betweenness
-3888464942,1319460609,1.0,Matched-Density Betweenness
-3888464942,6050457306,1.0,Matched-Density Betweenness
-3888464942,3866935600,1.0,Matched-Density Betweenness
-3888464942,4076359212,1.0,Matched-Density Betweenness
-3866935503,2472417902,1.0,Matched-Density Betweenness
-3866935503,3879369957,1.0,Matched-Density Betweenness
-3866935503,3686504879,1.0,Matched-Density Betweenness
-3866935503,5057936856,1.0,Matched-Density Betweenness
-3866935503,4064823316,1.0,Matched-Density Betweenness
-3866935503,5058207728,1.0,Matched-Density Betweenness
-3866935503,5971822160,1.0,Matched-Density Betweenness
-3866935503,5057936188,1.0,Matched-Density Betweenness
-3866935503,3700753737,1.0,Matched-Density Betweenness
-3866935503,5057936789,1.0,Matched-Density Betweenness
-3691467294,5057935925,1.0,Matched-Density Betweenness
-3691467294,3859766054,1.0,Matched-Density Betweenness
-3691467294,6787262365,1.0,Matched-Density Betweenness
-3691467294,4043078151,1.0063885604631253,Matched-Density Betweenness
-3691467294,729757927,1.0062984277774891,Matched-Density Betweenness
-3691467294,6853090144,1.0,Matched-Density Betweenness
-3691467294,5981175002,1.0,Matched-Density Betweenness
-3691467294,2171888966,1.0,Matched-Density Betweenness
-3691467294,5968464428,1.0,Matched-Density Betweenness
-3691467294,5971822157,1.0,Matched-Density Betweenness
-7456853153,3734102723,1.0,Matched-Density Betweenness
-7456853153,5684854574,1.0,Matched-Density Betweenness
-7456853153,7451841777,1.0,Matched-Density Betweenness
-7456853153,3888464941,1.0,Matched-Density Betweenness
-7456853153,3700753742,1.0,Matched-Density Betweenness
-7456853153,5058207805,1.0,Matched-Density Betweenness
-7456853153,5057936851,1.0,Matched-Density Betweenness
-7456853153,4064823205,1.0,Matched-Density Betweenness
-7456853153,5971869789,1.0,Matched-Density Betweenness
-7456853153,6853119084,1.0,Matched-Density Betweenness
-3686504889,5965956570,1.0,Matched-Density Betweenness
-3686504889,3866933743,1.0,Matched-Density Betweenness
-3686504889,6853092596,1.0,Matched-Density Betweenness
-3686504889,5057793310,1.0,Matched-Density Betweenness
-3686504889,2171637131,1.0,Matched-Density Betweenness
-3686504889,3866935632,1.0,Matched-Density Betweenness
-3686504889,1319139935,1.0,Matched-Density Betweenness
-3686504889,5057793258,1.0,Matched-Density Betweenness
-3686504889,5057937046,1.0,Matched-Density Betweenness
-3686504889,4043078154,1.0,Matched-Density Betweenness
-6853043266,2171888872,1.0,Matched-Density Betweenness
-6853043266,3859766065,1.0,Matched-Density Betweenness
-6853043266,5966260784,1.0,Matched-Density Betweenness
-6853043266,7451212153,1.0,Matched-Density Betweenness
-6853043266,5057053291,1.0,Matched-Density Betweenness
-6853043266,3859766073,1.0,Matched-Density Betweenness
-6853043266,5982522013,1.0,Matched-Density Betweenness
-6853043266,5167747875,1.0238495450400935,Matched-Density Betweenness
-6853043266,5057936965,1.0,Matched-Density Betweenness
-6853043266,5971893129,1.0,Matched-Density Betweenness
-7456872000,5058207759,1.0,Matched-Density Betweenness
-7456872000,3700603647,1.0,Matched-Density Betweenness
-7456872000,4043078130,1.0,Matched-Density Betweenness
-7456872000,3691467294,1.0,Matched-Density Betweenness
-7456872000,3888465124,1.0,Matched-Density Betweenness
-7456872000,7456983071,1.0,Matched-Density Betweenness
-7456872000,5966003308,1.0,Matched-Density Betweenness
-7456872000,5839464300,1.0,Matched-Density Betweenness
-7456872000,4043078109,1.0308815690009623,Matched-Density Betweenness
-7456872000,7457140728,1.0,Matched-Density Betweenness
-5971869785,5964136944,1.2470849422602932,Hierarchical Road Classifier
-5971869785,2997342470,1.0,Hierarchical Road Classifier
-5971869785,5968212764,1.0176376877317186,Hierarchical Road Classifier
-5971869785,5058043923,1.0,Hierarchical Road Classifier
-5971869785,1319139934,1.0,Hierarchical Road Classifier
-5971869785,13181157932,1.0,Hierarchical Road Classifier
-5971869785,3275071580,1.0219273721461495,Hierarchical Road Classifier
-5971869785,3866933699,1.0045313037501151,Hierarchical Road Classifier
-5971869785,3866935982,1.0181340035289754,Hierarchical Road Classifier
-5971869785,5167747909,1.1872356035152634,Hierarchical Road Classifier
-3686514157,5968379566,1.0150213112683026,Hierarchical Road Classifier
-3686514157,12050489668,1.5117134711184448,Hierarchical Road Classifier
-3686514157,5966003308,1.1728073117749476,Hierarchical Road Classifier
-3686514157,3842949368,1.0092974030580226,Hierarchical Road Classifier
-3686514157,7451193131,1.0178420737151832,Hierarchical Road Classifier
-3686514157,5982460282,1.6490240966902192,Hierarchical Road Classifier
-3686514157,729757918,1.007803354951769,Hierarchical Road Classifier
-3686514157,5964136944,1.2351686416801322,Hierarchical Road Classifier
-3686514157,5058043908,1.0998547029320245,Hierarchical Road Classifier
-3686514157,3866935274,1.0102386615426069,Hierarchical Road Classifier
-11649780056,5058207605,1.0,Hierarchical Road Classifier
-11649780056,5968184371,1.0872905004439555,Hierarchical Road Classifier
-11649780056,4064823317,1.0,Hierarchical Road Classifier
-11649780056,11228720453,1.690169080478798,Hierarchical Road Classifier
-11649780056,3700753721,1.0,Hierarchical Road Classifier
-11649780056,7106087708,1.1976280841833649,Hierarchical Road Classifier
-11649780056,5058043930,1.0,Hierarchical Road Classifier
-11649780056,5057793417,1.0,Hierarchical Road Classifier
-11649780056,4064823316,1.0,Hierarchical Road Classifier
-11649780056,3700753698,1.0,Hierarchical Road Classifier
-7456876622,3859766094,8.479808340274563,Hierarchical Road Classifier
-7456876622,5057793379,1.3194682089086793,Hierarchical Road Classifier
-7456876622,3686504887,1.9386590714145389,Hierarchical Road Classifier
-7456876622,3275071574,1.5035834211213517,Hierarchical Road Classifier
-7456876622,5057936854,1.0883847853396316,Hierarchical Road Classifier
-7456876622,3296662733,3.947898605045945,Hierarchical Road Classifier
-7456876622,5057935947,1.047107672141105,Hierarchical Road Classifier
-7456876622,5057793579,1.022336896750911,Hierarchical Road Classifier
-7456876622,5968379572,1.4091263557755889,Hierarchical Road Classifier
-7456876622,4043078129,1.0504941096265734,Hierarchical Road Classifier
-4064823279,1319148779,1.0,Hierarchical Road Classifier
-4064823279,7451854698,1.0525397112279917,Hierarchical Road Classifier
-4064823279,5058207769,2.1165581246787992,Hierarchical Road Classifier
-4064823279,5747062218,1.0,Hierarchical Road Classifier
-4064823279,3688721250,1.0,Hierarchical Road Classifier
-4064823279,5057936848,1.271904707481327,Hierarchical Road Classifier
-4064823279,2472417891,1.0,Hierarchical Road Classifier
-4064823279,5965868887,1.0142646091810166,Hierarchical Road Classifier
-4064823279,4080896069,1.0,Hierarchical Road Classifier
-4064823279,5971712871,1.0,Hierarchical Road Classifier
-3888464942,5968568131,1.0375156971491817,Hierarchical Road Classifier
-3888464942,5057935995,1.377933353285443,Hierarchical Road Classifier
-3888464942,5966393701,1.0,Hierarchical Road Classifier
-3888464942,3840730919,1.1592466330613296,Hierarchical Road Classifier
-3888464942,7447864318,1.0,Hierarchical Road Classifier
-3888464942,2171888933,2.2690007404758603,Hierarchical Road Classifier
-3888464942,1319460609,2.5641540152338242,Hierarchical Road Classifier
-3888464942,6050457306,1.0,Hierarchical Road Classifier
-3888464942,3866935600,1.3437136067667563,Hierarchical Road Classifier
-3888464942,4076359212,1.4077467244007662,Hierarchical Road Classifier
-3866935503,2472417902,1.4280005180405613,Hierarchical Road Classifier
-3866935503,3879369957,1.2939038415760242,Hierarchical Road Classifier
-3866935503,3686504879,1.0,Hierarchical Road Classifier
-3866935503,5057936856,1.3515582968590447,Hierarchical Road Classifier
-3866935503,4064823316,1.0,Hierarchical Road Classifier
-3866935503,5058207728,1.0,Hierarchical Road Classifier
-3866935503,5971822160,1.2890602022252828,Hierarchical Road Classifier
-3866935503,5057936188,1.3514105974183848,Hierarchical Road Classifier
-3866935503,3700753737,1.0459454311552183,Hierarchical Road Classifier
-3866935503,5057936789,1.1232899838893915,Hierarchical Road Classifier
-3691467294,5057935925,1.0,Hierarchical Road Classifier
-3691467294,3859766054,1.1618438804029587,Hierarchical Road Classifier
-3691467294,6787262365,1.022005202646937,Hierarchical Road Classifier
-3691467294,4043078151,1.0520354298874652,Hierarchical Road Classifier
-3691467294,729757927,1.05130129062854,Hierarchical Road Classifier
-3691467294,6853090144,1.097625910284151,Hierarchical Road Classifier
-3691467294,5981175002,1.0563769226919117,Hierarchical Road Classifier
-3691467294,2171888966,1.1291586311713362,Hierarchical Road Classifier
-3691467294,5968464428,1.110065124538822,Hierarchical Road Classifier
-3691467294,5971822157,1.0,Hierarchical Road Classifier
-7456853153,3734102723,1.0,Hierarchical Road Classifier
-7456853153,5684854574,1.5784305166328274,Hierarchical Road Classifier
-7456853153,7451841777,1.0,Hierarchical Road Classifier
-7456853153,3888464941,1.0,Hierarchical Road Classifier
-7456853153,3700753742,1.0,Hierarchical Road Classifier
-7456853153,5058207805,1.0,Hierarchical Road Classifier
-7456853153,5057936851,1.26730579842497,Hierarchical Road Classifier
-7456853153,4064823205,1.542412589382936,Hierarchical Road Classifier
-7456853153,5971869789,1.0532223261110008,Hierarchical Road Classifier
-7456853153,6853119084,1.0,Hierarchical Road Classifier
-3686504889,5965956570,1.130228634631941,Hierarchical Road Classifier
-3686504889,3866933743,1.0,Hierarchical Road Classifier
-3686504889,6853092596,3.494248743736152,Hierarchical Road Classifier
-3686504889,5057793310,1.0254287477289974,Hierarchical Road Classifier
-3686504889,2171637131,1.0695851951219442,Hierarchical Road Classifier
-3686504889,3866935632,1.0,Hierarchical Road Classifier
-3686504889,1319139935,1.0,Hierarchical Road Classifier
-3686504889,5057793258,1.0,Hierarchical Road Classifier
-3686504889,5057937046,1.0,Hierarchical Road Classifier
-3686504889,4043078154,1.0166435200637935,Hierarchical Road Classifier
-6853043266,2171888872,1.0,Hierarchical Road Classifier
-6853043266,3859766065,1.0,Hierarchical Road Classifier
-6853043266,5966260784,1.315568486094387,Hierarchical Road Classifier
-6853043266,7451212153,1.0,Hierarchical Road Classifier
-6853043266,5057053291,1.0,Hierarchical Road Classifier
-6853043266,3859766073,1.0,Hierarchical Road Classifier
-6853043266,5982522013,1.0,Hierarchical Road Classifier
-6853043266,5167747875,1.1204744514949818,Hierarchical Road Classifier
-6853043266,5057936965,1.0,Hierarchical Road Classifier
-6853043266,5971893129,1.398277638322817,Hierarchical Road Classifier
-7456872000,5058207759,1.0031951340835186,Hierarchical Road Classifier
-7456872000,3700603647,1.0570807183833748,Hierarchical Road Classifier
-7456872000,4043078130,1.0,Hierarchical Road Classifier
-7456872000,3691467294,1.0251373257517675,Hierarchical Road Classifier
-7456872000,3888465124,1.051352413125448,Hierarchical Road Classifier
-7456872000,7456983071,1.8578367761769727,Hierarchical Road Classifier
-7456872000,5966003308,1.0,Hierarchical Road Classifier
-7456872000,5839464300,1.0,Hierarchical Road Classifier
-7456872000,4043078109,1.195866543510285,Hierarchical Road Classifier
-7456872000,7457140728,1.1042740575440337,Hierarchical Road Classifier
+72,295,1.0,Delay-Bounded Spanner (ours)
+72,112,1.0,Delay-Bounded Spanner (ours)
+72,111,1.0,Delay-Bounded Spanner (ours)
+72,140,1.0,Delay-Bounded Spanner (ours)
+72,2,1.0,Delay-Bounded Spanner (ours)
+72,206,1.0,Delay-Bounded Spanner (ours)
+72,333,1.0,Delay-Bounded Spanner (ours)
+72,55,1.0,Delay-Bounded Spanner (ours)
+72,11,1.0,Delay-Bounded Spanner (ours)
+72,360,1.0,Delay-Bounded Spanner (ours)
+15,191,1.0,Delay-Bounded Spanner (ours)
+15,78,1.0,Delay-Bounded Spanner (ours)
+15,353,1.0,Delay-Bounded Spanner (ours)
+15,294,1.0,Delay-Bounded Spanner (ours)
+15,200,1.0,Delay-Bounded Spanner (ours)
+15,307,1.0,Delay-Bounded Spanner (ours)
+15,5,1.0,Delay-Bounded Spanner (ours)
+15,228,1.0,Delay-Bounded Spanner (ours)
+15,100,1.0,Delay-Bounded Spanner (ours)
+15,173,1.0,Delay-Bounded Spanner (ours)
+109,296,1.0,Delay-Bounded Spanner (ours)
+109,257,1.033740366256235,Delay-Bounded Spanner (ours)
+109,228,1.0,Delay-Bounded Spanner (ours)
+109,171,1.0,Delay-Bounded Spanner (ours)
+109,2,1.0,Delay-Bounded Spanner (ours)
+109,255,1.0,Delay-Bounded Spanner (ours)
+109,146,1.0,Delay-Bounded Spanner (ours)
+109,141,1.0,Delay-Bounded Spanner (ours)
+109,276,1.0301036580295515,Delay-Bounded Spanner (ours)
+109,143,1.0,Delay-Bounded Spanner (ours)
+225,265,1.0,Delay-Bounded Spanner (ours)
+225,259,1.0,Delay-Bounded Spanner (ours)
+225,57,1.0,Delay-Bounded Spanner (ours)
+225,220,1.0,Delay-Bounded Spanner (ours)
+225,118,1.0,Delay-Bounded Spanner (ours)
+225,312,1.0,Delay-Bounded Spanner (ours)
+225,349,1.0,Delay-Bounded Spanner (ours)
+225,155,1.0,Delay-Bounded Spanner (ours)
+225,275,1.0,Delay-Bounded Spanner (ours)
+225,134,1.0,Delay-Bounded Spanner (ours)
+211,357,1.0,Delay-Bounded Spanner (ours)
+211,235,1.0,Delay-Bounded Spanner (ours)
+211,68,1.0,Delay-Bounded Spanner (ours)
+211,63,1.0,Delay-Bounded Spanner (ours)
+211,268,1.0,Delay-Bounded Spanner (ours)
+211,44,1.0,Delay-Bounded Spanner (ours)
+211,188,1.0,Delay-Bounded Spanner (ours)
+211,13,1.0,Delay-Bounded Spanner (ours)
+211,119,1.0,Delay-Bounded Spanner (ours)
+211,83,1.0,Delay-Bounded Spanner (ours)
+201,204,1.0,Delay-Bounded Spanner (ours)
+201,233,1.0,Delay-Bounded Spanner (ours)
+201,134,1.0,Delay-Bounded Spanner (ours)
+201,207,1.0,Delay-Bounded Spanner (ours)
+201,144,1.0,Delay-Bounded Spanner (ours)
+201,276,1.0499832229028596,Delay-Bounded Spanner (ours)
+201,228,1.0,Delay-Bounded Spanner (ours)
+201,31,1.0,Delay-Bounded Spanner (ours)
+201,71,1.0427708989937952,Delay-Bounded Spanner (ours)
+201,269,1.0449442508348108,Delay-Bounded Spanner (ours)
+162,175,1.0,Delay-Bounded Spanner (ours)
+162,271,1.0,Delay-Bounded Spanner (ours)
+162,263,1.0,Delay-Bounded Spanner (ours)
+162,197,1.0,Delay-Bounded Spanner (ours)
+162,89,1.0,Delay-Bounded Spanner (ours)
+162,222,1.0165467656372336,Delay-Bounded Spanner (ours)
+162,94,1.0,Delay-Bounded Spanner (ours)
+162,77,1.0,Delay-Bounded Spanner (ours)
+162,130,1.0,Delay-Bounded Spanner (ours)
+162,59,1.0,Delay-Bounded Spanner (ours)
+145,71,1.0954625751719773,Delay-Bounded Spanner (ours)
+145,179,1.0,Delay-Bounded Spanner (ours)
+145,348,1.0,Delay-Bounded Spanner (ours)
+145,212,1.0,Delay-Bounded Spanner (ours)
+145,175,1.0,Delay-Bounded Spanner (ours)
+145,313,1.0,Delay-Bounded Spanner (ours)
+145,276,1.0342564788803716,Delay-Bounded Spanner (ours)
+145,224,1.0,Delay-Bounded Spanner (ours)
+145,73,1.0,Delay-Bounded Spanner (ours)
+145,97,1.0,Delay-Bounded Spanner (ours)
+90,359,1.004144095100274,Delay-Bounded Spanner (ours)
+90,20,1.0,Delay-Bounded Spanner (ours)
+90,95,1.0,Delay-Bounded Spanner (ours)
+90,249,1.0,Delay-Bounded Spanner (ours)
+90,123,1.0,Delay-Bounded Spanner (ours)
+90,204,1.0344341382227904,Delay-Bounded Spanner (ours)
+90,112,1.0470227064255448,Delay-Bounded Spanner (ours)
+90,244,1.0,Delay-Bounded Spanner (ours)
+90,285,1.0,Delay-Bounded Spanner (ours)
+90,222,1.0103939636711996,Delay-Bounded Spanner (ours)
+352,128,1.0,Delay-Bounded Spanner (ours)
+352,197,1.0,Delay-Bounded Spanner (ours)
+352,4,1.0,Delay-Bounded Spanner (ours)
+352,244,1.0,Delay-Bounded Spanner (ours)
+352,80,1.0,Delay-Bounded Spanner (ours)
+352,330,1.0,Delay-Bounded Spanner (ours)
+352,282,1.0,Delay-Bounded Spanner (ours)
+352,75,1.0,Delay-Bounded Spanner (ours)
+352,310,1.0,Delay-Bounded Spanner (ours)
+352,164,1.0,Delay-Bounded Spanner (ours)
+138,221,1.0512966218792394,Delay-Bounded Spanner (ours)
+138,163,1.0133845169625582,Delay-Bounded Spanner (ours)
+138,213,1.0,Delay-Bounded Spanner (ours)
+138,37,1.014429901829082,Delay-Bounded Spanner (ours)
+138,35,1.0091075181891724,Delay-Bounded Spanner (ours)
+138,220,1.0149848810811675,Delay-Bounded Spanner (ours)
+138,48,1.0,Delay-Bounded Spanner (ours)
+138,299,1.034933184204489,Delay-Bounded Spanner (ours)
+138,47,1.0,Delay-Bounded Spanner (ours)
+138,285,1.0,Delay-Bounded Spanner (ours)
+5,267,1.0,Delay-Bounded Spanner (ours)
+5,20,1.0,Delay-Bounded Spanner (ours)
+5,161,1.0,Delay-Bounded Spanner (ours)
+5,335,1.0,Delay-Bounded Spanner (ours)
+5,328,1.0,Delay-Bounded Spanner (ours)
+5,14,1.0,Delay-Bounded Spanner (ours)
+5,12,1.0,Delay-Bounded Spanner (ours)
+5,149,1.0,Delay-Bounded Spanner (ours)
+5,169,1.0,Delay-Bounded Spanner (ours)
+5,68,1.0,Delay-Bounded Spanner (ours)
+72,295,1.0,Static Free-Flow Spanner
+72,112,1.0,Static Free-Flow Spanner
+72,111,1.0,Static Free-Flow Spanner
+72,140,1.0,Static Free-Flow Spanner
+72,2,1.0,Static Free-Flow Spanner
+72,206,1.0,Static Free-Flow Spanner
+72,333,1.0,Static Free-Flow Spanner
+72,55,1.3497195491171878,Static Free-Flow Spanner
+72,11,1.0,Static Free-Flow Spanner
+72,360,1.0,Static Free-Flow Spanner
+15,191,1.0,Static Free-Flow Spanner
+15,78,1.0,Static Free-Flow Spanner
+15,353,1.0,Static Free-Flow Spanner
+15,294,1.0,Static Free-Flow Spanner
+15,200,1.0,Static Free-Flow Spanner
+15,307,1.0,Static Free-Flow Spanner
+15,5,1.0,Static Free-Flow Spanner
+15,228,1.0,Static Free-Flow Spanner
+15,100,1.0,Static Free-Flow Spanner
+15,173,1.0,Static Free-Flow Spanner
+109,296,1.0426666149742534,Static Free-Flow Spanner
+109,257,1.075941315293023,Static Free-Flow Spanner
+109,228,1.0392493778809728,Static Free-Flow Spanner
+109,171,1.0336955952831177,Static Free-Flow Spanner
+109,2,1.037304682831078,Static Free-Flow Spanner
+109,255,1.1392149915323702,Static Free-Flow Spanner
+109,146,1.0,Static Free-Flow Spanner
+109,141,1.0610095105512327,Static Free-Flow Spanner
+109,276,1.0677559742100624,Static Free-Flow Spanner
+109,143,1.2141164598647647,Static Free-Flow Spanner
+225,265,1.0,Static Free-Flow Spanner
+225,259,1.0,Static Free-Flow Spanner
+225,57,1.0,Static Free-Flow Spanner
+225,220,1.0,Static Free-Flow Spanner
+225,118,1.0,Static Free-Flow Spanner
+225,312,1.0,Static Free-Flow Spanner
+225,349,1.0,Static Free-Flow Spanner
+225,155,1.0,Static Free-Flow Spanner
+225,275,1.0,Static Free-Flow Spanner
+225,134,1.0,Static Free-Flow Spanner
+211,357,1.0,Static Free-Flow Spanner
+211,235,1.0,Static Free-Flow Spanner
+211,68,1.0,Static Free-Flow Spanner
+211,63,1.0,Static Free-Flow Spanner
+211,268,1.0,Static Free-Flow Spanner
+211,44,1.0,Static Free-Flow Spanner
+211,188,1.0,Static Free-Flow Spanner
+211,13,1.0,Static Free-Flow Spanner
+211,119,1.0,Static Free-Flow Spanner
+211,83,1.0,Static Free-Flow Spanner
+201,204,1.0,Static Free-Flow Spanner
+201,233,1.0,Static Free-Flow Spanner
+201,134,1.0,Static Free-Flow Spanner
+201,207,1.0111257722917295,Static Free-Flow Spanner
+201,144,1.0,Static Free-Flow Spanner
+201,276,1.1696938216194022,Static Free-Flow Spanner
+201,228,1.0,Static Free-Flow Spanner
+201,31,1.0,Static Free-Flow Spanner
+201,71,1.0427708989937952,Static Free-Flow Spanner
+201,269,1.0449442508348108,Static Free-Flow Spanner
+162,175,1.0,Static Free-Flow Spanner
+162,271,1.1280430628532014,Static Free-Flow Spanner
+162,263,1.0,Static Free-Flow Spanner
+162,197,1.0,Static Free-Flow Spanner
+162,89,1.0,Static Free-Flow Spanner
+162,222,1.0165467656372336,Static Free-Flow Spanner
+162,94,1.0,Static Free-Flow Spanner
+162,77,1.0,Static Free-Flow Spanner
+162,130,1.0,Static Free-Flow Spanner
+162,59,1.0,Static Free-Flow Spanner
+145,71,1.0954625751719773,Static Free-Flow Spanner
+145,179,1.0,Static Free-Flow Spanner
+145,348,1.0,Static Free-Flow Spanner
+145,212,1.0,Static Free-Flow Spanner
+145,175,1.0,Static Free-Flow Spanner
+145,313,1.0,Static Free-Flow Spanner
+145,276,1.0342564788803716,Static Free-Flow Spanner
+145,224,1.0,Static Free-Flow Spanner
+145,73,1.0,Static Free-Flow Spanner
+145,97,1.0,Static Free-Flow Spanner
+90,359,1.004144095100274,Static Free-Flow Spanner
+90,20,1.0,Static Free-Flow Spanner
+90,95,1.0,Static Free-Flow Spanner
+90,249,1.0,Static Free-Flow Spanner
+90,123,1.0,Static Free-Flow Spanner
+90,204,1.0344341382227904,Static Free-Flow Spanner
+90,112,1.0470227064255448,Static Free-Flow Spanner
+90,244,1.0,Static Free-Flow Spanner
+90,285,1.0,Static Free-Flow Spanner
+90,222,1.0103939636711996,Static Free-Flow Spanner
+352,128,1.0,Static Free-Flow Spanner
+352,197,1.0825141068784672,Static Free-Flow Spanner
+352,4,1.0,Static Free-Flow Spanner
+352,244,1.0,Static Free-Flow Spanner
+352,80,1.0,Static Free-Flow Spanner
+352,330,1.0,Static Free-Flow Spanner
+352,282,1.0,Static Free-Flow Spanner
+352,75,1.0,Static Free-Flow Spanner
+352,310,1.0,Static Free-Flow Spanner
+352,164,1.0,Static Free-Flow Spanner
+138,221,1.0512966218792394,Static Free-Flow Spanner
+138,163,1.160179476202228,Static Free-Flow Spanner
+138,213,1.0,Static Free-Flow Spanner
+138,37,1.014429901829082,Static Free-Flow Spanner
+138,35,1.0091075181891724,Static Free-Flow Spanner
+138,220,1.0149848810811675,Static Free-Flow Spanner
+138,48,1.0,Static Free-Flow Spanner
+138,299,1.034933184204489,Static Free-Flow Spanner
+138,47,1.0,Static Free-Flow Spanner
+138,285,1.0,Static Free-Flow Spanner
+5,267,1.0,Static Free-Flow Spanner
+5,20,1.0,Static Free-Flow Spanner
+5,161,1.0707185277296722,Static Free-Flow Spanner
+5,335,1.0,Static Free-Flow Spanner
+5,328,1.0,Static Free-Flow Spanner
+5,14,1.0,Static Free-Flow Spanner
+5,12,1.0,Static Free-Flow Spanner
+5,149,1.0,Static Free-Flow Spanner
+5,169,1.0,Static Free-Flow Spanner
+5,68,1.0,Static Free-Flow Spanner
+72,295,1.0,Matched-Density Betweenness
+72,112,1.0,Matched-Density Betweenness
+72,111,1.0,Matched-Density Betweenness
+72,140,1.0,Matched-Density Betweenness
+72,2,1.0,Matched-Density Betweenness
+72,206,1.0,Matched-Density Betweenness
+72,333,1.0,Matched-Density Betweenness
+72,55,1.0,Matched-Density Betweenness
+72,11,1.0,Matched-Density Betweenness
+72,360,1.0,Matched-Density Betweenness
+15,191,1.0,Matched-Density Betweenness
+15,78,1.0,Matched-Density Betweenness
+15,353,1.0,Matched-Density Betweenness
+15,294,1.0,Matched-Density Betweenness
+15,200,1.0,Matched-Density Betweenness
+15,307,1.0,Matched-Density Betweenness
+15,5,1.0,Matched-Density Betweenness
+15,228,1.0,Matched-Density Betweenness
+15,100,1.0,Matched-Density Betweenness
+15,173,1.0,Matched-Density Betweenness
+109,296,1.0,Matched-Density Betweenness
+109,257,1.033740366256235,Matched-Density Betweenness
+109,228,1.0,Matched-Density Betweenness
+109,171,1.0,Matched-Density Betweenness
+109,2,1.0,Matched-Density Betweenness
+109,255,1.0956631211304406,Matched-Density Betweenness
+109,146,1.0,Matched-Density Betweenness
+109,141,1.0,Matched-Density Betweenness
+109,276,1.0301036580295515,Matched-Density Betweenness
+109,143,1.0,Matched-Density Betweenness
+225,265,1.0,Matched-Density Betweenness
+225,259,1.0,Matched-Density Betweenness
+225,57,1.0,Matched-Density Betweenness
+225,220,1.0,Matched-Density Betweenness
+225,118,1.0,Matched-Density Betweenness
+225,312,1.0,Matched-Density Betweenness
+225,349,1.0,Matched-Density Betweenness
+225,155,1.0,Matched-Density Betweenness
+225,275,1.0,Matched-Density Betweenness
+225,134,1.0,Matched-Density Betweenness
+211,357,1.0,Matched-Density Betweenness
+211,235,1.0,Matched-Density Betweenness
+211,68,1.0,Matched-Density Betweenness
+211,63,1.0,Matched-Density Betweenness
+211,268,1.0,Matched-Density Betweenness
+211,44,1.0,Matched-Density Betweenness
+211,188,1.0,Matched-Density Betweenness
+211,13,1.0,Matched-Density Betweenness
+211,119,1.0,Matched-Density Betweenness
+211,83,1.0,Matched-Density Betweenness
+201,204,1.0,Matched-Density Betweenness
+201,233,1.0,Matched-Density Betweenness
+201,134,1.0,Matched-Density Betweenness
+201,207,1.0,Matched-Density Betweenness
+201,144,1.0,Matched-Density Betweenness
+201,276,1.0499832229028596,Matched-Density Betweenness
+201,228,1.0,Matched-Density Betweenness
+201,31,1.0,Matched-Density Betweenness
+201,71,1.0,Matched-Density Betweenness
+201,269,1.0,Matched-Density Betweenness
+162,175,1.0,Matched-Density Betweenness
+162,271,1.0,Matched-Density Betweenness
+162,263,1.0,Matched-Density Betweenness
+162,197,1.0,Matched-Density Betweenness
+162,89,1.0,Matched-Density Betweenness
+162,222,1.0165467656372336,Matched-Density Betweenness
+162,94,1.0,Matched-Density Betweenness
+162,77,1.0,Matched-Density Betweenness
+162,130,1.0,Matched-Density Betweenness
+162,59,1.0,Matched-Density Betweenness
+145,71,1.0,Matched-Density Betweenness
+145,179,1.0,Matched-Density Betweenness
+145,348,1.0,Matched-Density Betweenness
+145,212,1.0,Matched-Density Betweenness
+145,175,1.0,Matched-Density Betweenness
+145,313,1.0,Matched-Density Betweenness
+145,276,1.0342564788803716,Matched-Density Betweenness
+145,224,1.0,Matched-Density Betweenness
+145,73,1.0,Matched-Density Betweenness
+145,97,1.0,Matched-Density Betweenness
+90,359,1.004144095100274,Matched-Density Betweenness
+90,20,1.0,Matched-Density Betweenness
+90,95,1.0,Matched-Density Betweenness
+90,249,1.0,Matched-Density Betweenness
+90,123,1.0,Matched-Density Betweenness
+90,204,1.0,Matched-Density Betweenness
+90,112,1.0,Matched-Density Betweenness
+90,244,1.0,Matched-Density Betweenness
+90,285,1.0,Matched-Density Betweenness
+90,222,1.0103939636711996,Matched-Density Betweenness
+352,128,1.0,Matched-Density Betweenness
+352,197,1.0,Matched-Density Betweenness
+352,4,1.0,Matched-Density Betweenness
+352,244,1.0,Matched-Density Betweenness
+352,80,1.0,Matched-Density Betweenness
+352,330,1.0,Matched-Density Betweenness
+352,282,1.0,Matched-Density Betweenness
+352,75,1.0,Matched-Density Betweenness
+352,310,1.0,Matched-Density Betweenness
+352,164,1.0,Matched-Density Betweenness
+138,221,1.0390409534957008,Matched-Density Betweenness
+138,163,1.0,Matched-Density Betweenness
+138,213,1.0,Matched-Density Betweenness
+138,37,1.0057768374277996,Matched-Density Betweenness
+138,35,1.0,Matched-Density Betweenness
+138,220,1.0,Matched-Density Betweenness
+138,48,1.0,Matched-Density Betweenness
+138,299,1.0,Matched-Density Betweenness
+138,47,1.0,Matched-Density Betweenness
+138,285,1.0,Matched-Density Betweenness
+5,267,1.0,Matched-Density Betweenness
+5,20,1.0,Matched-Density Betweenness
+5,161,1.0,Matched-Density Betweenness
+5,335,1.0,Matched-Density Betweenness
+5,328,1.0,Matched-Density Betweenness
+5,14,1.0,Matched-Density Betweenness
+5,12,1.0,Matched-Density Betweenness
+5,149,1.0,Matched-Density Betweenness
+5,169,1.0,Matched-Density Betweenness
+5,68,1.0,Matched-Density Betweenness
+72,295,1.0,Hierarchical Road Classifier
+72,112,1.3112258859398958,Hierarchical Road Classifier
+72,111,1.0,Hierarchical Road Classifier
+72,140,1.0,Hierarchical Road Classifier
+72,2,1.0,Hierarchical Road Classifier
+72,206,1.0,Hierarchical Road Classifier
+72,333,1.1299454930379964,Hierarchical Road Classifier
+72,55,1.3497195491171878,Hierarchical Road Classifier
+72,11,1.0,Hierarchical Road Classifier
+72,360,1.0,Hierarchical Road Classifier
+15,191,1.0445520758191533,Hierarchical Road Classifier
+15,78,1.0,Hierarchical Road Classifier
+15,353,1.0,Hierarchical Road Classifier
+15,294,1.0,Hierarchical Road Classifier
+15,200,1.0,Hierarchical Road Classifier
+15,307,1.0,Hierarchical Road Classifier
+15,5,1.0,Hierarchical Road Classifier
+15,228,1.0,Hierarchical Road Classifier
+15,100,1.0,Hierarchical Road Classifier
+15,173,1.0,Hierarchical Road Classifier
+109,296,1.116459876864103,Hierarchical Road Classifier
+109,257,1.2307455080249867,Hierarchical Road Classifier
+109,228,1.1071324199908776,Hierarchical Road Classifier
+109,171,1.0919731944965057,Hierarchical Road Classifier
+109,2,1.1018243132618646,Hierarchical Road Classifier
+109,255,1.260240837546227,Hierarchical Road Classifier
+109,146,1.0,Hierarchical Road Classifier
+109,141,1.5136182294959333,Hierarchical Road Classifier
+109,276,1.1616365814246001,Hierarchical Road Classifier
+109,143,1.648803274451156,Hierarchical Road Classifier
+225,265,1.5183010585137326,Hierarchical Road Classifier
+225,259,1.0280006296438418,Hierarchical Road Classifier
+225,57,1.0118438894590744,Hierarchical Road Classifier
+225,220,1.0279465597987412,Hierarchical Road Classifier
+225,118,1.0145872427873912,Hierarchical Road Classifier
+225,312,1.0133133491191297,Hierarchical Road Classifier
+225,349,1.013846497482428,Hierarchical Road Classifier
+225,155,1.011806797575801,Hierarchical Road Classifier
+225,275,1.0152935185075662,Hierarchical Road Classifier
+225,134,1.0114014302685241,Hierarchical Road Classifier
+211,357,1.0062256573865642,Hierarchical Road Classifier
+211,235,1.0134256223955518,Hierarchical Road Classifier
+211,68,1.006599446732522,Hierarchical Road Classifier
+211,63,1.0,Hierarchical Road Classifier
+211,268,1.3801412216959945,Hierarchical Road Classifier
+211,44,1.0,Hierarchical Road Classifier
+211,188,1.0054595532878607,Hierarchical Road Classifier
+211,13,1.0059492251093745,Hierarchical Road Classifier
+211,119,1.0,Hierarchical Road Classifier
+211,83,1.12682882294449,Hierarchical Road Classifier
+201,204,1.4227796785932334,Hierarchical Road Classifier
+201,233,1.0,Hierarchical Road Classifier
+201,134,1.0,Hierarchical Road Classifier
+201,207,1.1938389986475118,Hierarchical Road Classifier
+201,144,1.0,Hierarchical Road Classifier
+201,276,1.4491132469747274,Hierarchical Road Classifier
+201,228,1.0,Hierarchical Road Classifier
+201,31,1.0,Hierarchical Road Classifier
+201,71,1.0427708989937952,Hierarchical Road Classifier
+201,269,1.0449442508348108,Hierarchical Road Classifier
+162,175,1.0,Hierarchical Road Classifier
+162,271,1.1280430628532014,Hierarchical Road Classifier
+162,263,1.0229998300624674,Hierarchical Road Classifier
+162,197,2.1349490494558143,Hierarchical Road Classifier
+162,89,1.413624790375683,Hierarchical Road Classifier
+162,222,1.0597680751261134,Hierarchical Road Classifier
+162,94,1.0,Hierarchical Road Classifier
+162,77,1.0,Hierarchical Road Classifier
+162,130,1.0,Hierarchical Road Classifier
+162,59,1.0,Hierarchical Road Classifier
+145,71,1.0954625751719773,Hierarchical Road Classifier
+145,179,1.0,Hierarchical Road Classifier
+145,348,1.0,Hierarchical Road Classifier
+145,212,1.0,Hierarchical Road Classifier
+145,175,1.0,Hierarchical Road Classifier
+145,313,1.0,Hierarchical Road Classifier
+145,276,1.0669836383454234,Hierarchical Road Classifier
+145,224,1.0,Hierarchical Road Classifier
+145,73,1.0,Hierarchical Road Classifier
+145,97,1.0,Hierarchical Road Classifier
+90,359,1.004144095100274,Hierarchical Road Classifier
+90,20,1.0,Hierarchical Road Classifier
+90,95,1.0,Hierarchical Road Classifier
+90,249,1.02137517036603,Hierarchical Road Classifier
+90,123,1.0,Hierarchical Road Classifier
+90,204,1.03903918437605,Hierarchical Road Classifier
+90,112,1.3316508976599304,Hierarchical Road Classifier
+90,244,1.0,Hierarchical Road Classifier
+90,285,1.0,Hierarchical Road Classifier
+90,222,1.0375437239626122,Hierarchical Road Classifier
+352,128,1.0,Hierarchical Road Classifier
+352,197,1.1480245775326883,Hierarchical Road Classifier
+352,4,1.0,Hierarchical Road Classifier
+352,244,1.0,Hierarchical Road Classifier
+352,80,1.0,Hierarchical Road Classifier
+352,330,1.4196648407773653,Hierarchical Road Classifier
+352,282,1.013673193663255,Hierarchical Road Classifier
+352,75,1.0,Hierarchical Road Classifier
+352,310,1.0,Hierarchical Road Classifier
+352,164,1.0,Hierarchical Road Classifier
+138,221,1.0588300829779127,Hierarchical Road Classifier
+138,163,1.16840683147217,Hierarchical Road Classifier
+138,213,1.2555368413143928,Hierarchical Road Classifier
+138,37,1.0197488711428189,Hierarchical Road Classifier
+138,35,1.2307029618960335,Hierarchical Road Classifier
+138,220,1.0241959673443084,Hierarchical Road Classifier
+138,48,1.014407167510131,Hierarchical Road Classifier
+138,299,1.0411958514948256,Hierarchical Road Classifier
+138,47,1.0071243641599759,Hierarchical Road Classifier
+138,285,1.0,Hierarchical Road Classifier
+5,267,1.0672264437809464,Hierarchical Road Classifier
+5,20,1.0,Hierarchical Road Classifier
+5,161,1.0707185277296722,Hierarchical Road Classifier
+5,335,1.0,Hierarchical Road Classifier
+5,328,1.048512545602813,Hierarchical Road Classifier
+5,14,1.0,Hierarchical Road Classifier
+5,12,1.0,Hierarchical Road Classifier
+5,149,1.0,Hierarchical Road Classifier
+5,169,1.0931707853903867,Hierarchical Road Classifier
+5,68,1.0,Hierarchical Road Classifier
