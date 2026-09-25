@@ -1882,7 +1882,7 @@ def _json_default(o):
 
 def main() -> None:
     ap = argparse.ArgumentParser(
-        description="Delay-Bounded Time-Varying Geometric t-Spanner — Q1 benchmark")
+        description="Delay-Bounded Time-Varying Geometric t-Spanner — benchmark")
     ap.add_argument("--lat", type=float, default=CENTER_POINT[0])
     ap.add_argument("--lon", type=float, default=CENTER_POINT[1])
     ap.add_argument("--dist", type=int, default=DEFAULT_DIST)
