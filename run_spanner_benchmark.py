@@ -198,14 +198,22 @@ METHOD_STYLE: Dict[str, Tuple[str, str, str, str]] = {
     "full":           ("Full Network (ground truth)",    "#7f8c8d", ":",  "D"),
 }
 
-# ---- Cross-city registry ------------------------------------------------------
+# ---- Cross-city registry: 6 Iranian + 6 international metros -----------------
 CITY_REGISTRY: List[Dict] = [
-    {"name": "Yazd",    "lat": 31.8974, "lon": 54.3569, "dist": 1500, "archetype": "historic-organic"},
-    {"name": "Tehran",  "lat": 35.6892, "lon": 51.3890, "dist": 1500, "archetype": "radial-grid"},
-    {"name": "Isfahan", "lat": 32.6546, "lon": 51.6680, "dist": 1500, "archetype": "historic-organic"},
-    {"name": "Shiraz",  "lat": 29.5918, "lon": 52.5837, "dist": 1500, "archetype": "hill-organic"},
-    {"name": "Mashhad", "lat": 36.2605, "lon": 59.6168, "dist": 1500, "archetype": "radial-grid"},
-    {"name": "Qom",     "lat": 34.6401, "lon": 50.8764, "dist": 1500, "archetype": "modern-grid"},
+    # Iran
+    {"name": "Yazd",      "lat": 31.8974, "lon": 54.3569, "dist": 1500, "archetype": "historic-organic", "country": "Iran"},
+    {"name": "Tehran",    "lat": 35.6892, "lon": 51.3890, "dist": 1500, "archetype": "radial-grid",      "country": "Iran"},
+    {"name": "Isfahan",   "lat": 32.6546, "lon": 51.6680, "dist": 1500, "archetype": "historic-organic", "country": "Iran"},
+    {"name": "Shiraz",    "lat": 29.5918, "lon": 52.5837, "dist": 1500, "archetype": "hill-organic",     "country": "Iran"},
+    {"name": "Mashhad",   "lat": 36.2605, "lon": 59.6168, "dist": 1500, "archetype": "radial-grid",      "country": "Iran"},
+    {"name": "Qom",       "lat": 34.6401, "lon": 50.8764, "dist": 1500, "archetype": "modern-grid",      "country": "Iran"},
+    # International
+    {"name": "Barcelona", "lat": 41.3874, "lon":  2.1686, "dist": 1500, "archetype": "modern-grid",      "country": "Spain"},
+    {"name": "Manhattan", "lat": 40.7580, "lon": -73.9855, "dist": 1500, "archetype": "strict-grid",     "country": "USA"},
+    {"name": "Amsterdam", "lat": 52.3730, "lon":  4.8926, "dist": 1500, "archetype": "historic-organic", "country": "Netherlands"},
+    {"name": "Tokyo",     "lat": 35.6595, "lon": 139.7005, "dist": 1500, "archetype": "dense-organic",   "country": "Japan"},
+    {"name": "Cairo",     "lat": 30.0444, "lon": 31.2357, "dist": 1500, "archetype": "informal-organic", "country": "Egypt"},
+    {"name": "Melbourne", "lat": -37.8136, "lon": 144.9631, "dist": 1500, "archetype": "strict-grid",    "country": "Australia"},
 ]
 
 ARCHETYPE_PARAMS: Dict[str, Dict] = {
@@ -217,6 +225,12 @@ ARCHETYPE_PARAMS: Dict[str, Dict] = {
                              arterial_period=5, collector_period=2),
     "modern-grid":      dict(irregularity=0.05, ring_count=1, oneway_density=0.03,
                              arterial_period=6, collector_period=3),
+    "strict-grid":      dict(irregularity=0.02, ring_count=2, oneway_density=0.30,
+                             arterial_period=4, collector_period=2),
+    "dense-organic":    dict(irregularity=0.65, ring_count=1, oneway_density=0.25,
+                             arterial_period=9, collector_period=4),
+    "informal-organic": dict(irregularity=0.85, ring_count=1, oneway_density=0.30,
+                             arterial_period=10, collector_period=4),
 }
 
 
@@ -1571,18 +1585,32 @@ def make_figure(G: nx.DiGraph, results: Dict, backbone: nx.DiGraph, hours: Seque
 # SECTION 11 - CROSS-CITY GENERALIZATION STUDY
 # ==============================================================================
 
+def _select_cities(quick: bool) -> List[Dict]:
+    """Full run: every registered city. Quick run: a STRATIFIED sample (>=2
+    Iranian + >=2 international) rather than CITY_REGISTRY[:n] -- taking a
+    plain prefix would silently smoke-test only the Iranian subset, since
+    the registry lists Iran first."""
+    if not quick:
+        return list(CITY_REGISTRY)
+    iran = [c for c in CITY_REGISTRY if c["country"] == "Iran"][:2]
+    intl = [c for c in CITY_REGISTRY if c["country"] != "Iran"][:2]
+    return iran + intl
+
+
 def run_cross_city_study(args, t_focus: float) -> List[Dict]:
     grid_n = 11 if args.quick else args.city_grid_n
-    n_cities = 3 if args.quick else len(CITY_REGISTRY)
     n_src = 5 if args.quick else args.city_sources
     n_tgt = 5 if args.quick else args.city_targets
+    cities = _select_cities(args.quick)
 
-    print(f"\n[cross-city] {n_cities} cities, grid_n={grid_n}, "
-          f"{n_src}x{n_tgt} OD pairs each, t_focus={t_focus}")
+    print(f"\n[cross-city] {len(cities)} cities "
+          f"({sum(1 for c in cities if c['country']=='Iran')} Iran / "
+          f"{sum(1 for c in cities if c['country']!='Iran')} international), "
+          f"grid_n={grid_n}, {n_src}x{n_tgt} OD pairs each, t_focus={t_focus}")
 
     out: List[Dict] = []
-    for spec in CITY_REGISTRY[:n_cities]:
-        print(f"  --- {spec['name']} ({spec['archetype']}) ---")
+    for spec in cities:
+        print(f"  --- {spec['name']}, {spec['country']} ({spec['archetype']}) ---")
         G = build_city_network(spec, grid_n=grid_n, force_synthetic=args.synthetic)
         morph = network_morphology(G)
         pairs = sample_pairs(G, n_src, n_tgt, args.seed)
@@ -1613,7 +1641,7 @@ def run_cross_city_study(args, t_focus: float) -> List[Dict]:
         Hb = matched_density_betweenness(G, budget, args.seed)
         methods["matched_btw"] = cert_eval(Hb, t_focus)
 
-        entry = {"city": spec["name"], "archetype": spec["archetype"],
+        entry = {"city": spec["name"], "country": spec["country"], "archetype": spec["archetype"],
                  "used_real_osm": bool(G.graph.get("used_real_osm", False)),
                  **morph, "methods": methods}
         out.append(entry)
@@ -1678,6 +1706,50 @@ def cross_city_significance(city_results: List[Dict]) -> Dict:
         return {"available": False, "error": f"{type(exc).__name__}: {exc}"}
 
 
+def cross_city_country_comparison(city_results: List[Dict]) -> Dict:
+    """Iran vs. international, INDEPENDENT samples (different cities, not the
+    same cities under two conditions) -- so Mann-Whitney U is the correct
+    test here, not the paired Wilcoxon used elsewhere in this script. This is
+    the check that actually speaks to external validity beyond one country:
+    if Iran and international cities are statistically indistinguishable on
+    the method's outcomes, the single-country result generalizes; if not,
+    the difference and its direction must be reported, not hidden."""
+    iran = [c for c in city_results if c["country"] == "Iran"]
+    intl = [c for c in city_results if c["country"] != "Iran"]
+    out: Dict = {"n_iran": len(iran), "n_international": len(intl),
+                 "international_countries": sorted({c["country"] for c in intl})}
+    if not _HAVE_SCIPY or len(iran) < 2 or len(intl) < 2:
+        out["available"] = False
+        out["reason"] = (f"need >=2 cities per group and scipy for Mann-Whitney U "
+                          f"(have {len(iran)} Iran / {len(intl)} international)")
+        return out
+
+    out["available"] = True
+    metrics = {
+        "edge_retention_pct": lambda c: c["methods"]["delay_bounded"]["structure"]["edge_retention_pct"],
+        "worst_od_dilation": lambda c: c["methods"]["delay_bounded"]["metrics"]["worst_dilation"],
+        "advantage_ratio_vs_matched_btw": lambda c: (
+            c["methods"]["matched_btw"]["metrics"]["worst_dilation"]
+            / max(1e-9, c["methods"]["delay_bounded"]["metrics"]["worst_dilation"])),
+        "orientation_entropy": lambda c: c["orientation_entropy"],
+        "circuity_mean": lambda c: c["circuity_mean"],
+    }
+    for name, fn in metrics.items():
+        a = [fn(c) for c in iran]
+        b = [fn(c) for c in intl]
+        try:
+            stat, p = sps.mannwhitneyu(a, b, alternative="two-sided")
+            out[name] = {"iran_median": float(np.median(a)), "international_median": float(np.median(b)),
+                        "statistic": float(stat), "p_value": float(p)}
+        except Exception as exc:
+            out[name] = {"error": str(exc)}
+    out["note"] = ("Two-sided Mann-Whitney U, independent samples. n is small (city count, "
+                   "not OD-pair count) so this is a coarse external-validity check, not a "
+                   "high-powered confirmatory test; a non-significant p here is the desired "
+                   "result (it means the method does not behave differently by country).")
+    return out
+
+
 def sensitivity_analysis(G: nx.DiGraph, t_focus: float, pairs: Dict, seed: int,
                          scales: Sequence[float] = (0.70, 0.85, 1.00, 1.15, 1.30)) -> List[Dict]:
     rows: List[Dict] = []
@@ -1704,17 +1776,18 @@ def sensitivity_analysis(G: nx.DiGraph, t_focus: float, pairs: Dict, seed: int,
 
 
 def build_crosscity_table(city_results: List[Dict]) -> str:
-    head = ("| City | Archetype | Data | Nodes | Edges | Orient.entropy | Circuity | "
+    head = ("| City | Country | Archetype | Data | Nodes | Edges | Orient.entropy | Circuity | "
             "Ours keep% | Certified | Ours worstOD | Matched-Btw worstOD | Advantage (x) | "
             "Static-FF keep% | Yao-Cone keep% | Matched-Btw keep% | Hierarchical keep% |")
-    rows = [head, "|" + "---|" * 16]
-    for c in city_results:
+    rows = [head, "|" + "---|" * 17]
+    for c in sorted(city_results, key=lambda c: (c["country"] != "Iran", c["country"], c["city"])):
         mo = c["methods"]
         ours_od = mo["delay_bounded"]["metrics"]["worst_dilation"]
         btw_od = mo["matched_btw"]["metrics"]["worst_dilation"]
         adv = btw_od / max(1e-9, ours_od)
         rows.append(
-            f"| {c['city']} | {c['archetype']} | {'OSM' if c['used_real_osm'] else 'synthetic'} | "
+            f"| {c['city']} | {c['country']} | {c['archetype']} | "
+            f"{'OSM' if c['used_real_osm'] else 'synthetic'} | "
             f"{c['n_nodes']} | {c['n_edges']} | {c['orientation_entropy']:.3f} | "
             f"{c['circuity_mean']:.3f} | {mo['delay_bounded']['structure']['edge_retention_pct']:.1f} | "
             f"{'yes' if mo['delay_bounded']['certificate']['certified'] else 'no'} | "
@@ -1734,30 +1807,43 @@ def make_crosscity_figure(city_results: List[Dict], regression: Dict, sensitivit
     fig, axes = plt.subplots(2, 2, figsize=(16.5, 13.5))
     axH, axI, axJ, axK = axes[0, 0], axes[0, 1], axes[1, 0], axes[1, 1]
 
+    city_order = sorted(city_results, key=lambda c: (c["country"] != "Iran", c["country"], c["city"]))
+    n_iran = sum(1 for c in city_order if c["country"] == "Iran")
     rows = []
-    for c in city_results:
+    for c in city_order:
         for m in ("delay_bounded", "static_ff", "yao_cone", "matched_btw", "hierarchical"):
             if m in c["methods"]:
-                rows.append({"city": c["city"], "method": METHOD_STYLE[m][0],
+                rows.append({"city": f"{c['city']}\n({c['country']})", "method": METHOD_STYLE[m][0],
                             "retention": c["methods"][m]["structure"]["edge_retention_pct"]})
     if rows:
         dfH = pd.DataFrame(rows)
+        city_labels = [f"{c['city']}\n({c['country']})" for c in city_order]
         pal = {METHOD_STYLE[m][0]: METHOD_STYLE[m][1]
               for m in ("delay_bounded", "static_ff", "yao_cone", "matched_btw", "hierarchical")}
-        sns.barplot(data=dfH, x="city", y="retention", hue="method", ax=axH, palette=pal)
+        sns.barplot(data=dfH, x="city", y="retention", hue="method", ax=axH, palette=pal,
+                   order=city_labels)
+        if 0 < n_iran < len(city_order):
+            axH.axvline(n_iran - 0.5, color="#111111", linestyle=(0, (4, 3)), linewidth=1.5, zorder=5)
+            axH.text(n_iran / 2.0 - 0.5, 101.5, "Iran", ha="center", fontsize=10, fontweight="bold")
+            axH.text(n_iran + (len(city_order) - n_iran) / 2.0 - 0.5, 101.5, "International",
+                     ha="center", fontsize=10, fontweight="bold")
+        axH.set_ylim(0, 108)
         axH.set_ylabel("Edges retained (%)"); axH.set_xlabel("")
         axH.set_title(f"(h) Cross-city sparsification at $t={t_focus}$", loc="left")
-        axH.tick_params(axis="x", rotation=20)
+        axH.tick_params(axis="x", rotation=20, labelsize=8.5)
         axH.legend(fontsize=7.5, ncol=2, loc="lower right")
 
-    names = [c["city"] for c in city_results]
-    ents = [c["orientation_entropy"] for c in city_results]
-    ours_dil = [c["methods"]["delay_bounded"]["metrics"]["worst_dilation"] for c in city_results]
-    btw_dil = [c["methods"]["matched_btw"]["metrics"]["worst_dilation"] for c in city_results]
+    names = [c["city"] for c in city_order]
+    is_iran = [c["country"] == "Iran" for c in city_order]
+    colors = ["#c0392b" if ir else "#2980b9" for ir in is_iran]
+    ents = [c["orientation_entropy"] for c in city_order]
+    ours_dil = [c["methods"]["delay_bounded"]["metrics"]["worst_dilation"] for c in city_order]
+    btw_dil = [c["methods"]["matched_btw"]["metrics"]["worst_dilation"] for c in city_order]
     advantage = [b / max(1e-9, o) for o, b in zip(ours_dil, btw_dil)]
-    axI.scatter(ents, advantage, s=100, color="#c0392b", zorder=3)
+    axI.scatter(ents, advantage, s=100, c=colors, zorder=3)
     for x, y, nm in zip(ents, advantage, names):
         axI.annotate(nm, (x, y), fontsize=9, xytext=(5, 5), textcoords="offset points")
+    axI.scatter([], [], color="#c0392b", label="Iran"); axI.scatter([], [], color="#2980b9", label="International")
     axI.axhline(1.0, color="#7f8c8d", linestyle=":", linewidth=1.4)
     if len(ents) >= 2 and np.std(advantage) > 1e-9:
         kk, bb = np.polyfit(ents, advantage, 1)
@@ -1770,10 +1856,11 @@ def make_crosscity_figure(city_results: List[Dict], regression: Dict, sensitivit
     axI.set_title(title, loc="left")
     axI.set_xlabel("Orientation entropy (0=grid, 1=organic)")
     axI.set_ylabel("Worst-OD-dilation ratio: matched-btw / ours  (>1 = we win)")
+    axI.legend(fontsize=8, loc="best")
 
-    circ = [c["circuity_mean"] for c in city_results]
-    retain = [c["methods"]["delay_bounded"]["structure"]["edge_retention_pct"] for c in city_results]
-    axJ.scatter(circ, retain, s=100, color="#2980b9", zorder=3)
+    circ = [c["circuity_mean"] for c in city_order]
+    retain = [c["methods"]["delay_bounded"]["structure"]["edge_retention_pct"] for c in city_order]
+    axJ.scatter(circ, retain, s=100, c=colors, zorder=3)
     for x, y, nm in zip(circ, retain, names):
         axJ.annotate(nm, (x, y), fontsize=9, xytext=(5, 5), textcoords="offset points")
     if len(circ) >= 2:
@@ -1882,7 +1969,7 @@ def _json_default(o):
 
 def main() -> None:
     ap = argparse.ArgumentParser(
-        description="Delay-Bounded Time-Varying Geometric t-Spanner — benchmark")
+        description="Delay-Bounded Time-Varying Geometric t-Spanner — Q1 benchmark")
     ap.add_argument("--lat", type=float, default=CENTER_POINT[0])
     ap.add_argument("--lon", type=float, default=CENTER_POINT[1])
     ap.add_argument("--dist", type=int, default=DEFAULT_DIST)
@@ -2065,6 +2152,7 @@ def main() -> None:
     city_results: List[Dict] = []
     regression: Dict = {"available": False}
     city_sig: Dict = {"available": False}
+    country_cmp: Dict = {"available": False}
     sensitivity: List[Dict] = []
     crosscity_table = ""
     if not args.skip_crosscity:
@@ -2074,6 +2162,7 @@ def main() -> None:
         city_results = run_cross_city_study(args, t_focus)
         regression = cross_city_regression(city_results)
         city_sig = cross_city_significance(city_results)
+        country_cmp = cross_city_country_comparison(city_results)
         print("\n[sensitivity] robustness to congestion-model misspecification "
               "(focus city, alpha rescaled -30%..+30%)")
         sensitivity = sensitivity_analysis(G, t_focus, pair_sets[0], args.seed)
@@ -2090,6 +2179,17 @@ def main() -> None:
             print(f"[stats] city-level Wilcoxon: n={city_sig['n_cities']}, p={city_sig['p_value']:.3e}")
         else:
             print(f"[stats] city-level Wilcoxon skipped: {city_sig.get('reason')}")
+        if country_cmp.get("available"):
+            print(f"[stats] Iran (n={country_cmp['n_iran']}) vs International "
+                  f"(n={country_cmp['n_international']}, {country_cmp['international_countries']}) "
+                  f"Mann-Whitney U:")
+            for k in ("edge_retention_pct", "worst_od_dilation", "advantage_ratio_vs_matched_btw"):
+                v = country_cmp.get(k, {})
+                if "p_value" in v:
+                    print(f"    {k}: Iran median={v['iran_median']:.3f}, "
+                          f"Intl median={v['international_median']:.3f}, p={v['p_value']:.3f}")
+        else:
+            print(f"[stats] Iran-vs-international comparison skipped: {country_cmp.get('reason')}")
 
     clean_results = {}
     for (m, t), v in results.items():
@@ -2137,6 +2237,7 @@ def main() -> None:
             "cities": clean_city_results,
             "morphology_regression": regression,
             "city_level_significance": city_sig,
+            "iran_vs_international_comparison": country_cmp,
             "yao_cone_definition": ("Network-constrained adaptation of the classical Yao graph "
                                     "(k=8 angular cones per node, cheapest free-flow edge per cone); "
                                     "NOT the unconstrained-point-set construction with the closed-form "
@@ -2153,9 +2254,12 @@ def main() -> None:
             "Cities whose live OSMnx/Overpass fetch is unavailable (e.g. an offline sandbox) "
             "fall back to a deterministic, morphology-parameterized synthetic generator; each "
             "city's `used_real_osm` flag in `cross_city.cities` states which was used for that run.",
-            "n=6 cities supports a directional cross-morphology generalization claim (see "
-            "morphology_regression and city_level_significance), not a definitive one; a "
-            "larger, multi-country, telemetry-fitted replication remains future work.",
+            f"n={len(CITY_REGISTRY)} cities across "
+            f"{len({c['country'] for c in CITY_REGISTRY})} countries supports a directional "
+            "cross-morphology, cross-country generalization claim (see morphology_regression, "
+            "city_level_significance and iran_vs_international_comparison), not a definitive "
+            "one; a larger, telemetry-fitted replication across more countries and continents "
+            "remains future work.",
             "Greedy construction gives no approximation guarantee on |H|; the matched-density "
             "and Yao-cone controls are the empirical (not theoretical) lower-bound proxies used here.",
         ],
