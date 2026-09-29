@@ -79,11 +79,9 @@ from __future__ import annotations
 
 import argparse
 import heapq
-import hashlib
 import json
 import math
 import os
-import pickle
 import random
 import time
 import warnings
@@ -142,6 +140,7 @@ EPS: float = 1e-9
 INF: float = float("inf")
 
 CERT_REFINE_CAP: int = 300
+CERT_REFINE_MULT: float = 8.0
 
 ROOT: str = os.path.dirname(os.path.abspath(__file__))
 RESULTS_DIR: str = os.path.join(ROOT, "results")
@@ -152,8 +151,6 @@ TABLE_PATH: str = os.path.join(RESULTS_DIR, "benchmark_table.md")
 ABLATION_PATH: str = os.path.join(RESULTS_DIR, "ablation_table.md")
 CROSSCITY_TABLE_PATH: str = os.path.join(RESULTS_DIR, "crosscity_table.md")
 PERPAIR_PATH: str = os.path.join(RESULTS_DIR, "per_pair_dilation.csv")
-GRAPH_CACHE_DIR: str = os.path.join(RESULTS_DIR, "graph_cache")
-CACHE_FORMAT_VERSION: int = 1
 
 HIGHWAY_PROFILES: Dict[str, Tuple[float, float, str]] = {
     "motorway":       (100.0, 0.20, "arterial"),
@@ -712,74 +709,12 @@ def enrich_temporal_costs(G: nx.DiGraph) -> nx.DiGraph:
     return G
 
 
-def _cache_key(kind: str, center: Tuple[float, float], dist: int, extra: Dict) -> str:
-    payload = json.dumps({"kind": kind, "center": [round(center[0], 6), round(center[1], 6)],
-                          "dist": dist, "extra": extra, "v": CACHE_FORMAT_VERSION}, sort_keys=True)
-    return hashlib.sha1(payload.encode("utf-8")).hexdigest()[:16]
-
-
-def _cache_paths(key: str, label: str) -> Tuple[str, str]:
-    os.makedirs(GRAPH_CACHE_DIR, exist_ok=True)
-    safe = "".join(ch if ch.isalnum() else "_" for ch in label)
-    base = os.path.join(GRAPH_CACHE_DIR, f"{safe}_{key}")
-    return base + ".pkl", base + ".meta.json"
-
-
-def load_graph_cache(pkl_path: str, meta_path: str) -> Optional[nx.DiGraph]:
-    """Cold-reproducibility layer: a graph built once from live OSM data can be
-    replayed byte-for-byte later, even offline or after the underlying map
-    has changed -- the whole point of the `run_spanner_benchmark.py --quick`
-    'could I reproduce this myself, cold, right now?' test."""
-    if not (os.path.exists(pkl_path) and os.path.exists(meta_path)):
-        return None
-    try:
-        with open(meta_path, "r", encoding="utf-8") as fh:
-            meta = json.load(fh)
-        if meta.get("cache_format_version") != CACHE_FORMAT_VERSION:
-            return None
-        with open(pkl_path, "rb") as fh:
-            G = pickle.load(fh)
-        G.graph["cache_hit"] = True
-        G.graph["cache_fetched_utc"] = meta.get("fetched_utc")
-        return G
-    except Exception as exc:
-        print(f"[cache] failed to load {pkl_path} ({type(exc).__name__}: {exc}); rebuilding.")
-        return None
-
-
-def save_graph_cache(G: nx.DiGraph, pkl_path: str, meta_path: str) -> None:
-    try:
-        with open(pkl_path, "wb") as fh:
-            pickle.dump(G, fh, protocol=pickle.HIGHEST_PROTOCOL)
-        meta = {"cache_format_version": CACHE_FORMAT_VERSION,
-                "fetched_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                "source": G.graph.get("source"), "nodes": G.number_of_nodes(),
-                "edges": G.number_of_edges(), "center": G.graph.get("center"),
-                "dist": G.graph.get("dist")}
-        with open(meta_path, "w", encoding="utf-8") as fh:
-            json.dump(meta, fh, indent=2)
-    except Exception as exc:
-        print(f"[cache] failed to save cache ({type(exc).__name__}: {exc}); continuing without cache.")
-
-
 def build_network(center: Tuple[float, float], dist: int,
                   force_synthetic: bool = False, contract: bool = True,
-                  grid_n: int = 19, use_cache: bool = True,
-                  refresh_cache: bool = False, label: str = "focus") -> nx.DiGraph:
-    key = _cache_key("network", center, dist, {"grid_n": grid_n, "contract": contract,
-                                                "force_synthetic": force_synthetic, "label": label})
-    pkl_path, meta_path = _cache_paths(key, label)
-    if use_cache and not refresh_cache:
-        cached = load_graph_cache(pkl_path, meta_path)
-        if cached is not None:
-            print(f"[cache] loaded '{label}' from {os.path.basename(pkl_path)} "
-                  f"({cached.number_of_nodes()} nodes / {cached.number_of_edges()} edges, "
-                  f"fetched {cached.graph.get('cache_fetched_utc')}); pass --refresh-cache to refetch.")
-            return cached
-
+                  grid_n: int = 19) -> nx.DiGraph:
     G = None if force_synthetic else fetch_osm_network(center, dist)
     if G is None:
-        G = synthetic_arterial_grid(center, dist, n=grid_n, seed_key=label)
+        G = synthetic_arterial_grid(center, dist, n=grid_n, seed_key="focus")
     raw_nodes, raw_edges = G.number_of_nodes(), G.number_of_edges()
     if contract:
         G = contract_degree_two(G)
@@ -787,31 +722,13 @@ def build_network(center: Tuple[float, float], dist: int,
               f"{raw_edges} -> {G.number_of_edges()} edges.")
     G.graph["raw_nodes"] = raw_nodes
     G.graph["raw_edges"] = raw_edges
-    G = enrich_temporal_costs(G)
-    G.graph["cache_hit"] = False
-    if use_cache:
-        save_graph_cache(G, pkl_path, meta_path)
-    return G
+    return enrich_temporal_costs(G)
 
 
 def build_city_network(spec: Dict, grid_n: int = 15, contract: bool = True,
-                       force_synthetic: bool = False, use_cache: bool = True,
-                       refresh_cache: bool = False) -> nx.DiGraph:
-    """Cross-city loader: real OSM first, morphology-aware synthetic fallback,
-    both behind the same graph cache as build_network()."""
+                       force_synthetic: bool = False) -> nx.DiGraph:
+    """Cross-city loader: real OSM first, morphology-aware synthetic fallback."""
     center = (spec["lat"], spec["lon"])
-    key = _cache_key("city", center, spec["dist"], {"grid_n": grid_n, "contract": contract,
-                                                     "force_synthetic": force_synthetic,
-                                                     "archetype": spec["archetype"]})
-    pkl_path, meta_path = _cache_paths(key, spec["name"])
-    if use_cache and not refresh_cache:
-        cached = load_graph_cache(pkl_path, meta_path)
-        if cached is not None:
-            print(f"[cache] loaded '{spec['name']}' from {os.path.basename(pkl_path)} "
-                  f"({cached.number_of_nodes()} nodes / {cached.number_of_edges()} edges, "
-                  f"fetched {cached.graph.get('cache_fetched_utc')}); pass --refresh-cache to refetch.")
-            return cached
-
     G = None if force_synthetic else fetch_osm_network(center, spec["dist"])
     used_real = G is not None
     if G is None:
@@ -825,11 +742,7 @@ def build_city_network(spec: Dict, grid_n: int = 15, contract: bool = True,
     G.graph["city"] = spec["name"]
     G.graph["archetype"] = spec["archetype"]
     G.graph["used_real_osm"] = used_real
-    G = enrich_temporal_costs(G)
-    G.graph["cache_hit"] = False
-    if use_cache:
-        save_graph_cache(G, pkl_path, meta_path)
-    return G
+    return enrich_temporal_costs(G)
 
 
 def network_summary(G: nx.DiGraph) -> dict:
@@ -1020,35 +933,11 @@ def delay_bounded_greedy_spanner(G: nx.DiGraph, t: float,
     return H
 
 
-def unbounded_dijkstra(adj: Adjacency, source, target, tau: int) -> float:
-    """Same as bounded_dijkstra with an infinite budget -- the TRUE distance,
-    not a capped estimate. Used only for refinement (the certificate decision
-    itself always uses the cheap bounded probe; this is called at most
-    `refine_cap` times per certificate check)."""
-    return bounded_dijkstra(adj, source, target, tau, INF)
-
-
 def temporal_stretch_certificate(G: nx.DiGraph, H: nx.DiGraph, t: float,
                                  hours: Optional[Iterable[int]] = None,
-                                 attr: str = "tt", refine_cap: int = CERT_REFINE_CAP) -> dict:
-    """Exhaustive Theorem-1 certificate + the TRUE magnitude of the worst
-    violation (not a capped estimate).
-
-    CORRECTNESS NOTE (fixed after a code-review catch): an earlier version
-    refined violations with a budget of `refine_mult * w` and, on timeout,
-    silently reported `attained_worst_edge_stretch = refine_mult` (a fixed
-    8.0) for EVERY censored edge. That number was a search-cutoff artifact,
-    identical across wildly different graphs, not a measured value -- exactly
-    the kind of suspiciously round, zero-information result that should be
-    distrusted rather than reported. This version instead runs a genuinely
-    unbounded Dijkstra on the first `refine_cap` violating edges: if `H`
-    still reaches `v` from `u` (however slowly), the TRUE stretch is
-    reported; if `H` cannot reach `v` from `u` AT ALL on that snapshot, the
-    edge is flagged as `unreachable` and the certificate's
-    `attained_worst_edge_stretch` is reported as `inf`, with the exact count
-    of such edges given in `unreachable_violations` -- an honest "we don't
-    have a finite bound" rather than a fabricated one.
-    """
+                                 attr: str = "tt", refine_cap: int = CERT_REFINE_CAP,
+                                 refine_mult: float = CERT_REFINE_MULT) -> dict:
+    """Exhaustive Theorem-1 certificate + magnitude of the worst violation."""
     hours = list(HOURS) if hours is None else list(hours)
     adj = build_adjacency(H, attr)
 
@@ -1062,28 +951,25 @@ def temporal_stretch_certificate(G: nx.DiGraph, H: nx.DiGraph, t: float,
                 break
 
     max_stretch = float(t)
-    unreachable = 0
-    refined_n = min(len(violating), refine_cap)
+    censored = 0
     for u, v, tau, w in violating[:refine_cap]:
-        d = unbounded_dijkstra(adj, u, v, tau)
+        big = refine_mult * w
+        d = bounded_dijkstra(adj, u, v, tau, big)
         if d == INF:
-            unreachable += 1
+            censored += 1
         else:
             max_stretch = max(max_stretch, d / max(EPS, w))
-
-    truncated = len(violating) > refine_cap
-    is_lower_bound = bool(unreachable > 0 or truncated)
-    attained = float("inf") if unreachable > 0 else float(max_stretch)
+    if censored > 0:
+        max_stretch = max(max_stretch, refine_mult)
 
     return {
         "certified": len(violating) == 0,
         "violating_edges": int(len(violating)),
         "violation_rate": float(len(violating) / max(1, G.number_of_edges())),
         "checked_edges": int(G.number_of_edges()),
-        "refined_edges": int(refined_n),
-        "attained_worst_edge_stretch": attained,
-        "unreachable_violations": int(unreachable),
-        "attained_stretch_is_lower_bound": is_lower_bound,
+        "attained_worst_edge_stretch": float(max_stretch),
+        "censored_refinements": int(censored),
+        "refine_budget_mult": float(refine_mult),
         "first_violation_hour": int(violating[0][2]) if violating else None,
     }
 
@@ -1725,8 +1611,7 @@ def run_cross_city_study(args, t_focus: float) -> List[Dict]:
     out: List[Dict] = []
     for spec in cities:
         print(f"  --- {spec['name']}, {spec['country']} ({spec['archetype']}) ---")
-        G = build_city_network(spec, grid_n=grid_n, force_synthetic=args.synthetic,
-                               use_cache=not args.no_cache, refresh_cache=args.refresh_cache)
+        G = build_city_network(spec, grid_n=grid_n, force_synthetic=args.synthetic)
         morph = network_morphology(G)
         pairs = sample_pairs(G, n_src, n_tgt, args.seed)
         base = baseline_distances(G, pairs, HOURS)
@@ -1761,7 +1646,7 @@ def run_cross_city_study(args, t_focus: float) -> List[Dict]:
                  **morph, "methods": methods}
         out.append(entry)
         print(f"    keep(ours)={methods['delay_bounded']['structure']['edge_retention_pct']:.1f}% | "
-              f"stretch={_fmt_stretch(methods['delay_bounded']['certificate'])} | "
+              f"stretch={methods['delay_bounded']['certificate']['attained_worst_edge_stretch']:.3f} | "
               f"worstOD(ours)={methods['delay_bounded']['metrics']['worst_dilation']:.3f} | "
               f"worstOD(matched-btw)={methods['matched_btw']['metrics']['worst_dilation']:.3f} | "
               f"orient.entropy={morph['orientation_entropy']:.3f} | circuity={morph['circuity_mean']:.3f}")
@@ -2015,29 +1900,9 @@ def make_crosscity_figure(city_results: List[Dict], regression: Dict, sensitivit
 # ==============================================================================
 
 def _fmt(x, nd: int = 3) -> str:
-    if x is None or (isinstance(x, float) and math.isnan(x)):
+    if x is None or (isinstance(x, float) and (math.isnan(x) or math.isinf(x))):
         return "—"
-    if isinstance(x, float) and math.isinf(x):
-        return "∞"
     return f"{x:.{nd}f}"
-
-
-def _fmt_stretch(cert: Optional[Dict], nd: int = 3) -> str:
-    """Format attained_worst_edge_stretch honestly: '—' if no certificate was
-    run, an exact number if every violation was refined to its true value,
-    '≥X' if the search was truncated before refining every violating edge
-    (a genuine, disclosed lower bound, never a fabricated cap), and '∞ (n
-    unreachable)' if H truly cannot reach some pair on some snapshot."""
-    if not cert:
-        return "—"
-    val = cert.get("attained_worst_edge_stretch")
-    if val is None or (isinstance(val, float) and math.isnan(val)):
-        return "—"
-    if isinstance(val, float) and math.isinf(val):
-        n = cert.get("unreachable_violations", 0)
-        return f"∞ ({n} unreachable)"
-    prefix = "≥" if cert.get("attained_stretch_is_lower_bound") else ""
-    return f"{prefix}{val:.{nd}f}"
 
 
 def build_table(results: Dict, t_values: Sequence[float]) -> str:
@@ -2063,12 +1928,13 @@ def build_table(results: Dict, t_values: Sequence[float]) -> str:
         m, s, c = e["metrics"], e["structure"], e.get("certificate", {}) or {}
         name = METHOD_STYLE[key[0]][0]
         tstr = f"{key[1]:.2f}" if key[1] is not None else "—"
+        stretch = c.get("attained_worst_edge_stretch")
         cert = "—" if not c else ("**yes**" if c.get("certified") else f"no ({c.get('violating_edges')} edges)")
         ci = m.get("mean_dilation_ci", [np.nan, np.nan])
         ppe = e["dijkstra_probes"] / max(1, s["edges_parent"])
         rows.append(
             f"| {name} | {tstr} | {s['edge_retention_pct']:.1f} | {s['length_retention_pct']:.1f} | "
-            f"{_fmt_stretch(c)} | {cert} | {_fmt(m['worst_dilation'])} | {_fmt(m['mean_dilation'])} "
+            f"{_fmt(stretch)} | {cert} | {_fmt(m['worst_dilation'])} | {_fmt(m['mean_dilation'])} "
             f"[{_fmt(ci[0])}, {_fmt(ci[1])}] | {100*m['reachability']:.1f} | "
             f"{e['build_seconds']:.2f} | {ppe:.2f} |"
         )
@@ -2119,10 +1985,6 @@ def main() -> None:
     ap.add_argument("--city-grid-n", type=int, default=15)
     ap.add_argument("--city-sources", type=int, default=7)
     ap.add_argument("--city-targets", type=int, default=7)
-    ap.add_argument("--refresh-cache", action="store_true",
-                    help="ignore any cached graph and refetch/rebuild (then overwrite the cache)")
-    ap.add_argument("--no-cache", action="store_true",
-                    help="disable graph caching entirely (neither read nor write)")
     args = ap.parse_args()
 
     os.makedirs(RESULTS_DIR, exist_ok=True)
@@ -2143,8 +2005,7 @@ def main() -> None:
 
     # ---------------- focus-city network ---------------------------------
     G = build_network((args.lat, args.lon), dist, force_synthetic=args.synthetic,
-                      contract=not args.no_contract, grid_n=grid_n,
-                      use_cache=not args.no_cache, refresh_cache=args.refresh_cache)
+                      contract=not args.no_contract, grid_n=grid_n)
     summary = network_summary(G)
     summary["temporal_heterogeneity_index"] = round(temporal_heterogeneity_index(G), 5)
     summary["fifo_violation_rate"] = round(fifo_violation_rate(G), 6)
@@ -2173,7 +2034,7 @@ def main() -> None:
         print(f"  [{key[0]:<15} t={('%.2f' % key[1]) if key[1] else '  — '}] "
               f"keep={s['edge_retention_pct']:5.1f}% | worstOD={met['worst_dilation']:.3f} | "
               f"reach={100*met['reachability']:5.1f}% | cert={cert.get('certified') if cert else '—'} | "
-              f"stretch={_fmt_stretch(cert) if cert else '—'} | "
+              f"stretch={_fmt(cert.get('attained_worst_edge_stretch')) if cert else '—'} | "
               f"{results[key]['build_seconds']:.2f}s")
 
     print("\n[sweep] constructing spanners over the dilation grid ...")

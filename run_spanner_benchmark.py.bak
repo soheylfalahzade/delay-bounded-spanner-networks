@@ -79,11 +79,9 @@ from __future__ import annotations
 
 import argparse
 import heapq
-import hashlib
 import json
 import math
 import os
-import pickle
 import random
 import time
 import warnings
@@ -142,6 +140,7 @@ EPS: float = 1e-9
 INF: float = float("inf")
 
 CERT_REFINE_CAP: int = 300
+CERT_REFINE_MULT: float = 8.0
 
 ROOT: str = os.path.dirname(os.path.abspath(__file__))
 RESULTS_DIR: str = os.path.join(ROOT, "results")
@@ -152,8 +151,6 @@ TABLE_PATH: str = os.path.join(RESULTS_DIR, "benchmark_table.md")
 ABLATION_PATH: str = os.path.join(RESULTS_DIR, "ablation_table.md")
 CROSSCITY_TABLE_PATH: str = os.path.join(RESULTS_DIR, "crosscity_table.md")
 PERPAIR_PATH: str = os.path.join(RESULTS_DIR, "per_pair_dilation.csv")
-GRAPH_CACHE_DIR: str = os.path.join(RESULTS_DIR, "graph_cache")
-CACHE_FORMAT_VERSION: int = 1
 
 HIGHWAY_PROFILES: Dict[str, Tuple[float, float, str]] = {
     "motorway":       (100.0, 0.20, "arterial"),
@@ -201,22 +198,14 @@ METHOD_STYLE: Dict[str, Tuple[str, str, str, str]] = {
     "full":           ("Full Network (ground truth)",    "#7f8c8d", ":",  "D"),
 }
 
-# ---- Cross-city registry: 6 Iranian + 6 international metros -----------------
+# ---- Cross-city registry ------------------------------------------------------
 CITY_REGISTRY: List[Dict] = [
-    # Iran
-    {"name": "Yazd",      "lat": 31.8974, "lon": 54.3569, "dist": 1500, "archetype": "historic-organic", "country": "Iran"},
-    {"name": "Tehran",    "lat": 35.6892, "lon": 51.3890, "dist": 1500, "archetype": "radial-grid",      "country": "Iran"},
-    {"name": "Isfahan",   "lat": 32.6546, "lon": 51.6680, "dist": 1500, "archetype": "historic-organic", "country": "Iran"},
-    {"name": "Shiraz",    "lat": 29.5918, "lon": 52.5837, "dist": 1500, "archetype": "hill-organic",     "country": "Iran"},
-    {"name": "Mashhad",   "lat": 36.2605, "lon": 59.6168, "dist": 1500, "archetype": "radial-grid",      "country": "Iran"},
-    {"name": "Qom",       "lat": 34.6401, "lon": 50.8764, "dist": 1500, "archetype": "modern-grid",      "country": "Iran"},
-    # International
-    {"name": "Barcelona", "lat": 41.3874, "lon":  2.1686, "dist": 1500, "archetype": "modern-grid",      "country": "Spain"},
-    {"name": "Manhattan", "lat": 40.7580, "lon": -73.9855, "dist": 1500, "archetype": "strict-grid",     "country": "USA"},
-    {"name": "Amsterdam", "lat": 52.3730, "lon":  4.8926, "dist": 1500, "archetype": "historic-organic", "country": "Netherlands"},
-    {"name": "Tokyo",     "lat": 35.6595, "lon": 139.7005, "dist": 1500, "archetype": "dense-organic",   "country": "Japan"},
-    {"name": "Cairo",     "lat": 30.0444, "lon": 31.2357, "dist": 1500, "archetype": "informal-organic", "country": "Egypt"},
-    {"name": "Melbourne", "lat": -37.8136, "lon": 144.9631, "dist": 1500, "archetype": "strict-grid",    "country": "Australia"},
+    {"name": "Yazd",    "lat": 31.8974, "lon": 54.3569, "dist": 1500, "archetype": "historic-organic"},
+    {"name": "Tehran",  "lat": 35.6892, "lon": 51.3890, "dist": 1500, "archetype": "radial-grid"},
+    {"name": "Isfahan", "lat": 32.6546, "lon": 51.6680, "dist": 1500, "archetype": "historic-organic"},
+    {"name": "Shiraz",  "lat": 29.5918, "lon": 52.5837, "dist": 1500, "archetype": "hill-organic"},
+    {"name": "Mashhad", "lat": 36.2605, "lon": 59.6168, "dist": 1500, "archetype": "radial-grid"},
+    {"name": "Qom",     "lat": 34.6401, "lon": 50.8764, "dist": 1500, "archetype": "modern-grid"},
 ]
 
 ARCHETYPE_PARAMS: Dict[str, Dict] = {
@@ -228,12 +217,6 @@ ARCHETYPE_PARAMS: Dict[str, Dict] = {
                              arterial_period=5, collector_period=2),
     "modern-grid":      dict(irregularity=0.05, ring_count=1, oneway_density=0.03,
                              arterial_period=6, collector_period=3),
-    "strict-grid":      dict(irregularity=0.02, ring_count=2, oneway_density=0.30,
-                             arterial_period=4, collector_period=2),
-    "dense-organic":    dict(irregularity=0.65, ring_count=1, oneway_density=0.25,
-                             arterial_period=9, collector_period=4),
-    "informal-organic": dict(irregularity=0.85, ring_count=1, oneway_density=0.30,
-                             arterial_period=10, collector_period=4),
 }
 
 
@@ -712,74 +695,12 @@ def enrich_temporal_costs(G: nx.DiGraph) -> nx.DiGraph:
     return G
 
 
-def _cache_key(kind: str, center: Tuple[float, float], dist: int, extra: Dict) -> str:
-    payload = json.dumps({"kind": kind, "center": [round(center[0], 6), round(center[1], 6)],
-                          "dist": dist, "extra": extra, "v": CACHE_FORMAT_VERSION}, sort_keys=True)
-    return hashlib.sha1(payload.encode("utf-8")).hexdigest()[:16]
-
-
-def _cache_paths(key: str, label: str) -> Tuple[str, str]:
-    os.makedirs(GRAPH_CACHE_DIR, exist_ok=True)
-    safe = "".join(ch if ch.isalnum() else "_" for ch in label)
-    base = os.path.join(GRAPH_CACHE_DIR, f"{safe}_{key}")
-    return base + ".pkl", base + ".meta.json"
-
-
-def load_graph_cache(pkl_path: str, meta_path: str) -> Optional[nx.DiGraph]:
-    """Cold-reproducibility layer: a graph built once from live OSM data can be
-    replayed byte-for-byte later, even offline or after the underlying map
-    has changed -- the whole point of the `run_spanner_benchmark.py --quick`
-    'could I reproduce this myself, cold, right now?' test."""
-    if not (os.path.exists(pkl_path) and os.path.exists(meta_path)):
-        return None
-    try:
-        with open(meta_path, "r", encoding="utf-8") as fh:
-            meta = json.load(fh)
-        if meta.get("cache_format_version") != CACHE_FORMAT_VERSION:
-            return None
-        with open(pkl_path, "rb") as fh:
-            G = pickle.load(fh)
-        G.graph["cache_hit"] = True
-        G.graph["cache_fetched_utc"] = meta.get("fetched_utc")
-        return G
-    except Exception as exc:
-        print(f"[cache] failed to load {pkl_path} ({type(exc).__name__}: {exc}); rebuilding.")
-        return None
-
-
-def save_graph_cache(G: nx.DiGraph, pkl_path: str, meta_path: str) -> None:
-    try:
-        with open(pkl_path, "wb") as fh:
-            pickle.dump(G, fh, protocol=pickle.HIGHEST_PROTOCOL)
-        meta = {"cache_format_version": CACHE_FORMAT_VERSION,
-                "fetched_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                "source": G.graph.get("source"), "nodes": G.number_of_nodes(),
-                "edges": G.number_of_edges(), "center": G.graph.get("center"),
-                "dist": G.graph.get("dist")}
-        with open(meta_path, "w", encoding="utf-8") as fh:
-            json.dump(meta, fh, indent=2)
-    except Exception as exc:
-        print(f"[cache] failed to save cache ({type(exc).__name__}: {exc}); continuing without cache.")
-
-
 def build_network(center: Tuple[float, float], dist: int,
                   force_synthetic: bool = False, contract: bool = True,
-                  grid_n: int = 19, use_cache: bool = True,
-                  refresh_cache: bool = False, label: str = "focus") -> nx.DiGraph:
-    key = _cache_key("network", center, dist, {"grid_n": grid_n, "contract": contract,
-                                                "force_synthetic": force_synthetic, "label": label})
-    pkl_path, meta_path = _cache_paths(key, label)
-    if use_cache and not refresh_cache:
-        cached = load_graph_cache(pkl_path, meta_path)
-        if cached is not None:
-            print(f"[cache] loaded '{label}' from {os.path.basename(pkl_path)} "
-                  f"({cached.number_of_nodes()} nodes / {cached.number_of_edges()} edges, "
-                  f"fetched {cached.graph.get('cache_fetched_utc')}); pass --refresh-cache to refetch.")
-            return cached
-
+                  grid_n: int = 19) -> nx.DiGraph:
     G = None if force_synthetic else fetch_osm_network(center, dist)
     if G is None:
-        G = synthetic_arterial_grid(center, dist, n=grid_n, seed_key=label)
+        G = synthetic_arterial_grid(center, dist, n=grid_n, seed_key="focus")
     raw_nodes, raw_edges = G.number_of_nodes(), G.number_of_edges()
     if contract:
         G = contract_degree_two(G)
@@ -787,31 +708,13 @@ def build_network(center: Tuple[float, float], dist: int,
               f"{raw_edges} -> {G.number_of_edges()} edges.")
     G.graph["raw_nodes"] = raw_nodes
     G.graph["raw_edges"] = raw_edges
-    G = enrich_temporal_costs(G)
-    G.graph["cache_hit"] = False
-    if use_cache:
-        save_graph_cache(G, pkl_path, meta_path)
-    return G
+    return enrich_temporal_costs(G)
 
 
 def build_city_network(spec: Dict, grid_n: int = 15, contract: bool = True,
-                       force_synthetic: bool = False, use_cache: bool = True,
-                       refresh_cache: bool = False) -> nx.DiGraph:
-    """Cross-city loader: real OSM first, morphology-aware synthetic fallback,
-    both behind the same graph cache as build_network()."""
+                       force_synthetic: bool = False) -> nx.DiGraph:
+    """Cross-city loader: real OSM first, morphology-aware synthetic fallback."""
     center = (spec["lat"], spec["lon"])
-    key = _cache_key("city", center, spec["dist"], {"grid_n": grid_n, "contract": contract,
-                                                     "force_synthetic": force_synthetic,
-                                                     "archetype": spec["archetype"]})
-    pkl_path, meta_path = _cache_paths(key, spec["name"])
-    if use_cache and not refresh_cache:
-        cached = load_graph_cache(pkl_path, meta_path)
-        if cached is not None:
-            print(f"[cache] loaded '{spec['name']}' from {os.path.basename(pkl_path)} "
-                  f"({cached.number_of_nodes()} nodes / {cached.number_of_edges()} edges, "
-                  f"fetched {cached.graph.get('cache_fetched_utc')}); pass --refresh-cache to refetch.")
-            return cached
-
     G = None if force_synthetic else fetch_osm_network(center, spec["dist"])
     used_real = G is not None
     if G is None:
@@ -825,11 +728,7 @@ def build_city_network(spec: Dict, grid_n: int = 15, contract: bool = True,
     G.graph["city"] = spec["name"]
     G.graph["archetype"] = spec["archetype"]
     G.graph["used_real_osm"] = used_real
-    G = enrich_temporal_costs(G)
-    G.graph["cache_hit"] = False
-    if use_cache:
-        save_graph_cache(G, pkl_path, meta_path)
-    return G
+    return enrich_temporal_costs(G)
 
 
 def network_summary(G: nx.DiGraph) -> dict:
@@ -1020,35 +919,11 @@ def delay_bounded_greedy_spanner(G: nx.DiGraph, t: float,
     return H
 
 
-def unbounded_dijkstra(adj: Adjacency, source, target, tau: int) -> float:
-    """Same as bounded_dijkstra with an infinite budget -- the TRUE distance,
-    not a capped estimate. Used only for refinement (the certificate decision
-    itself always uses the cheap bounded probe; this is called at most
-    `refine_cap` times per certificate check)."""
-    return bounded_dijkstra(adj, source, target, tau, INF)
-
-
 def temporal_stretch_certificate(G: nx.DiGraph, H: nx.DiGraph, t: float,
                                  hours: Optional[Iterable[int]] = None,
-                                 attr: str = "tt", refine_cap: int = CERT_REFINE_CAP) -> dict:
-    """Exhaustive Theorem-1 certificate + the TRUE magnitude of the worst
-    violation (not a capped estimate).
-
-    CORRECTNESS NOTE (fixed after a code-review catch): an earlier version
-    refined violations with a budget of `refine_mult * w` and, on timeout,
-    silently reported `attained_worst_edge_stretch = refine_mult` (a fixed
-    8.0) for EVERY censored edge. That number was a search-cutoff artifact,
-    identical across wildly different graphs, not a measured value -- exactly
-    the kind of suspiciously round, zero-information result that should be
-    distrusted rather than reported. This version instead runs a genuinely
-    unbounded Dijkstra on the first `refine_cap` violating edges: if `H`
-    still reaches `v` from `u` (however slowly), the TRUE stretch is
-    reported; if `H` cannot reach `v` from `u` AT ALL on that snapshot, the
-    edge is flagged as `unreachable` and the certificate's
-    `attained_worst_edge_stretch` is reported as `inf`, with the exact count
-    of such edges given in `unreachable_violations` -- an honest "we don't
-    have a finite bound" rather than a fabricated one.
-    """
+                                 attr: str = "tt", refine_cap: int = CERT_REFINE_CAP,
+                                 refine_mult: float = CERT_REFINE_MULT) -> dict:
+    """Exhaustive Theorem-1 certificate + magnitude of the worst violation."""
     hours = list(HOURS) if hours is None else list(hours)
     adj = build_adjacency(H, attr)
 
@@ -1062,28 +937,25 @@ def temporal_stretch_certificate(G: nx.DiGraph, H: nx.DiGraph, t: float,
                 break
 
     max_stretch = float(t)
-    unreachable = 0
-    refined_n = min(len(violating), refine_cap)
+    censored = 0
     for u, v, tau, w in violating[:refine_cap]:
-        d = unbounded_dijkstra(adj, u, v, tau)
+        big = refine_mult * w
+        d = bounded_dijkstra(adj, u, v, tau, big)
         if d == INF:
-            unreachable += 1
+            censored += 1
         else:
             max_stretch = max(max_stretch, d / max(EPS, w))
-
-    truncated = len(violating) > refine_cap
-    is_lower_bound = bool(unreachable > 0 or truncated)
-    attained = float("inf") if unreachable > 0 else float(max_stretch)
+    if censored > 0:
+        max_stretch = max(max_stretch, refine_mult)
 
     return {
         "certified": len(violating) == 0,
         "violating_edges": int(len(violating)),
         "violation_rate": float(len(violating) / max(1, G.number_of_edges())),
         "checked_edges": int(G.number_of_edges()),
-        "refined_edges": int(refined_n),
-        "attained_worst_edge_stretch": attained,
-        "unreachable_violations": int(unreachable),
-        "attained_stretch_is_lower_bound": is_lower_bound,
+        "attained_worst_edge_stretch": float(max_stretch),
+        "censored_refinements": int(censored),
+        "refine_budget_mult": float(refine_mult),
         "first_violation_hour": int(violating[0][2]) if violating else None,
     }
 
@@ -1699,34 +1571,19 @@ def make_figure(G: nx.DiGraph, results: Dict, backbone: nx.DiGraph, hours: Seque
 # SECTION 11 - CROSS-CITY GENERALIZATION STUDY
 # ==============================================================================
 
-def _select_cities(quick: bool) -> List[Dict]:
-    """Full run: every registered city. Quick run: a STRATIFIED sample (>=2
-    Iranian + >=2 international) rather than CITY_REGISTRY[:n] -- taking a
-    plain prefix would silently smoke-test only the Iranian subset, since
-    the registry lists Iran first."""
-    if not quick:
-        return list(CITY_REGISTRY)
-    iran = [c for c in CITY_REGISTRY if c["country"] == "Iran"][:2]
-    intl = [c for c in CITY_REGISTRY if c["country"] != "Iran"][:2]
-    return iran + intl
-
-
 def run_cross_city_study(args, t_focus: float) -> List[Dict]:
     grid_n = 11 if args.quick else args.city_grid_n
+    n_cities = 3 if args.quick else len(CITY_REGISTRY)
     n_src = 5 if args.quick else args.city_sources
     n_tgt = 5 if args.quick else args.city_targets
-    cities = _select_cities(args.quick)
 
-    print(f"\n[cross-city] {len(cities)} cities "
-          f"({sum(1 for c in cities if c['country']=='Iran')} Iran / "
-          f"{sum(1 for c in cities if c['country']!='Iran')} international), "
-          f"grid_n={grid_n}, {n_src}x{n_tgt} OD pairs each, t_focus={t_focus}")
+    print(f"\n[cross-city] {n_cities} cities, grid_n={grid_n}, "
+          f"{n_src}x{n_tgt} OD pairs each, t_focus={t_focus}")
 
     out: List[Dict] = []
-    for spec in cities:
-        print(f"  --- {spec['name']}, {spec['country']} ({spec['archetype']}) ---")
-        G = build_city_network(spec, grid_n=grid_n, force_synthetic=args.synthetic,
-                               use_cache=not args.no_cache, refresh_cache=args.refresh_cache)
+    for spec in CITY_REGISTRY[:n_cities]:
+        print(f"  --- {spec['name']} ({spec['archetype']}) ---")
+        G = build_city_network(spec, grid_n=grid_n, force_synthetic=args.synthetic)
         morph = network_morphology(G)
         pairs = sample_pairs(G, n_src, n_tgt, args.seed)
         base = baseline_distances(G, pairs, HOURS)
@@ -1756,12 +1613,12 @@ def run_cross_city_study(args, t_focus: float) -> List[Dict]:
         Hb = matched_density_betweenness(G, budget, args.seed)
         methods["matched_btw"] = cert_eval(Hb, t_focus)
 
-        entry = {"city": spec["name"], "country": spec["country"], "archetype": spec["archetype"],
+        entry = {"city": spec["name"], "archetype": spec["archetype"],
                  "used_real_osm": bool(G.graph.get("used_real_osm", False)),
                  **morph, "methods": methods}
         out.append(entry)
         print(f"    keep(ours)={methods['delay_bounded']['structure']['edge_retention_pct']:.1f}% | "
-              f"stretch={_fmt_stretch(methods['delay_bounded']['certificate'])} | "
+              f"stretch={methods['delay_bounded']['certificate']['attained_worst_edge_stretch']:.3f} | "
               f"worstOD(ours)={methods['delay_bounded']['metrics']['worst_dilation']:.3f} | "
               f"worstOD(matched-btw)={methods['matched_btw']['metrics']['worst_dilation']:.3f} | "
               f"orient.entropy={morph['orientation_entropy']:.3f} | circuity={morph['circuity_mean']:.3f}")
@@ -1821,50 +1678,6 @@ def cross_city_significance(city_results: List[Dict]) -> Dict:
         return {"available": False, "error": f"{type(exc).__name__}: {exc}"}
 
 
-def cross_city_country_comparison(city_results: List[Dict]) -> Dict:
-    """Iran vs. international, INDEPENDENT samples (different cities, not the
-    same cities under two conditions) -- so Mann-Whitney U is the correct
-    test here, not the paired Wilcoxon used elsewhere in this script. This is
-    the check that actually speaks to external validity beyond one country:
-    if Iran and international cities are statistically indistinguishable on
-    the method's outcomes, the single-country result generalizes; if not,
-    the difference and its direction must be reported, not hidden."""
-    iran = [c for c in city_results if c["country"] == "Iran"]
-    intl = [c for c in city_results if c["country"] != "Iran"]
-    out: Dict = {"n_iran": len(iran), "n_international": len(intl),
-                 "international_countries": sorted({c["country"] for c in intl})}
-    if not _HAVE_SCIPY or len(iran) < 2 or len(intl) < 2:
-        out["available"] = False
-        out["reason"] = (f"need >=2 cities per group and scipy for Mann-Whitney U "
-                          f"(have {len(iran)} Iran / {len(intl)} international)")
-        return out
-
-    out["available"] = True
-    metrics = {
-        "edge_retention_pct": lambda c: c["methods"]["delay_bounded"]["structure"]["edge_retention_pct"],
-        "worst_od_dilation": lambda c: c["methods"]["delay_bounded"]["metrics"]["worst_dilation"],
-        "advantage_ratio_vs_matched_btw": lambda c: (
-            c["methods"]["matched_btw"]["metrics"]["worst_dilation"]
-            / max(1e-9, c["methods"]["delay_bounded"]["metrics"]["worst_dilation"])),
-        "orientation_entropy": lambda c: c["orientation_entropy"],
-        "circuity_mean": lambda c: c["circuity_mean"],
-    }
-    for name, fn in metrics.items():
-        a = [fn(c) for c in iran]
-        b = [fn(c) for c in intl]
-        try:
-            stat, p = sps.mannwhitneyu(a, b, alternative="two-sided")
-            out[name] = {"iran_median": float(np.median(a)), "international_median": float(np.median(b)),
-                        "statistic": float(stat), "p_value": float(p)}
-        except Exception as exc:
-            out[name] = {"error": str(exc)}
-    out["note"] = ("Two-sided Mann-Whitney U, independent samples. n is small (city count, "
-                   "not OD-pair count) so this is a coarse external-validity check, not a "
-                   "high-powered confirmatory test; a non-significant p here is the desired "
-                   "result (it means the method does not behave differently by country).")
-    return out
-
-
 def sensitivity_analysis(G: nx.DiGraph, t_focus: float, pairs: Dict, seed: int,
                          scales: Sequence[float] = (0.70, 0.85, 1.00, 1.15, 1.30)) -> List[Dict]:
     rows: List[Dict] = []
@@ -1891,18 +1704,17 @@ def sensitivity_analysis(G: nx.DiGraph, t_focus: float, pairs: Dict, seed: int,
 
 
 def build_crosscity_table(city_results: List[Dict]) -> str:
-    head = ("| City | Country | Archetype | Data | Nodes | Edges | Orient.entropy | Circuity | "
+    head = ("| City | Archetype | Data | Nodes | Edges | Orient.entropy | Circuity | "
             "Ours keep% | Certified | Ours worstOD | Matched-Btw worstOD | Advantage (x) | "
             "Static-FF keep% | Yao-Cone keep% | Matched-Btw keep% | Hierarchical keep% |")
-    rows = [head, "|" + "---|" * 17]
-    for c in sorted(city_results, key=lambda c: (c["country"] != "Iran", c["country"], c["city"])):
+    rows = [head, "|" + "---|" * 16]
+    for c in city_results:
         mo = c["methods"]
         ours_od = mo["delay_bounded"]["metrics"]["worst_dilation"]
         btw_od = mo["matched_btw"]["metrics"]["worst_dilation"]
         adv = btw_od / max(1e-9, ours_od)
         rows.append(
-            f"| {c['city']} | {c['country']} | {c['archetype']} | "
-            f"{'OSM' if c['used_real_osm'] else 'synthetic'} | "
+            f"| {c['city']} | {c['archetype']} | {'OSM' if c['used_real_osm'] else 'synthetic'} | "
             f"{c['n_nodes']} | {c['n_edges']} | {c['orientation_entropy']:.3f} | "
             f"{c['circuity_mean']:.3f} | {mo['delay_bounded']['structure']['edge_retention_pct']:.1f} | "
             f"{'yes' if mo['delay_bounded']['certificate']['certified'] else 'no'} | "
@@ -1922,43 +1734,30 @@ def make_crosscity_figure(city_results: List[Dict], regression: Dict, sensitivit
     fig, axes = plt.subplots(2, 2, figsize=(16.5, 13.5))
     axH, axI, axJ, axK = axes[0, 0], axes[0, 1], axes[1, 0], axes[1, 1]
 
-    city_order = sorted(city_results, key=lambda c: (c["country"] != "Iran", c["country"], c["city"]))
-    n_iran = sum(1 for c in city_order if c["country"] == "Iran")
     rows = []
-    for c in city_order:
+    for c in city_results:
         for m in ("delay_bounded", "static_ff", "yao_cone", "matched_btw", "hierarchical"):
             if m in c["methods"]:
-                rows.append({"city": f"{c['city']}\n({c['country']})", "method": METHOD_STYLE[m][0],
+                rows.append({"city": c["city"], "method": METHOD_STYLE[m][0],
                             "retention": c["methods"][m]["structure"]["edge_retention_pct"]})
     if rows:
         dfH = pd.DataFrame(rows)
-        city_labels = [f"{c['city']}\n({c['country']})" for c in city_order]
         pal = {METHOD_STYLE[m][0]: METHOD_STYLE[m][1]
               for m in ("delay_bounded", "static_ff", "yao_cone", "matched_btw", "hierarchical")}
-        sns.barplot(data=dfH, x="city", y="retention", hue="method", ax=axH, palette=pal,
-                   order=city_labels)
-        if 0 < n_iran < len(city_order):
-            axH.axvline(n_iran - 0.5, color="#111111", linestyle=(0, (4, 3)), linewidth=1.5, zorder=5)
-            axH.text(n_iran / 2.0 - 0.5, 101.5, "Iran", ha="center", fontsize=10, fontweight="bold")
-            axH.text(n_iran + (len(city_order) - n_iran) / 2.0 - 0.5, 101.5, "International",
-                     ha="center", fontsize=10, fontweight="bold")
-        axH.set_ylim(0, 108)
+        sns.barplot(data=dfH, x="city", y="retention", hue="method", ax=axH, palette=pal)
         axH.set_ylabel("Edges retained (%)"); axH.set_xlabel("")
         axH.set_title(f"(h) Cross-city sparsification at $t={t_focus}$", loc="left")
-        axH.tick_params(axis="x", rotation=20, labelsize=8.5)
+        axH.tick_params(axis="x", rotation=20)
         axH.legend(fontsize=7.5, ncol=2, loc="lower right")
 
-    names = [c["city"] for c in city_order]
-    is_iran = [c["country"] == "Iran" for c in city_order]
-    colors = ["#c0392b" if ir else "#2980b9" for ir in is_iran]
-    ents = [c["orientation_entropy"] for c in city_order]
-    ours_dil = [c["methods"]["delay_bounded"]["metrics"]["worst_dilation"] for c in city_order]
-    btw_dil = [c["methods"]["matched_btw"]["metrics"]["worst_dilation"] for c in city_order]
+    names = [c["city"] for c in city_results]
+    ents = [c["orientation_entropy"] for c in city_results]
+    ours_dil = [c["methods"]["delay_bounded"]["metrics"]["worst_dilation"] for c in city_results]
+    btw_dil = [c["methods"]["matched_btw"]["metrics"]["worst_dilation"] for c in city_results]
     advantage = [b / max(1e-9, o) for o, b in zip(ours_dil, btw_dil)]
-    axI.scatter(ents, advantage, s=100, c=colors, zorder=3)
+    axI.scatter(ents, advantage, s=100, color="#c0392b", zorder=3)
     for x, y, nm in zip(ents, advantage, names):
         axI.annotate(nm, (x, y), fontsize=9, xytext=(5, 5), textcoords="offset points")
-    axI.scatter([], [], color="#c0392b", label="Iran"); axI.scatter([], [], color="#2980b9", label="International")
     axI.axhline(1.0, color="#7f8c8d", linestyle=":", linewidth=1.4)
     if len(ents) >= 2 and np.std(advantage) > 1e-9:
         kk, bb = np.polyfit(ents, advantage, 1)
@@ -1971,11 +1770,10 @@ def make_crosscity_figure(city_results: List[Dict], regression: Dict, sensitivit
     axI.set_title(title, loc="left")
     axI.set_xlabel("Orientation entropy (0=grid, 1=organic)")
     axI.set_ylabel("Worst-OD-dilation ratio: matched-btw / ours  (>1 = we win)")
-    axI.legend(fontsize=8, loc="best")
 
-    circ = [c["circuity_mean"] for c in city_order]
-    retain = [c["methods"]["delay_bounded"]["structure"]["edge_retention_pct"] for c in city_order]
-    axJ.scatter(circ, retain, s=100, c=colors, zorder=3)
+    circ = [c["circuity_mean"] for c in city_results]
+    retain = [c["methods"]["delay_bounded"]["structure"]["edge_retention_pct"] for c in city_results]
+    axJ.scatter(circ, retain, s=100, color="#2980b9", zorder=3)
     for x, y, nm in zip(circ, retain, names):
         axJ.annotate(nm, (x, y), fontsize=9, xytext=(5, 5), textcoords="offset points")
     if len(circ) >= 2:
@@ -2015,29 +1813,9 @@ def make_crosscity_figure(city_results: List[Dict], regression: Dict, sensitivit
 # ==============================================================================
 
 def _fmt(x, nd: int = 3) -> str:
-    if x is None or (isinstance(x, float) and math.isnan(x)):
+    if x is None or (isinstance(x, float) and (math.isnan(x) or math.isinf(x))):
         return "—"
-    if isinstance(x, float) and math.isinf(x):
-        return "∞"
     return f"{x:.{nd}f}"
-
-
-def _fmt_stretch(cert: Optional[Dict], nd: int = 3) -> str:
-    """Format attained_worst_edge_stretch honestly: '—' if no certificate was
-    run, an exact number if every violation was refined to its true value,
-    '≥X' if the search was truncated before refining every violating edge
-    (a genuine, disclosed lower bound, never a fabricated cap), and '∞ (n
-    unreachable)' if H truly cannot reach some pair on some snapshot."""
-    if not cert:
-        return "—"
-    val = cert.get("attained_worst_edge_stretch")
-    if val is None or (isinstance(val, float) and math.isnan(val)):
-        return "—"
-    if isinstance(val, float) and math.isinf(val):
-        n = cert.get("unreachable_violations", 0)
-        return f"∞ ({n} unreachable)"
-    prefix = "≥" if cert.get("attained_stretch_is_lower_bound") else ""
-    return f"{prefix}{val:.{nd}f}"
 
 
 def build_table(results: Dict, t_values: Sequence[float]) -> str:
@@ -2063,12 +1841,13 @@ def build_table(results: Dict, t_values: Sequence[float]) -> str:
         m, s, c = e["metrics"], e["structure"], e.get("certificate", {}) or {}
         name = METHOD_STYLE[key[0]][0]
         tstr = f"{key[1]:.2f}" if key[1] is not None else "—"
+        stretch = c.get("attained_worst_edge_stretch")
         cert = "—" if not c else ("**yes**" if c.get("certified") else f"no ({c.get('violating_edges')} edges)")
         ci = m.get("mean_dilation_ci", [np.nan, np.nan])
         ppe = e["dijkstra_probes"] / max(1, s["edges_parent"])
         rows.append(
             f"| {name} | {tstr} | {s['edge_retention_pct']:.1f} | {s['length_retention_pct']:.1f} | "
-            f"{_fmt_stretch(c)} | {cert} | {_fmt(m['worst_dilation'])} | {_fmt(m['mean_dilation'])} "
+            f"{_fmt(stretch)} | {cert} | {_fmt(m['worst_dilation'])} | {_fmt(m['mean_dilation'])} "
             f"[{_fmt(ci[0])}, {_fmt(ci[1])}] | {100*m['reachability']:.1f} | "
             f"{e['build_seconds']:.2f} | {ppe:.2f} |"
         )
@@ -2103,7 +1882,7 @@ def _json_default(o):
 
 def main() -> None:
     ap = argparse.ArgumentParser(
-        description="Delay-Bounded Time-Varying Geometric t-Spanner — Q1 benchmark")
+        description="Delay-Bounded Time-Varying Geometric t-Spanner — benchmark")
     ap.add_argument("--lat", type=float, default=CENTER_POINT[0])
     ap.add_argument("--lon", type=float, default=CENTER_POINT[1])
     ap.add_argument("--dist", type=int, default=DEFAULT_DIST)
@@ -2119,10 +1898,6 @@ def main() -> None:
     ap.add_argument("--city-grid-n", type=int, default=15)
     ap.add_argument("--city-sources", type=int, default=7)
     ap.add_argument("--city-targets", type=int, default=7)
-    ap.add_argument("--refresh-cache", action="store_true",
-                    help="ignore any cached graph and refetch/rebuild (then overwrite the cache)")
-    ap.add_argument("--no-cache", action="store_true",
-                    help="disable graph caching entirely (neither read nor write)")
     args = ap.parse_args()
 
     os.makedirs(RESULTS_DIR, exist_ok=True)
@@ -2143,8 +1918,7 @@ def main() -> None:
 
     # ---------------- focus-city network ---------------------------------
     G = build_network((args.lat, args.lon), dist, force_synthetic=args.synthetic,
-                      contract=not args.no_contract, grid_n=grid_n,
-                      use_cache=not args.no_cache, refresh_cache=args.refresh_cache)
+                      contract=not args.no_contract, grid_n=grid_n)
     summary = network_summary(G)
     summary["temporal_heterogeneity_index"] = round(temporal_heterogeneity_index(G), 5)
     summary["fifo_violation_rate"] = round(fifo_violation_rate(G), 6)
@@ -2173,7 +1947,7 @@ def main() -> None:
         print(f"  [{key[0]:<15} t={('%.2f' % key[1]) if key[1] else '  — '}] "
               f"keep={s['edge_retention_pct']:5.1f}% | worstOD={met['worst_dilation']:.3f} | "
               f"reach={100*met['reachability']:5.1f}% | cert={cert.get('certified') if cert else '—'} | "
-              f"stretch={_fmt_stretch(cert) if cert else '—'} | "
+              f"stretch={_fmt(cert.get('attained_worst_edge_stretch')) if cert else '—'} | "
               f"{results[key]['build_seconds']:.2f}s")
 
     print("\n[sweep] constructing spanners over the dilation grid ...")
@@ -2291,7 +2065,6 @@ def main() -> None:
     city_results: List[Dict] = []
     regression: Dict = {"available": False}
     city_sig: Dict = {"available": False}
-    country_cmp: Dict = {"available": False}
     sensitivity: List[Dict] = []
     crosscity_table = ""
     if not args.skip_crosscity:
@@ -2301,7 +2074,6 @@ def main() -> None:
         city_results = run_cross_city_study(args, t_focus)
         regression = cross_city_regression(city_results)
         city_sig = cross_city_significance(city_results)
-        country_cmp = cross_city_country_comparison(city_results)
         print("\n[sensitivity] robustness to congestion-model misspecification "
               "(focus city, alpha rescaled -30%..+30%)")
         sensitivity = sensitivity_analysis(G, t_focus, pair_sets[0], args.seed)
@@ -2318,17 +2090,6 @@ def main() -> None:
             print(f"[stats] city-level Wilcoxon: n={city_sig['n_cities']}, p={city_sig['p_value']:.3e}")
         else:
             print(f"[stats] city-level Wilcoxon skipped: {city_sig.get('reason')}")
-        if country_cmp.get("available"):
-            print(f"[stats] Iran (n={country_cmp['n_iran']}) vs International "
-                  f"(n={country_cmp['n_international']}, {country_cmp['international_countries']}) "
-                  f"Mann-Whitney U:")
-            for k in ("edge_retention_pct", "worst_od_dilation", "advantage_ratio_vs_matched_btw"):
-                v = country_cmp.get(k, {})
-                if "p_value" in v:
-                    print(f"    {k}: Iran median={v['iran_median']:.3f}, "
-                          f"Intl median={v['international_median']:.3f}, p={v['p_value']:.3f}")
-        else:
-            print(f"[stats] Iran-vs-international comparison skipped: {country_cmp.get('reason')}")
 
     clean_results = {}
     for (m, t), v in results.items():
@@ -2376,7 +2137,6 @@ def main() -> None:
             "cities": clean_city_results,
             "morphology_regression": regression,
             "city_level_significance": city_sig,
-            "iran_vs_international_comparison": country_cmp,
             "yao_cone_definition": ("Network-constrained adaptation of the classical Yao graph "
                                     "(k=8 angular cones per node, cheapest free-flow edge per cone); "
                                     "NOT the unconstrained-point-set construction with the closed-form "
@@ -2393,12 +2153,9 @@ def main() -> None:
             "Cities whose live OSMnx/Overpass fetch is unavailable (e.g. an offline sandbox) "
             "fall back to a deterministic, morphology-parameterized synthetic generator; each "
             "city's `used_real_osm` flag in `cross_city.cities` states which was used for that run.",
-            f"n={len(CITY_REGISTRY)} cities across "
-            f"{len({c['country'] for c in CITY_REGISTRY})} countries supports a directional "
-            "cross-morphology, cross-country generalization claim (see morphology_regression, "
-            "city_level_significance and iran_vs_international_comparison), not a definitive "
-            "one; a larger, telemetry-fitted replication across more countries and continents "
-            "remains future work.",
+            "n=6 cities supports a directional cross-morphology generalization claim (see "
+            "morphology_regression and city_level_significance), not a definitive one; a "
+            "larger, multi-country, telemetry-fitted replication remains future work.",
             "Greedy construction gives no approximation guarantee on |H|; the matched-density "
             "and Yao-cone controls are the empirical (not theoretical) lower-bound proxies used here.",
         ],
