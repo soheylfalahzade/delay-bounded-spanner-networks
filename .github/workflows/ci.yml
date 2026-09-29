@@ -29,9 +29,7 @@ jobs:
       - name: Byte-compile (syntax check)
         run: python -m py_compile run_spanner_benchmark.py verify_results.py
 
-      - name: Unit tests (Theorem-1 certificate: positive/negative controls,
-          greedy self-certification property test, independent Dijkstra
-          cross-check against networkx)
+      - name: "Unit tests: Theorem-1 certificate positive/negative controls, greedy self-certification property test, independent Dijkstra cross-check against networkx"
         run: python -m unittest discover -s tests -v
 
       - name: Pipeline smoke test (offline, synthetic, stratified Iran + international)
