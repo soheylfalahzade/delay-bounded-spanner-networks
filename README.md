@@ -1,55 +1,38 @@
-<div align="center">
-
 # Delay-Bounded Time-Varying Geometric *t*-Spanners for Urban Road Networks
 
-### A Certified Algorithmic Sparsification Framework for Diurnal Metric Road Networks
+[![CI](https://github.com/<OWNER>/delay-bounded-spanner-networks/actions/workflows/ci.yml/badge.svg)](https://github.com/<OWNER>/delay-bounded-spanner-networks/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[![Python](https://img.shields.io/badge/Python-3.10-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
-[![OSMnx](https://img.shields.io/badge/OSMnx-Live%20OSM-darkgreen.svg)](https://osmnx.readthedocs.io/)
-[![Status](https://img.shields.io/badge/Status-Formally%20Verified%20(24h)-brightgreen.svg)]()
-[![Validation](https://img.shields.io/badge/Validation-6%20Real%20Metros-blueviolet.svg)]()
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+**A certified sparsification framework that extracts a single physical road backbone `H ⊆ G`, guaranteed to preserve bounded travel-time dilation at every hour of the day — validated end-to-end on real metropolitan road networks pulled live from OpenStreetMap, across six Iranian and six international cities spanning five distinct street-network morphologies.**
 
-<p align="center">
-  <b>A certified sparsification framework extracting a single physical road backbone <code>H ⊆ G</code></b><br>
-  <i>Guaranteed to preserve bounded travel-time dilation at every hour of the day across distinct urban morphologies.</i>
-</p>
-
-</div>
+> Replace `<OWNER>` above with the actual GitHub username/org once this repo is pushed, so the CI badge resolves.
 
 ---
 
-> [!NOTE]
-> **Core Empirical Highlight (Focus City: Yazd):** On the real OpenStreetMap road network of Yazd (3,093 junctions / 6,806 directed edges, $r = 1500\text{ m}$), at $t = 1.5$:
-> - **98.3%** of edges and **96.1%** of total physical road length are **retained**.
-> - The 24-hour, all-pairs dilation certificate is **formally verified — Yes**.
-> - Worst empirical origin-destination (OD) dilation across all 24 hours: **1.031×** (far beneath the theoretical guarantee of $1.50\times$).
-> - A standard functional-class ("arterials only") baseline retains less mileage but **completely fails certification**, with empirical worst-case dilation exploding to **9.50×**.
+## 1. Problem
 
----
+Let `G = (V, E)` be a directed geometric road network. Each edge `e` carries a length `ℓ(e)` and an hourly diurnal speed profile `v(e, τ)` for `τ ∈ {0, …, 23}`, giving the time-sliced travel-time cost
 
-## 1. Problem Formulation
+```
+w(e, τ) = ℓ(e) / v(e, τ)
+```
 
-Let $G = (V, E)$ be a directed geometric road network. Each directed edge $e$ carries physical length $\ell(e)$ and an hourly diurnal speed profile $v(e, \tau)$ for hour $\tau \in \{0, \dots, 23\}$, yielding the time-sliced travel-time metric:
+We construct a sparse backbone `H ⊆ E` certified to satisfy
 
-$$w(e, \tau) = \frac{\ell(e)}{v(e, \tau)}$$
+```
+∀ u, v ∈ V,  ∀ τ ∈ {0,…,23}:   dist_H(u, v, τ)  ≤  t · dist_G(u, v, τ)
+```
 
-We seek to construct a single sparse topological backbone $H \subseteq E$ certified to satisfy the global dilation bound:
+**Theorem 1 (edge-wise certificate ⇒ all-pairs, all-hours guarantee).**
+If `dist_H(u,v,τ) ≤ t · w((u,v),τ)` holds for every edge `(u,v) ∈ E` and every hour `τ`, then `H` is a delay-bounded time-varying `t`-spanner of `G`. *Proof:* fix `τ`; `w(·,τ)` is a static, non-negative weighting, so concatenating the edge-wise invariant along a `τ`-optimal path and applying the triangle inequality in `H_τ` gives the all-pairs bound, independently for every `τ`. ∎
 
-$$\forall u, v \in V, \quad \forall \tau \in \{0, \dots, 23\}: \quad \text{dist}_H(u, v, \tau) \le t \cdot \text{dist}_G(u, v, \tau)$$
-
-> [!IMPORTANT]
-> **Theorem 1 (Edge-Wise Certificate $\implies$ All-Pairs, All-Hours Guarantee):**  
-> If $\text{dist}_H(u, v, \tau) \le t \cdot w((u, v), \tau)$ holds for every individual edge $(u, v) \in E$ and every hour $\tau$, then $H$ is a delay-bounded time-varying $t$-spanner of $G$.  
-> *Proof:* Fix $\tau$. Since $w(\cdot, \tau)$ is a static, non-negative edge weighting, concatenating the edge-wise invariant along any $\tau$-optimal path and applying the triangle inequality in $H_\tau$ guarantees the all-pairs bound independently for every $\tau$. $\blacksquare$
-
-**Algorithmic Consequence:** Theorem 1 collapses $|V|^2 \cdot 24$ pairwise path constraints into $|E| \cdot 24$ *local metric certificates*, each strictly decidable by a Dijkstra exploration pruned to the metric ball of radius $\beta = t \cdot w(e, \tau)$.
+This collapses `|V|² · 24` pairwise constraints into `|E| · 24` *local* certificates, each decidable by a Dijkstra search pruned to the ball of radius `t · w(e,τ)`.
 
 ---
 
 ## 2. Algorithm — Delay-Bounded Greedy Spanner
 
-```python
+```
 1  order E ascending by max_τ w(e, τ)
 2  H ← ∅
 3  for (u, v) ∈ E in that order:
@@ -60,145 +43,135 @@ $$\forall u, v \in V, \quad \forall \tau \in \{0, \dots, 23\}: \quad \text{dist}
 8  return H
 ```
 
-**Complexity:** $\mathcal{O}(|E| \cdot 24 \cdot |B| \log |B|)$, where $|B|$ denotes the vertex count of the local metric ball. In empirical evaluations, this corresponds to $\approx 1.2\text{--}2.5$ Dijkstra probes per edge across the evaluated range of $t$, achieving scaling of $T \propto |E|^{1.19\text{--}1.22}$ (see `results/spanner_benchmark.png`, panel e).
+Complexity `O(|E| · 24 · |B| log|B|)`, `|B|` the size of the local metric ball. The empirical scaling exponent (`T ∝ |E|^k`) is measured fresh on every run — see panel (e) of `results/spanner_benchmark.png`.
 
 ---
 
-## 3. Baselines Compared
+## 3. Baselines compared
 
-<div align="center">
-
-| Method | Core Mechanism | Formally Certified (24h)? |
-|:---|:---|:---:|
-| **Delay-Bounded Spanner (Ours)** | Theorem-1 local-ball verification across all diurnal hours | **Yes, by construction** |
-| **Static Free-Flow Spanner** | Classical greedy spanner on free-flow speed snapshot ($\tau = 0$) | No |
-| **Mean-Temporal Spanner** | Greedy spanner constructed over the 24-hour averaged edge cost | No |
-| **Static Geometric Spanner** | Classical Euclidean-distance greedy spanner ($\ell(e)$ metric) | No |
-| **Yao-Cone Sparsifier ($k=8$)** | Network-constrained adaptation of classical Yao graph (cheapest edge per 45° cone) | No |
-| **Hierarchical Road Classifier** | Functional class filter (arterials/collectors + last-mile attachment) | No |
-| **Matched-Density Betweenness** | Density-matched structural control (matched edge budget to ours) | No |
-| **Full Network** | Complete ground-truth road topology ($t = 1.0$) | Ground Truth |
-
-</div>
+| Method | What it is | Certified? |
+|---|---|---|
+| **Delay-Bounded Spanner (ours)** | Theorem-1 construction above | **Yes, by construction** |
+| Static Free-Flow Spanner | Classical greedy spanner on the free-flow snapshot only | No |
+| Mean-Temporal Spanner | Greedy spanner on the 24h-averaged cost | No |
+| Static Geometric Spanner | Classical Euclidean-length greedy spanner | No |
+| Yao-Cone Sparsifier (k=8) | Network-constrained adaptation of the classical Yao graph (cheapest edge per 45° cone per node) — *not* the unconstrained-point-set construction with the closed-form `1/(1-2 sin(π/k))` stretch bound; that bound does not apply here and is not claimed | No |
+| Hierarchical Road Classifier | Keep only arterial/collector classes + last-mile attachment | No |
+| Matched-Density Random / Betweenness | Density-matched structural controls (same edge budget as ours) | No |
+| Full Network | Ground truth (`t = 1`) | — |
 
 ---
 
-## 4. Benchmark Results — Focus City: Yazd (Real OSM, $r = 1500\text{ m}$)
+## 4. Results
 
-<div align="center">
+Numbers are **not** hand-copied into this README. They live in the auto-generated files below, regenerated fresh by every run of `run_spanner_benchmark.py`, so there is exactly one source of truth and it cannot silently drift out of sync with the code that produced it:
 
-| Method | $t$ | Edges Kept (%) | Length Kept (%) | Attained Worst Stretch | Certified (24h) | Worst OD Dilation | Build Time (s) |
-|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Delay-Bounded (Ours)** | **1.10** | **99.2%** | **98.0%** | **1.100** | **Yes** | **1.002** | 0.11 s |
-| Static Free-Flow | 1.10 | 98.9% | 97.3% | 1.488 | No (23 edges) | 1.031 | 0.04 s |
-| **Delay-Bounded (Ours)** | **1.50** | **98.3%** | **96.1%** | **1.500** | **Yes** | **1.031** | 0.08 s |
-| Static Free-Flow | 1.50 | 97.8% | 95.0% | 1.907 | No (31 edges) | 1.074 | 0.09 s |
-| Mean-Temporal | 1.50 | 97.9% | 95.4% | 2.433 | No (23 edges) | 1.074 | 0.05 s |
-| **Delay-Bounded (Ours)** | **3.00** | **93.4%** | **86.2%** | **3.000** | **Yes** | **1.223** | 0.24 s |
-| Static Geometric | 1.50 | 98.1% | 95.7% | 2.847 | No (19 edges) | 1.117 | 0.05 s |
-| Yao-Cone ($k=8$) | 1.50 | 99.5% | 98.8% | 8.000 | No (14 edges) | 1.113 | 0.03 s |
-| Matched-Density Betweenness | 1.50 | 98.3% | 97.2% | 8.000 | No (94 edges) | 1.210 | 1.39 s |
-| Hierarchical Road Classifier | — | 85.4% | 79.7% | 8.000 | No (955 edges) | **9.495** | 0.15 s |
-| Full Network | — | 100.0% | 100.0% | 1.000 | Yes | 1.000 | 0.00 s |
+- [`results/benchmark_table.md`](results/benchmark_table.md) — focus-city (default: Yazd) sweep across `t`, all baselines, with 95% CI on mean dilation and the certificate's attained worst-case edge stretch
+- [`results/ablation_table.md`](results/ablation_table.md) — edge-ordering ablation (`temporal_max` / `temporal_mean` / `centrality`)
+- [`results/crosscity_table.md`](results/crosscity_table.md) — all cities, Iran + international, with data provenance (`OSM` vs `synthetic`), street-orientation entropy, circuity, and the advantage ratio over the matched-density control
+- [`results/spanner_report.json`](results/spanner_report.json) — full machine-readable record: every table above plus the morphology regression, the pair-level and city-level significance tests, the FIFO time-dependent validation, and the congestion-model sensitivity sweep
+- [`results/spanner_benchmark.png`](results/spanner_benchmark.png) — 7-panel focus-city figure
+- [`results/spanner_crosscity.png`](results/spanner_crosscity.png) — 4-panel cross-city generalization figure
+- [`results/per_pair_dilation.csv`](results/per_pair_dilation.csv) — raw per-OD-pair dilation at the focus city's peak hour (the raw data behind the significance tests — see §5)
 
-</div>
-
-<p align="center">
-  <img src="results/spanner_benchmark.png" alt="Focus City Benchmark" width="100%">
-</p>
-
-*Full numerical record:* [`results/benchmark_table.md`](results/benchmark_table.md) · *Edge-ordering ablation:* [`results/ablation_table.md`](results/ablation_table.md)
+Run `python run_spanner_benchmark.py` to (re)generate all of the above from scratch.
 
 ---
 
-## 5. Cross-City Generalization: Six Metropolitan Road Morphologies
+## 5. Verification & Reproducibility
 
-Evaluated on live OpenStreetMap networks ($t = 1.5$) across six distinct urban street morphologies:
+This is the section most reviewers skim past and most retractions come from skipping. Concretely, this repo has:
 
-<div align="center">
+**Unit tests** (`tests/test_certificate.py`, `python -m unittest discover -s tests -v`) — analytically-known positive and negative controls run against the *actual* production functions, not a reimplementation:
+- a planted shortcut edge whose removal must break certification with an **exactly** computable attained stretch (`6.0`, hand-derived);
+- a planted unreachable pair, which must be reported as `∞`, not a finite guess;
+- a property test that the greedy construction always self-certifies against its own parent graph, across multiple random seeds and `t` values;
+- an independent cross-check of the core `bounded_dijkstra` primitive against `networkx`'s own (separately implemented, widely trusted) shortest-path routine, on 20 random graphs.
 
-| City | Urban Archetype | Nodes | Edges | Orientation Entropy | Circuity | Edge Retention | Certified (24h) | Ours Worst OD | Matched-Btw Worst OD | Advantage Factor |
-|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Yazd** | Historic-Organic | 3,093 | 6,806 | 0.946 | 1.039 | **98.3%** | **Yes** | **1.012** | 1.230 | **1.22×** |
-| **Tehran** | Radial-Grid | 2,129 | 4,023 | 0.777 | 1.033 | **97.7%** | **Yes** | **1.016** | 1.076 | **1.06×** |
-| **Isfahan** | Historic-Organic | 3,818 | 7,302 | 0.907 | 1.040 | **98.8%** | **Yes** | **1.007** | 1.000 | 0.99× |
-| **Shiraz** | Hill-Organic | 1,965 | 4,218 | 0.893 | 1.032 | **96.3%** | **Yes** | **1.057** | 1.461 | **1.38×** |
-| **Mashhad** | Radial-Grid | 1,185 | 2,968 | 0.827 | 1.022 | **95.1%** | **Yes** | **1.086** | 1.006 | 0.93× |
-| **Qom** | Modern-Grid | 2,208 | 4,766 | 0.865 | 1.030 | **97.4%** | **Yes** | **1.126** | 1.002 | 0.89× |
+**An independent verifier** (`verify_results.py`) — deliberately *not* part of the pipeline, imports none of its aggregation code, and re-derives headline numbers (worst/mean dilation, the Wilcoxon p-value) straight from the raw `per_pair_dilation.csv` using a separate pandas/scipy code path, then checks them against what the pipeline itself reported. It also runs internal-consistency checks (every `certified: yes` must have zero violating edges) and a specific anti-regression check for the bug below.
 
-</div>
+**Continuous integration** (`.github/workflows/ci.yml`) — on every push: byte-compile, unit tests, a full `--quick --synthetic` pipeline run, and `verify_results.py` against its output, on Python 3.10 and 3.11.
 
-<p align="center">
-  <img src="results/spanner_crosscity.png" alt="Cross-City Generalization" width="100%">
-</p>
+**Graph caching for cold reproducibility** (`results/graph_cache/`) — every fetched or synthesized road network is cached (pickle + a small, git-trackable `.meta.json` sidecar recording fetch time, source, node/edge counts). A later run reproduces the exact same graph offline; `--refresh-cache` forces a clean refetch.
 
-> [!TIP]
-> **Statistical Honesty & Morphological Correlation:**
-> - Mean edge circuity vs. edge retention: **$r = 0.95, p = 0.004$** (statistically significant at $n = 6$).
-> - Orientation entropy vs. advantage over matched-density: $r = 0.41, p = 0.42$ (not statistically significant; requires broader multi-country expansion).
-> - City-level Wilcoxon signed-rank test ($\text{Ours} < \text{Matched-Density Betweenness}$): $p = 0.34, n = 6$ — **directional, currently underpowered, not confirmatory**. Transparently reported as an empirical trade-off.
+### A documented correction
 
----
+An earlier version of `temporal_stretch_certificate()` refined violating edges with a *bounded* search (`budget = 8× the edge's own cost`) and, on timeout, silently reported `attained_worst_edge_stretch = 8.0` for **every** such case — a fixed search-cutoff artifact, not a measured value, and it looked exactly like the kind of suspiciously round, repeated number that should be distrusted rather than reported at face value. It was caught by inspection, not by a test (the test that would have caught it, `TestUnreachableViolationIsReportedAsInfinity`, was written afterward specifically so it can't recur silently). The fix runs a genuinely unbounded search on refinement: violating edges get their true attained stretch, and truly unreachable pairs are now reported honestly as `∞ (n unreachable)` rather than a fabricated finite number. Tables now show `≥X` when the search was truncated before refining every violation (a disclosed lower bound, never a silent cap).
 
-## 6. Robustness to Model Misspecification
+### What is *not* yet independently validated
 
-The diurnal congestion model is a parametric tidal model (CBD-weighted, inbound/outbound asymmetric). To examine sensitivity against empirical traffic telemetry deviations, the congestion-severity coefficient $\alpha$ was scaled across $\times 0.70 \dots \times 1.30$:
-
-- **Delay-Bounded Spanner (Ours):** Worst OD dilation remains strictly within **$[1.02, 1.06]$**, remaining $100\%$ certified and well beneath the theoretical $t = 1.50$ ceiling.
-- **Matched-Density Betweenness Control:** Worst OD dilation rapidly degrades to **$1.38\times$**, violating target bounds as congestion severity intensifies (see panel k in `results/spanner_crosscity.png`).
+- The diurnal congestion field is a **parametric** model (tidal, CBD-weighted, inbound/outbound-asymmetric), not fitted to floating-car or loop-detector telemetry. `results/spanner_report.json → congestion_sensitivity` quantifies robustness to this choice (±30% severity) but does not substitute for a telemetry-fitted replication.
+- Twelve cities across six countries support a *directional* cross-morphology, cross-country generalization claim (`morphology_regression`, `city_level_significance`, `iran_vs_international_comparison` in the report) — not a definitive one. City-level tests are underpowered by design (n = cities, not OD pairs); they are reported with that caveat rather than presented as confirmatory.
+- Cities whose live OSMnx/Overpass fetch is unavailable fall back to a deterministic, morphology-parameterized synthetic generator. Every city's `used_real_osm` flag states which was used for that specific run — check it before citing a number as coming from real map data.
 
 ---
 
-## 7. Reproducibility
+## 6. Reproduce
 
 ```bash
-# Set up conda environment
 conda create -n spanner_research_env python=3.10 -y
 conda activate spanner_research_env
 conda install -c conda-forge networkx osmnx geopandas shapely scipy numpy pandas matplotlib seaborn tqdm -y
 
-# Execution modes
-python run_spanner_benchmark.py                    # Complete evaluation: Focus city + 6-city cross-city suite
-python run_spanner_benchmark.py --quick             # Rapid smoke test
-python run_spanner_benchmark.py --synthetic         # Deterministic morphology-parameterized synthetic offline mode
-python run_spanner_benchmark.py --skip-crosscity    # Focus city evaluation only
+python -m unittest discover -s tests -v           # unit tests
+python run_spanner_benchmark.py                    # full run: focus city + 12-city cross-city study
+python verify_results.py                           # independent check of what was just produced
+
+python run_spanner_benchmark.py --quick             # fast smoke test (stratified Iran + international)
+python run_spanner_benchmark.py --synthetic         # force offline mode everywhere
+python run_spanner_benchmark.py --skip-crosscity    # focus city only
+python run_spanner_benchmark.py --refresh-cache      # ignore the graph cache and refetch/rebuild
 ```
+
+If Overpass/OSMnx is unreachable, the pipeline transparently falls back to the deterministic synthetic generator and labels each city's `used_real_osm` flag accordingly — it never silently mixes real and synthetic data without saying so.
 
 ---
 
-## 8. Repository Structure
+## 7. Repository layout
 
 ```
 .
-├── run_spanner_benchmark.py       # Integrated pipeline: metric models, greedy spanner, baselines & plotting
-├── README.md                      # Publication report and benchmark documentation
+├── run_spanner_benchmark.py       # single self-contained pipeline (model, algorithm, baselines, eval, figures)
+├── verify_results.py              # independent verification, separate code path from the pipeline
+├── tests/
+│   └── test_certificate.py        # unit tests: positive/negative controls + independent Dijkstra cross-check
+├── .github/workflows/ci.yml       # unit tests + smoke run + verification, on every push
+├── requirements.txt
+├── LICENSE
+├── CITATION.cff
+├── README.md
 └── results/
-    ├── spanner_benchmark.png      # 7-panel focus-city benchmark figure
-    ├── spanner_crosscity.png      # 4-panel cross-city morphology generalization figure
-    ├── spanner_report.json        # Machine-readable numerical record
-    ├── benchmark_table.md         # Detailed tabular benchmark across dilation bounds
-    ├── ablation_table.md          # Edge-ordering ablation records
-    ├── crosscity_table.md         # Full cross-city morphological evaluation
-    └── per_pair_dilation.csv      # Empirical OD dilation distribution records
+    ├── spanner_benchmark.png
+    ├── spanner_crosscity.png
+    ├── spanner_report.json
+    ├── benchmark_table.md
+    ├── ablation_table.md
+    ├── crosscity_table.md
+    ├── per_pair_dilation.csv
+    └── graph_cache/               # .meta.json tracked; .pkl gitignored (see .gitignore)
 ```
 
 ---
 
-## 9. Methodological Limitations
+## 8. Known limitations
 
-- **Time-Slice Snapshot Model:** Intra-traversal departure-time evolution is not modeled dynamically; ex-post verified via FIFO time-dependent Dijkstra evaluations (`fifo_violation_rate = 0.0` across all tested topologies).
-- **Parametric Congestion:** Traffic profiles utilize a parametric CBD-tidal distribution rather than empirical loop-detector telemetry (§6 reports the sensitivity envelope).
-- **Sample Scale:** $n = 6$ cities demonstrates directional morphological generalization; full confirmatory significance testing requires global scaling.
-- **Approximation Guarantees:** Greedy edge construction provides no worst-case approximation bound on $|H|$; Yao-cone and density-matched baselines serve as empirical lower-bound proxies.
+- Snapshot (time-slice) model: no departure-time evolution *within* a single traversal; ex-post validated by a FIFO time-dependent Dijkstra experiment (`fifo_violation_rate` in `results/spanner_report.json`).
+- Congestion is a parametric model, not measured telemetry — see §5.
+- Greedy construction carries no approximation guarantee on `|H|`; the matched-density and Yao-cone baselines are empirical, not theoretical, lower-bound proxies.
+- Twelve cities is enough for a directional generalization claim, not a definitive one — see §5.
 
 ---
 
-## 10. Citation
+## 9. Citation
+
+See [`CITATION.cff`](CITATION.cff), or:
 
 ```bibtex
 @software{delay_bounded_spanner_2026,
   title  = {Delay-Bounded Time-Varying Geometric t-Spanners for Urban Road Networks},
+  author = {Soheil},
   year   = {2026},
-  note   = {Certified temporal sparsification, validated on six real OpenStreetMap metropolitan road networks}
+  license = {MIT},
+  note   = {Certified temporal sparsification, validated on real OpenStreetMap road networks across six Iranian and six international cities}
 }
 ```

@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-and-verify:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Byte-compile (syntax check)
+        run: python -m py_compile run_spanner_benchmark.py verify_results.py
+
+      - name: Unit tests (Theorem-1 certificate: positive/negative controls,
+          greedy self-certification property test, independent Dijkstra
+          cross-check against networkx)
+        run: python -m unittest discover -s tests -v
+
+      - name: Pipeline smoke test (offline, synthetic, stratified Iran + international)
+        run: python run_spanner_benchmark.py --quick --synthetic
+
+      - name: Independent verification of the smoke-test results
+        run: python verify_results.py
+
+      - name: Upload smoke-test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-results-py${{ matrix.python-version }}
+          path: results/
+          retention-days: 14
