@@ -6,7 +6,7 @@ authors:
     affiliation: "Yazd University"
 version: 2.2.0
 date-released: 2026-09-26
-repository-code: "https://github.com/<OWNER>/delay-bounded-spanner-networks"
+repository-code: "https://github.com/soheylfalahzade/delay-bounded-spanner-networks"
 license: MIT
 keywords:
   - graph spanners

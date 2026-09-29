@@ -1,11 +1,11 @@
 # Delay-Bounded Time-Varying Geometric *t*-Spanners for Urban Road Networks
 
-[![CI](https://github.com/<OWNER>/delay-bounded-spanner-networks/actions/workflows/ci.yml/badge.svg)](https://github.com/<OWNER>/delay-bounded-spanner-networks/actions/workflows/ci.yml)
+[![CI](https://github.com/soheylfalahzade/delay-bounded-spanner-networks/actions/workflows/ci.yml/badge.svg)](https://github.com/soheylfalahzade/delay-bounded-spanner-networks/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **A certified sparsification framework that extracts a single physical road backbone `H ⊆ G`, guaranteed to preserve bounded travel-time dilation at every hour of the day — validated end-to-end on real metropolitan road networks pulled live from OpenStreetMap, across six Iranian and six international cities spanning five distinct street-network morphologies.**
 
-> Replace `<OWNER>` above with the actual GitHub username/org once this repo is pushed, so the CI badge resolves.
+> Replace `soheylfalahzade` above with the actual GitHub username/org once this repo is pushed, so the CI badge resolves.
 
 ---
 
