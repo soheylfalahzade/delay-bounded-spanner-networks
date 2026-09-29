@@ -71,7 +71,13 @@ Numbers are **not** hand-copied into this README. They live in the auto-generate
 - [`results/crosscity_table.md`](results/crosscity_table.md) — all cities, Iran + international, with data provenance (`OSM` vs `synthetic`), street-orientation entropy, circuity, and the advantage ratio over the matched-density control
 - [`results/spanner_report.json`](results/spanner_report.json) — full machine-readable record: every table above plus the morphology regression, the pair-level and city-level significance tests, the FIFO time-dependent validation, and the congestion-model sensitivity sweep
 - [`results/spanner_benchmark.png`](results/spanner_benchmark.png) — 7-panel focus-city figure
+
+<img src="results/spanner_benchmark.png" width="900" alt="Focus-city 7-panel benchmark figure">
+
 - [`results/spanner_crosscity.png`](results/spanner_crosscity.png) — 4-panel cross-city generalization figure
+
+<img src="results/spanner_crosscity.png" width="900" alt="Cross-city 4-panel generalization figure">
+
 - [`results/per_pair_dilation.csv`](results/per_pair_dilation.csv) — raw per-OD-pair dilation at the focus city's peak hour (the raw data behind the significance tests — see §5)
 
 Run `python run_spanner_benchmark.py` to (re)generate all of the above from scratch.
