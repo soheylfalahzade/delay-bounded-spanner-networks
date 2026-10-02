@@ -9,6 +9,6 @@
 | Melbourne | Australia | strict-grid | OSM | 1564 | 3011 | 0.773 | 1.013 | 97.8 | yes | 1.019 | 1.000 | 0.98 | 97.1 | 99.5 | 97.8 | 79.2 |
 | Cairo | Egypt | informal-organic | OSM | 2507 | 5797 | 0.942 | 1.029 | 97.6 | yes | 1.054 | 1.000 | 0.95 | 97.3 | 99.5 | 97.6 | 74.7 |
 | Tokyo | Japan | dense-organic | OSM | 1561 | 3746 | 0.989 | 1.059 | 95.4 | yes | 1.164 | 1.053 | 0.91 | 94.7 | 98.7 | 95.4 | 72.7 |
-| Amsterdam | Netherlands | historic-organic | OSM | 1192 | 2553 | 0.951 | 1.026 | 93.8 | yes | 1.034 | 1.410 | 1.36 | 93.1 | 98.3 | 93.8 | 74.9 |
-| Barcelona | Spain | modern-grid | OSM | 847 | 1550 | 0.783 | 1.021 | 96.5 | yes | 1.026 | 1.001 | 0.98 | 95.9 | 99.3 | 96.5 | 81.8 |
+| Amsterdam | Netherlands | historic-organic | OSM | 1190 | 2550 | 0.951 | 1.026 | 93.8 | yes | 1.034 | 1.275 | 1.23 | 93.1 | 98.3 | 93.8 | 74.9 |
+| Barcelona | Spain | modern-grid | OSM | 849 | 1555 | 0.786 | 1.021 | 96.5 | yes | 1.016 | 1.003 | 0.99 | 95.9 | 99.3 | 96.5 | 81.8 |
 | Manhattan | USA | strict-grid | OSM | 565 | 1110 | 0.353 | 1.011 | 94.1 | yes | 1.069 | 1.000 | 0.94 | 89.5 | 99.1 | 94.1 | 78.3 |

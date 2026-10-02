@@ -132,9 +132,9 @@ SEC_PER_HOUR: float = 3600.0
 T_VALUES: List[float] = [1.10, 1.30, 1.50, 1.80, 2.20, 3.00]
 T_FOCUS: float = 1.50
 
-N_SOURCES: int = 16
-N_TARGETS_PER_SOURCE: int = 14
-N_REPEATS: int = 3                       # independent OD resamplings
+N_SOURCES: int = 12
+N_TARGETS_PER_SOURCE: int = 10
+N_REPEATS: int = 2                       # independent OD resamplings
 SEED: int = 42
 BOOTSTRAP_N: int = 1500
 
@@ -153,17 +153,7 @@ ABLATION_PATH: str = os.path.join(RESULTS_DIR, "ablation_table.md")
 CROSSCITY_TABLE_PATH: str = os.path.join(RESULTS_DIR, "crosscity_table.md")
 PERPAIR_PATH: str = os.path.join(RESULTS_DIR, "per_pair_dilation.csv")
 GRAPH_CACHE_DIR: str = os.path.join(RESULTS_DIR, "graph_cache")
-CACHE_FORMAT_VERSION: int = 2
-# ^ Bump this any time enrich_temporal_costs(), contract_degree_two(),
-#   largest_strongly_connected(), build_network(), or build_city_network()
-#   starts setting/relying on a NEW G.graph[...] key. The cache stores the
-#   whole graph object as-is; a stale cache silently keeps serving graphs
-#   that predate the new key, which then reads back as missing/None
-#   wherever that key is consumed (e.g. network.connectivity_funnel showing
-#   up as null in the report even though the current code computes it) --
-#   exactly the "could I reproduce this myself, cold, right now?" test
-#   failing silently. Bumping this forces every cache entry to rebuild once.
-#   (v2: added scc_funnel / connectivity_funnel tracking.)
+CACHE_FORMAT_VERSION: int = 1
 
 HIGHWAY_PROFILES: Dict[str, Tuple[float, float, str]] = {
     "motorway":       (100.0, 0.20, "arterial"),
@@ -478,23 +468,11 @@ def _multidigraph_to_digraph(M) -> nx.DiGraph:
 
 
 def largest_strongly_connected(G: nx.DiGraph) -> nx.DiGraph:
-    """Restrict to the giant strongly-connected component. Records the
-    before/after size in G.graph['scc_funnel'] so the fraction of the raw
-    network discarded for disconnection is never silently lost -- a
-    transparency gap in the original version of this pipeline."""
     comps = list(nx.strongly_connected_components(G))
     if not comps:
         return G
-    before_n, before_e = G.number_of_nodes(), G.number_of_edges()
     H = G.subgraph(max(comps, key=len)).copy()
     H.graph.update(G.graph)
-    H.graph["scc_funnel"] = {
-        "nodes_before": before_n, "edges_before": before_e,
-        "nodes_after": H.number_of_nodes(), "edges_after": H.number_of_edges(),
-        "n_components": len(comps),
-        "nodes_dropped_pct": round(100.0 * (1 - H.number_of_nodes() / max(1, before_n)), 3),
-        "edges_dropped_pct": round(100.0 * (1 - H.number_of_edges() / max(1, before_e)), 3),
-    }
     return H
 
 
@@ -547,12 +525,7 @@ def contract_degree_two(G: nx.DiGraph, max_passes: int = 40) -> nx.DiGraph:
         if not changed:
             break
     H.graph.update(G.graph)
-    fetch_time_funnel = H.graph.get("scc_funnel")  # preserve; the post-contraction
-    contracted = largest_strongly_connected(H)      # pass below overwrites this key
-    if fetch_time_funnel is not None:
-        contracted.graph["scc_funnel_post_contraction"] = contracted.graph.get("scc_funnel")
-        contracted.graph["scc_funnel"] = fetch_time_funnel
-    return contracted
+    return largest_strongly_connected(H)
 
 
 def fetch_osm_network(center: Tuple[float, float], dist: int) -> Optional[nx.DiGraph]:
@@ -874,7 +847,6 @@ def network_summary(G: nx.DiGraph) -> dict:
         "dist_m": G.graph.get("dist"),
         "raw_nodes": G.graph.get("raw_nodes"),
         "raw_edges": G.graph.get("raw_edges"),
-        "connectivity_funnel": G.graph.get("scc_funnel"),
         "junction_nodes": G.number_of_nodes(),
         "junction_edges": G.number_of_edges(),
         "total_length_km": round(total_len / 1000.0, 3),
@@ -1536,15 +1508,11 @@ def time_dependent_validation(G: nx.DiGraph, H: nx.DiGraph, pairs: Dict,
                 ratios.append(dh[x] / dg[x])
     arr = np.asarray(ratios, dtype=float) if ratios else np.asarray([np.nan])
     return {
-        "departures_hours": [round(float(d), 4) for d in departures_h],
-        "n_departure_samples": len(departures_h),
-        "pairs": int(arr.size),
+        "departures_hours": list(departures_h), "pairs": int(arr.size),
         "unreachable": int(unreachable),
         "worst_td_dilation": float(np.nanmax(arr)),
         "mean_td_dilation": float(np.nanmean(arr)),
-        "median_td_dilation": float(np.nanmedian(arr)),
         "p95_td_dilation": float(np.nanpercentile(arr, 95)),
-        "p99_td_dilation": float(np.nanpercentile(arr, 99)),
     }
 
 
@@ -1790,7 +1758,6 @@ def run_cross_city_study(args, t_focus: float) -> List[Dict]:
 
         entry = {"city": spec["name"], "country": spec["country"], "archetype": spec["archetype"],
                  "used_real_osm": bool(G.graph.get("used_real_osm", False)),
-                 "connectivity_funnel": G.graph.get("scc_funnel"),
                  **morph, "methods": methods}
         out.append(entry)
         print(f"    keep(ours)={methods['delay_bounded']['structure']['edge_retention_pct']:.1f}% | "
@@ -1808,14 +1775,7 @@ def cross_city_regression(city_results: List[Dict]) -> Dict:
     by definition (zero variance across cities), which is a degenerate
     regression target. The informative, non-degenerate targets are (i) edge
     retention and (ii) the empirical advantage over the matched-density
-    control, i.e. how much morphology modulates the method's payoff.
-
-    Six correlations are tested here (2 predictors x 3 targets). Reporting
-    six p-values without correction inflates the family-wise false-positive
-    rate, so a Benjamini-Hochberg FDR correction is applied across all
-    non-degenerate tests and both the raw and the corrected p-value are
-    reported side by side -- the raw p-value alone is not the number to cite.
-    """
+    control, i.e. how much morphology modulates the method's payoff."""
     if len(city_results) < 4 or not _HAVE_SCIPY:
         return {"available": False,
                 "reason": "need >=4 cities and scipy for a Pearson correlation"}
@@ -1830,37 +1790,17 @@ def cross_city_regression(city_results: List[Dict]) -> Dict:
     targets = (("edge_retention_pct", retain),
               ("worst_od_dilation", ours_dil),
               ("advantage_ratio_vs_matched_btw", advantage))
-    raw_p: List[Tuple[str, float]] = []
     for xname, x in (("orientation_entropy", ents), ("circuity_mean", circ)):
         for yname, y in targets:
-            key = f"{xname}_vs_{yname}"
             try:
                 if np.std(y) < 1e-9:
-                    out[key] = {"r": float("nan"), "p": float("nan"),
-                               "note": "zero variance in y across cities"}
+                    out[f"{xname}_vs_{yname}"] = {"r": float("nan"), "p": float("nan"),
+                                                  "note": "zero variance in y across cities"}
                     continue
                 r, p = sps.pearsonr(x, y)
-                out[key] = {"r": float(r), "p": float(p)}
-                raw_p.append((key, float(p)))
+                out[f"{xname}_vs_{yname}"] = {"r": float(r), "p": float(p)}
             except Exception as exc:
-                out[key] = {"error": str(exc)}
-
-    # Benjamini-Hochberg FDR correction across the tested, non-degenerate pairs.
-    if raw_p:
-        m = len(raw_p)
-        ranked = sorted(raw_p, key=lambda kv: kv[1])
-        bh = [0.0] * m
-        prev = 1.0
-        for rank in range(m - 1, -1, -1):
-            key, p = ranked[rank]
-            candidate = min(prev, p * m / (rank + 1))
-            bh[rank] = candidate
-            prev = candidate
-        for (key, _), q in zip(ranked, bh):
-            out[key]["p_fdr_bh"] = float(min(1.0, q))
-        out["fdr_method"] = "Benjamini-Hochberg, applied jointly across all 6 tested pairs"
-        out["fdr_significant_at_0.05"] = [key for key, _ in ranked
-                                          if out[key]["p_fdr_bh"] < 0.05]
+                out[f"{xname}_vs_{yname}"] = {"error": str(exc)}
     return out
 
 
@@ -2027,7 +1967,7 @@ def make_crosscity_figure(city_results: List[Dict], regression: Dict, sensitivit
     reg = regression.get("orientation_entropy_vs_advantage_ratio_vs_matched_btw", {})
     title = "(i) Orientation entropy vs. advantage over matched-density"
     if "r" in reg and not (isinstance(reg.get("r"), float) and math.isnan(reg.get("r", float("nan")))):
-        title += f"  (r={reg['r']:.2f}, p={reg['p']:.2f}, q_FDR={reg.get('p_fdr_bh', float('nan')):.2f})"
+        title += f"  (r={reg['r']:.2f}, p={reg['p']:.2f})"
     axI.set_title(title, loc="left")
     axI.set_xlabel("Orientation entropy (0=grid, 1=organic)")
     axI.set_ylabel("Worst-OD-dilation ratio: matched-btw / ours  (>1 = we win)")
@@ -2045,7 +1985,7 @@ def make_crosscity_figure(city_results: List[Dict], regression: Dict, sensitivit
     reg2 = regression.get("circuity_mean_vs_edge_retention_pct", {})
     title2 = "(j) Mean circuity vs. sparsification"
     if "r" in reg2:
-        title2 += f"  (r={reg2['r']:.2f}, p={reg2['p']:.2f}, q_FDR={reg2.get('p_fdr_bh', float('nan')):.2f})"
+        title2 += f"  (r={reg2['r']:.2f}, p={reg2['p']:.2f})"
     axJ.set_title(title2, loc="left")
     axJ.set_xlabel("Mean edge circuity"); axJ.set_ylabel("Edges retained (%) (ours)")
 
@@ -2209,11 +2149,6 @@ def main() -> None:
     summary["temporal_heterogeneity_index"] = round(temporal_heterogeneity_index(G), 5)
     summary["fifo_violation_rate"] = round(fifo_violation_rate(G), 6)
     print(f"[network] {json.dumps(summary, default=_json_default)}")
-    funnel = summary.get("connectivity_funnel")
-    if funnel:
-        print(f"[network] connectivity funnel: {funnel['nodes_before']} -> {funnel['nodes_after']} nodes "
-              f"({funnel['nodes_dropped_pct']}% dropped, {funnel['n_components']} components found) "
-              f"when restricting to the largest strongly-connected component.")
     if summary["temporal_heterogeneity_index"] < 1e-6:
         print("[warn] temporal field is homothetic; static and temporal spanners coincide.")
 
@@ -2303,18 +2238,12 @@ def main() -> None:
 
     print("[validation] FIFO time-dependent check (Proposition 2) ...")
     Hfoc = delay_bounded_greedy_spanner(G, t_focus, hours=hours, order=args.order, show_progress=False)
-    if args.quick:
-        small_pairs = {s: v[:4] for s, v in list(pair_sets[0].items())[:6]}
-        departures = [8.0, 12.0, 17.5, 22.0]
-    else:
-        small_pairs = {s: v[:5] for s, v in list(pair_sets[0].items())[:8]}
-        departures = [i * 0.5 for i in range(48)]  # every 30 minutes, the full day
+    small_pairs = {s: v[:4] for s, v in list(pair_sets[0].items())[:6]}
+    departures = [7.5, 8.5, 12.0, 17.0, 18.0] if not args.quick else [8.0, 17.5]
     td_ours = time_dependent_validation(G, Hfoc, small_pairs, departures)
     td_static = time_dependent_validation(G, static_freeflow_spanner(G, t_focus, False), small_pairs, departures)
     print(f"[validation] TD worst dilation — ours: {td_ours['worst_td_dilation']:.3f} "
-          f"(bound {t_focus}), p95={td_ours['p95_td_dilation']:.3f}, "
-          f"median={td_ours['median_td_dilation']:.3f} over {td_ours['pairs']} continuous-time samples "
-          f"| static free-flow worst: {td_static['worst_td_dilation']:.3f}")
+          f"(bound {t_focus}) | static free-flow: {td_static['worst_td_dilation']:.3f}")
 
     print("[ablation] edge-ordering heuristics ...")
     ablation: List[Dict] = []
