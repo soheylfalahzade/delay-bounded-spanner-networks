@@ -1,11 +1,11 @@
 # Delay-Bounded Time-Varying Geometric *t*-Spanners for Urban Road Networks
 
-[![CI](https://github.com/soheylfalahzade/delay-bounded-spanner-networks/actions/workflows/ci.yml/badge.svg)](https://github.com/soheylfalahzade/delay-bounded-spanner-networks/actions/workflows/ci.yml)
+[![CI](https://github.com/<OWNER>/delay-bounded-spanner-networks/actions/workflows/ci.yml/badge.svg)](https://github.com/<OWNER>/delay-bounded-spanner-networks/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **A certified sparsification framework that extracts a single physical road backbone `H ⊆ G`, guaranteed to preserve bounded travel-time dilation at every hour of the day — validated end-to-end on real metropolitan road networks pulled live from OpenStreetMap, across six Iranian and six international cities spanning five distinct street-network morphologies.**
 
-> Replace `soheylfalahzade` above with the actual GitHub username/org once this repo is pushed, so the CI badge resolves.
+> Replace `<OWNER>` above with the actual GitHub username/org once this repo is pushed, so the CI badge resolves.
 
 ---
 
@@ -71,13 +71,7 @@ Numbers are **not** hand-copied into this README. They live in the auto-generate
 - [`results/crosscity_table.md`](results/crosscity_table.md) — all cities, Iran + international, with data provenance (`OSM` vs `synthetic`), street-orientation entropy, circuity, and the advantage ratio over the matched-density control
 - [`results/spanner_report.json`](results/spanner_report.json) — full machine-readable record: every table above plus the morphology regression, the pair-level and city-level significance tests, the FIFO time-dependent validation, and the congestion-model sensitivity sweep
 - [`results/spanner_benchmark.png`](results/spanner_benchmark.png) — 7-panel focus-city figure
-
-<img src="results/spanner_benchmark.png" width="900" alt="Focus-city 7-panel benchmark figure">
-
 - [`results/spanner_crosscity.png`](results/spanner_crosscity.png) — 4-panel cross-city generalization figure
-
-<img src="results/spanner_crosscity.png" width="900" alt="Cross-city 4-panel generalization figure">
-
 - [`results/per_pair_dilation.csv`](results/per_pair_dilation.csv) — raw per-OD-pair dilation at the focus city's peak hour (the raw data behind the significance tests — see §5)
 
 Run `python run_spanner_benchmark.py` to (re)generate all of the above from scratch.
@@ -94,9 +88,11 @@ This is the section most reviewers skim past and most retractions come from skip
 - a property test that the greedy construction always self-certifies against its own parent graph, across multiple random seeds and `t` values;
 - an independent cross-check of the core `bounded_dijkstra` primitive against `networkx`'s own (separately implemented, widely trusted) shortest-path routine, on 20 random graphs.
 
-**An independent verifier** (`verify_results.py`) — deliberately *not* part of the pipeline, imports none of its aggregation code, and re-derives headline numbers (worst/mean dilation, the Wilcoxon p-value) straight from the raw `per_pair_dilation.csv` using a separate pandas/scipy code path, then checks them against what the pipeline itself reported. It also runs internal-consistency checks (every `certified: yes` must have zero violating edges) and a specific anti-regression check for the bug below.
+**An independent verifier** (`verify_results.py`) — deliberately *not* part of the pipeline, imports none of its aggregation code, and re-derives headline numbers (worst/mean dilation, the Wilcoxon p-value) straight from the raw `per_pair_dilation.csv` using a separate pandas/scipy code path, then checks them against what the pipeline itself reported. Eight independent checks in total: certificate internal consistency, the anti-fabrication check for the bug below, re-derived dilation statistics, a re-derived Wilcoxon p-value, sparsification monotonicity in `t`, cross-city data provenance, a connectivity-funnel sanity check (an SCC/contraction filter can only remove nodes or edges, never add them), and a Benjamini-Hochberg FDR-correction sanity check (an adjusted p-value can never be smaller than its own raw p-value) on the multi-comparison morphology regression. Paths are CLI-overridable (`--results-dir`, `--report`, `--perpair`) specifically so it can be driven in isolation by tests, not only by eyeballing a terminal.
 
-**Continuous integration** (`.github/workflows/ci.yml`) — on every push: byte-compile, unit tests, a full `--quick --synthetic` pipeline run, and `verify_results.py` against its output, on Python 3.10 and 3.11.
+**The verifier is tested against itself** (`tests/test_verify_results.py`) — a minimal, fully synthetic report is built in-memory, and each test corrupts exactly one thing (a `certified: true` paired with nonzero violating edges, a fabricated repeated stretch cap, non-monotone sparsification, a connectivity funnel running backwards, a broken FDR correction, a reported Wilcoxon p-value that doesn't match what scipy actually computes from the raw data) and asserts `verify_results.py` catches that *specific* failure, with every other check still passing. Without this, "we have a verifier" is just as unverifiable a claim as anything it checks.
+
+**Continuous integration** (`.github/workflows/ci.yml`) — on every push: byte-compile, all unit tests (certificate controls + the verifier's own negative controls), a full `--quick --synthetic` pipeline run, and `verify_results.py` against its output, on Python 3.10 and 3.11.
 
 **Graph caching for cold reproducibility** (`results/graph_cache/`) — every fetched or synthesized road network is cached (pickle + a small, git-trackable `.meta.json` sidecar recording fetch time, source, node/edge counts). A later run reproduces the exact same graph offline; `--refresh-cache` forces a clean refetch.
 
