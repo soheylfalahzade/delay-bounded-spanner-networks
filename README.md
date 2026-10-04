@@ -1,9 +1,18 @@
-# Delay-Bounded Time-Varying Geometric *t*-Spanners for Urban Road Networks
+<div align="center">
+
+# 🕸️ Delay-Bounded Time-Varying Geometric *t*-Spanners
+### for Urban Road Networks
 
 [![CI](https://github.com/<OWNER>/delay-bounded-spanner-networks/actions/workflows/ci.yml/badge.svg)](https://github.com/<OWNER>/delay-bounded-spanner-networks/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](requirements.txt)
+[![Data](https://img.shields.io/badge/data-OpenStreetMap-7ebc6f.svg)](https://www.openstreetmap.org)
+[![Cities](https://img.shields.io/badge/validated%20on-12%20cities%20%2F%206%20countries-c0392b.svg)](results/crosscity_table.md)
+[![Theorem 1](https://img.shields.io/badge/certificate-Theorem%201%2C%20by%20construction-6f42c1.svg)](#1-problem)
 
-**A certified sparsification framework that extracts a single physical road backbone `H ⊆ G`, guaranteed to preserve bounded travel-time dilation at every hour of the day — validated end-to-end on real metropolitan road networks pulled live from OpenStreetMap, across six Iranian and six international cities spanning five distinct street-network morphologies.**
+**A certified sparsification framework that extracts a single physical road backbone, guaranteed to preserve bounded travel-time dilation at every hour of the day — validated end-to-end on real metropolitan road networks pulled live from OpenStreetMap, across six Iranian and six international cities spanning five distinct street-network morphologies.**
+
+</div>
 
 > Replace `<OWNER>` above with the actual GitHub username/org once this repo is pushed, so the CI badge resolves.
 
@@ -11,39 +20,63 @@
 
 ## 1. Problem
 
-Let `G = (V, E)` be a directed geometric road network. Each edge `e` carries a length `ℓ(e)` and an hourly diurnal speed profile `v(e, τ)` for `τ ∈ {0, …, 23}`, giving the time-sliced travel-time cost
+Let $G = (V, E)$ be a directed geometric road network. Each edge $e$ carries a length $\ell(e)$ and an hourly diurnal speed profile $v(e, \tau)$ for $\tau \in \{0, \dots, 23\}$, giving the time-sliced travel-time cost
 
+$$w(e, \tau) \;=\; \frac{\ell(e)}{v(e, \tau)}$$
+
+We construct a sparse backbone $H \subseteq E$ certified to satisfy
+
+$$\forall\, u, v \in V,\ \ \forall\, \tau \in \{0,\dots,23\}:\qquad \mathrm{dist}_H(u, v, \tau) \;\le\; t \cdot \mathrm{dist}_G(u, v, \tau)$$
+
+> **Theorem 1** *(edge-wise certificate ⇒ all-pairs, all-hours guarantee).*
+> If $\mathrm{dist}_H(u,v,\tau) \le t \cdot w((u,v),\tau)$ holds for every edge $(u,v) \in E$ and every hour $\tau$, then $H$ is a delay-bounded time-varying $t$-spanner of $G$.
+>
+> *Proof.* Fix $\tau$; $w(\cdot,\tau)$ is a static, non-negative weighting, so concatenating the edge-wise invariant along a $\tau$-optimal path and applying the triangle inequality in $H_\tau$ gives the all-pairs bound, independently for every $\tau$. $\blacksquare$
+
+This collapses $|V|^2 \cdot 24$ pairwise constraints into $|E| \cdot 24$ *local* certificates, each decidable by a Dijkstra search pruned to the ball of radius $t \cdot w(e,\tau)$ — the diagram below shows the full pipeline this enables, and the animation under §2 shows the certificate decision actually running.
+
+```mermaid
+flowchart LR
+    A["🗺️ OpenStreetMap<br/>live fetch or cached"] --> B["⏱️ Diurnal enrichment<br/>w(e,τ) for 24 hours"]
+    B --> C["✂️ Delay-Bounded<br/>Greedy Spanner"]
+    C --> D{"Theorem 1<br/>certificate"}
+    D -- "yes, by construction" --> E["📐 H ⊆ G<br/>certified backbone"]
+    B --> F["📊 Baselines<br/>static · hierarchical ·<br/>Yao-cone · matched-density"]
+    F --> G{"certificate<br/>check"}
+    G -- "no" --> H["❌ uncertified"]
+    E --> I["🔁 verify_results.py<br/>independent re-derivation"]
+    H --> I
+    I --> J["✅ spanner_report.json"]
+
+    style E fill:#c0392b,stroke:#7b0d1e,color:#fff
+    style H fill:#30363d,stroke:#8b949e,color:#c9d1d9
+    style J fill:#238636,stroke:#196c2e,color:#fff
 ```
-w(e, τ) = ℓ(e) / v(e, τ)
-```
-
-We construct a sparse backbone `H ⊆ E` certified to satisfy
-
-```
-∀ u, v ∈ V,  ∀ τ ∈ {0,…,23}:   dist_H(u, v, τ)  ≤  t · dist_G(u, v, τ)
-```
-
-**Theorem 1 (edge-wise certificate ⇒ all-pairs, all-hours guarantee).**
-If `dist_H(u,v,τ) ≤ t · w((u,v),τ)` holds for every edge `(u,v) ∈ E` and every hour `τ`, then `H` is a delay-bounded time-varying `t`-spanner of `G`. *Proof:* fix `τ`; `w(·,τ)` is a static, non-negative weighting, so concatenating the edge-wise invariant along a `τ`-optimal path and applying the triangle inequality in `H_τ` gives the all-pairs bound, independently for every `τ`. ∎
-
-This collapses `|V|² · 24` pairwise constraints into `|E| · 24` *local* certificates, each decidable by a Dijkstra search pruned to the ball of radius `t · w(e,τ)`.
 
 ---
 
 ## 2. Algorithm — Delay-Bounded Greedy Spanner
 
-```
-1  order E ascending by max_τ w(e, τ)
-2  H ← ∅
-3  for (u, v) ∈ E in that order:
-4      for τ ordered by ascending w((u,v), τ):        # tightest budget first
-5          β ← t · w((u,v), τ)
-6          if BoundedDijkstra(H, u→v, τ, β) > β:
-7              H ← H ∪ {(u,v)}; break                  # early exit
-8  return H
-```
+$$
+\begin{aligned}
+&1.\ \ \text{order } E \text{ ascending by } \max_\tau w(e, \tau) \\
+&2.\ \ H \leftarrow \varnothing \\
+&3.\ \ \text{for } (u, v) \in E \text{ in that order:} \\
+&4.\ \ \quad \text{for } \tau \text{ ordered by ascending } w((u,v), \tau):\quad \text{\small(tightest budget first)} \\
+&5.\ \ \qquad \beta \leftarrow t \cdot w((u,v), \tau) \\
+&6.\ \ \qquad \text{if } \mathrm{BoundedDijkstra}(H, u{\to}v, \tau, \beta) > \beta: \\
+&7.\ \ \qquad\quad H \leftarrow H \cup \{(u,v)\};\ \text{break} \qquad \text{\small(early exit)} \\
+&8.\ \ \text{return } H
+\end{aligned}
+$$
 
-Complexity `O(|E| · 24 · |B| log|B|)`, `|B|` the size of the local metric ball. The empirical scaling exponent (`T ∝ |E|^k`) is measured fresh on every run — see panel (e) of `results/spanner_benchmark.png`.
+Complexity $O(|E| \cdot 24 \cdot |B| \log|B|)$, $|B|$ the size of the local metric ball. The empirical scaling exponent ($T \propto |E|^k$) is measured fresh on every run — see panel (e) of `results/spanner_benchmark.png`.
+
+**This is the actual algorithm running**, not a mockup — the animation below replays the real `_edge_order()` and `bounded_dijkstra()` decisions (from `tools/make_algorithm_animation.py`) on a small toy grid chosen for legibility; it is illustrative/schematic, not a benchmark result, and feeds no number anywhere in this README:
+
+<p align="center">
+  <img src="assets/algorithm_demo.gif" width="560" alt="Animation of the Delay-Bounded Greedy Spanner building a certified backbone edge by edge">
+</p>
 
 ---
 
@@ -76,11 +109,46 @@ Numbers are **not** hand-copied into this README. They live in the auto-generate
 
 Run `python run_spanner_benchmark.py` to (re)generate all of the above from scratch.
 
+<p align="center">
+  <img src="results/spanner_benchmark.png" width="900" alt="Focus-city 7-panel benchmark figure">
+  <br><sub><b>Figure 1.</b> Focus city, real OpenStreetMap data — temporal dilation stability, sparsification vs. permitted dilation, sparsity/fidelity Pareto front, empirical scaling, dilation distribution at the worst hour, and the certified emergency backbone overlaid on the full network.</sub>
+</p>
+
+<p align="center">
+  <img src="results/spanner_crosscity.png" width="900" alt="Cross-city 4-panel generalization figure">
+  <br><sub><b>Figure 2.</b> Cross-city generalization — sparsification across all 12 cities, street-morphology regressions, and robustness of the certified bound to congestion-model misspecification.</sub>
+</p>
+
 ---
 
 ## 5. Verification & Reproducibility
 
-This is the section most reviewers skim past and most retractions come from skipping. Concretely, this repo has:
+This is the section most reviewers skim past and most retractions come from skipping.
+
+```mermaid
+flowchart TD
+    subgraph L1["Layer 1 — does the algorithm itself work?"]
+        T1["tests/test_certificate.py<br/>planted shortcut · planted unreachable pair ·<br/>greedy self-certification property ·<br/>Dijkstra cross-check vs networkx"]
+    end
+    subgraph L2["Layer 2 — does the checker itself work?"]
+        T2["tests/test_verify_results.py<br/>7 injected-error negative controls:<br/>cert/violation mismatch · fabricated stretch cap ·<br/>non-monotone sweep · backwards funnel ·<br/>broken FDR · wrong Wilcoxon p"]
+    end
+    subgraph L3["Layer 3 — does THIS run's output hold up?"]
+        T3["verify_results.py<br/>re-derives headline numbers from raw CSV,<br/>independent of the pipeline's own code"]
+    end
+    T1 --> RUN["run_spanner_benchmark.py<br/>12 real cities, 6 countries"]
+    T2 --> T3
+    RUN --> T3
+    T3 --> OUT["results/*.md, *.json, *.png<br/>committed, single source of truth"]
+    CI["GitHub Actions CI<br/>on every push, Python 3.10 &amp; 3.11"] -. runs all three layers .-> T1
+    CI -.-> T2
+    CI -.-> T3
+
+    style OUT fill:#238636,stroke:#196c2e,color:#fff
+    style CI fill:#1f6feb,stroke:#0d419d,color:#fff
+```
+
+Concretely, this repo has:
 
 **Unit tests** (`tests/test_certificate.py`, `python -m unittest discover -s tests -v`) — analytically-known positive and negative controls run against the *actual* production functions, not a reimplementation:
 - a planted shortcut edge whose removal must break certification with an **exactly** computable attained stretch (`6.0`, hand-derived);
@@ -136,7 +204,12 @@ If Overpass/OSMnx is unreachable, the pipeline transparently falls back to the d
 ├── run_spanner_benchmark.py       # single self-contained pipeline (model, algorithm, baselines, eval, figures)
 ├── verify_results.py              # independent verification, separate code path from the pipeline
 ├── tests/
-│   └── test_certificate.py        # unit tests: positive/negative controls + independent Dijkstra cross-check
+│   ├── test_certificate.py        # unit tests: positive/negative controls + independent Dijkstra cross-check
+│   └── test_verify_results.py     # negative controls proving the verifier itself catches injected errors
+├── tools/
+│   └── make_algorithm_animation.py  # regenerates assets/algorithm_demo.gif from the real algorithm
+├── assets/
+│   └── algorithm_demo.gif         # illustrative only — not a benchmark result, feeds no number in this README
 ├── .github/workflows/ci.yml       # unit tests + smoke run + verification, on every push
 ├── requirements.txt
 ├── LICENSE
