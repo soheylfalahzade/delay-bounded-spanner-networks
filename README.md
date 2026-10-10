@@ -19,6 +19,26 @@
 
 > **Research line.** This repository is the time-varying, delay-bounded branch of a single line of work on geometric spanners: `geometric-spanners-lab` (classical baselines), `Research_Geometric_ML_Optimization` / Geo-SmartSpanner (the same construction problem with ML acceleration), and this repository.
 
+## Research Program
+
+This repository is one component of a connected research program on emergency-aware urban network control. The four repositories share a problem family, not code: each is self-contained and makes claims only within its own tested scope.
+
+| Repository | Setting | Role in the program | Type of guarantee |
+| --- | --- | --- | --- |
+| [`geometric-spanners-lab`](https://github.com/soheylfalahzade/geometric-spanners-lab) | Euclidean point sets, undirected | Classical greedy t-spanner baseline | Exact by construction; independently re-derived by `verify_independent.py` |
+| [`Research_Geometric_ML_Optimization`](https://github.com/soheylfalahzade/Research_Geometric_ML_Optimization) | Directed OpenStreetMap road graphs | Same spanner problem, with learned (GNN + fuzzy) edge pruning for speed | Per-edge local repair guarantee; global stretch validated empirically by Monte Carlo sampling (small nonzero violation rate in one city, disclosed in that repository) |
+| **[`delay-bounded-spanner-networks`](https://github.com/soheylfalahzade/delay-bounded-spanner-networks) (this repository)** | Directed road graphs with hourly speed profiles | Same problem under a time-varying delay constraint | Certified: an edge-wise certificate implies the all-pairs, all-hours bound (Theorem 1); congestion model is parametric, not fitted to telemetry |
+| [`anti-gridlock-signal-control`](https://github.com/soheylfalahzade/anti-gridlock-signal-control) | Single signalized intersection (SUMO) | Local control layer beneath a future network layer | Empirical (10 paired seeds); no closed-loop stability proof |
+
+**How the pieces fit.** The three spanner repositories form one line of work on sparse backbones of road networks: a classical greedy baseline, a machine-learning-accelerated variant on directed road graphs, and a variant that certifies a delay bound at every hour of the day. The signal-control repository is the local control layer that a network-level layer would sit above.
+
+**Status.** Integration of the local control layer with the network layer is planned and has not been demonstrated. Principal open items per repository:
+
+- `geometric-spanners-lab`: the OpenStreetMap experiments use node coordinates only (Euclidean metric), not road connectivity.
+- `Research_Geometric_ML_Optimization`: efficiency does not transfer to Tokyo scale (0.09% of edges pruned), and the ablation study has not yet been re-run on all four cities with the final pipeline.
+- `delay-bounded-spanner-networks`: the congestion field is parametric, not fitted to real traffic telemetry.
+- `anti-gridlock-signal-control`: fuzzy membership functions are hand-set, only one intersection is tested, and closed-loop stability is open.
+
 ## 1. Problem
 
 Let $G = (V, E)$ be a directed geometric road network. Each edge $e$ carries a length $\ell(e)$ and an hourly diurnal speed profile $v(e, \tau)$ for $\tau \in \{0, \dots, 23\}$, giving the time-sliced travel-time cost
@@ -231,6 +251,28 @@ If Overpass/OSMnx is unreachable, the pipeline transparently falls back to the d
 ```
 
 ---
+
+## Related Work
+
+<!-- TODO: verify every bibliographic entry below against the publisher record. -->
+
+**Spanners.** The greedy construction and its size bounds are due to Althofer, Das, Dobkin, Joseph and Soares (1993); Peleg and Schaffer (1989) introduced graph spanners; Narasimhan and Smid (2007) is the standard monograph on geometric spanner networks, and Yao (1982) introduced the cone-based sparsification used here as a baseline. Fault-tolerant geometric spanners were studied by Levcopoulos, Narasimhan and Smid (1998). These works treat static, undirected edge weights; the present work differs in that the cost of each edge varies with the hour of day and the network is directed.
+
+**Time-dependent routing.** Cooke and Halsey (1966) and Orda and Rom (1990) established shortest-path computation when edge costs depend on time, including the FIFO property that this repository validates empirically. Geisberger, Sanders, Schultes and Delling (2012) give contraction hierarchies, the dominant practical speed-up for static road graphs; hierarchical road classes appear here only as a baseline.
+
+**Data.** Road networks are obtained with OSMnx (Boeing, 2017) from OpenStreetMap.
+
+### References
+
+- Althofer, I., Das, G., Dobkin, D., Joseph, D., Soares, J. (1993). On sparse spanners of weighted graphs. *Discrete & Computational Geometry* 9(1), 81-100.
+- Boeing, G. (2017). OSMnx: New methods for acquiring, constructing, analyzing, and visualizing complex street networks. *Computers, Environment and Urban Systems* 65, 126-139.
+- Cooke, K. L., Halsey, E. (1966). The shortest route through a network with time-dependent internodal transit times. *Journal of Mathematical Analysis and Applications* 14(3), 493-498.
+- Geisberger, R., Sanders, P., Schultes, D., Delling, D. (2012). Exact routing in large road graphs: contraction hierarchies. *Transportation Science* 46(3), 388-404.
+- Levcopoulos, C., Narasimhan, G., Smid, M. (1998). Efficient algorithms for constructing fault-tolerant geometric spanners. *Proc. 30th ACM STOC*.
+- Narasimhan, G., Smid, M. (2007). *Geometric Spanner Networks*. Cambridge University Press.
+- Orda, A., Rom, R. (1990). Shortest-path and minimum-delay algorithms in networks with time-dependent edge-length. *Journal of the ACM* 37(3), 607-625.
+- Peleg, D., Schaffer, A. A. (1989). Graph spanners. *Journal of Graph Theory* 13(1), 99-116.
+- Yao, A. C.-C. (1982). On constructing minimum spanning trees in k-dimensional spaces and related problems. *SIAM Journal on Computing* 11(4), 721-736.
 
 ## 8. Known limitations
 

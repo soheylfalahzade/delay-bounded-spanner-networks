@@ -11,3 +11,6 @@ results/graph_cache/*.pkl
 # Everything else in results/ (figures, tables, JSON report, per-pair CSV)
 # is small and IS meant to be committed for a self-contained, reviewable
 # repo -- do not blanket-ignore results/.
+
+*.bak
+*.bak.*
