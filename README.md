@@ -133,6 +133,7 @@ flowchart TD
     end
     subgraph L2["Layer 2 — does the checker itself work?"]
         T2["tests/test_verify_results.py<br/>7 injected-error negative controls:<br/>cert/violation mismatch · fabricated stretch cap ·<br/>non-monotone sweep · backwards funnel ·<br/>broken FDR · wrong Wilcoxon p"]
+        T2["tests/test_congestion_shape.py<br/>7 injected-error negative controls:<br/>cert/violation mismatch · fabricated stretch cap ·<br/>non-monotone sweep · backwards funnel ·<br/>broken FDR · wrong Wilcoxon p"]
     end
     subgraph L3["Layer 3 — does THIS run's output hold up?"]
         T3["verify_results.py<br/>re-derives headline numbers from raw CSV,<br/>independent of the pipeline's own code"]
