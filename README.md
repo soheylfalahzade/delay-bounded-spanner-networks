@@ -3,7 +3,7 @@
 # 🕸️ Delay-Bounded Time-Varying Geometric *t*-Spanners
 ### for Urban Road Networks
 
-[![CI](https://github.com/<OWNER>/delay-bounded-spanner-networks/actions/workflows/ci.yml/badge.svg)](https://github.com/<OWNER>/delay-bounded-spanner-networks/actions/workflows/ci.yml)
+[![CI](https://github.com/soheylfalahzade/delay-bounded-spanner-networks/actions/workflows/ci.yml/badge.svg)](https://github.com/soheylfalahzade/delay-bounded-spanner-networks/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](requirements.txt)
 [![Data](https://img.shields.io/badge/data-OpenStreetMap-7ebc6f.svg)](https://www.openstreetmap.org)
@@ -14,7 +14,6 @@
 
 </div>
 
-> Replace `<OWNER>` above with the actual GitHub username/org once this repo is pushed, so the CI badge resolves.
 
 ---
 
