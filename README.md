@@ -133,7 +133,6 @@ flowchart TD
     end
     subgraph L2["Layer 2 — does the checker itself work?"]
         T2["tests/test_verify_results.py<br/>7 injected-error negative controls:<br/>cert/violation mismatch · fabricated stretch cap ·<br/>non-monotone sweep · backwards funnel ·<br/>broken FDR · wrong Wilcoxon p"]
-        T2["tests/test_congestion_shape.py<br/>7 injected-error negative controls:<br/>cert/violation mismatch · fabricated stretch cap ·<br/>non-monotone sweep · backwards funnel ·<br/>broken FDR · wrong Wilcoxon p"]
     end
     subgraph L3["Layer 3 — does THIS run's output hold up?"]
         T3["verify_results.py<br/>re-derives headline numbers from raw CSV,<br/>independent of the pipeline's own code"]
@@ -208,9 +207,11 @@ If Overpass/OSMnx is unreachable, the pipeline transparently falls back to the d
 ├── verify_results.py              # independent verification, separate code path from the pipeline
 ├── tests/
 │   ├── test_certificate.py        # unit tests: positive/negative controls + independent Dijkstra cross-check
-│   └── test_verify_results.py     # negative controls proving the verifier itself catches injected errors
+│   ├── test_verify_results.py     # negative controls proving the verifier itself catches injected errors
+│   └── test_congestion_shape.py   # unit tests + negative controls for the congestion-shape validator
 ├── tools/
-│   └── make_algorithm_animation.py  # regenerates assets/algorithm_demo.gif from the real algorithm
+│   ├── make_algorithm_animation.py  # regenerates assets/algorithm_demo.gif from the real algorithm
+│   └── validate_congestion_shape.py # shape-only check of the congestion model vs measured NYC DOT speeds (not yet run: data unreachable)
 ├── assets/
 │   └── algorithm_demo.gif         # illustrative only — not a benchmark result, feeds no number in this README
 ├── .github/workflows/ci.yml       # unit tests + smoke run + verification, on every push
