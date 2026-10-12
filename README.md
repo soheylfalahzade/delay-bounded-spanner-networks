@@ -157,7 +157,7 @@ flowchart TD
     subgraph L3["Layer 3 — does THIS run's output hold up?"]
         T3["verify_results.py<br/>re-derives headline numbers from raw CSV,<br/>independent of the pipeline's own code"]
     end
-    T1 --> RUN["run_spanner_benchmark.py<br/>12 real cities, 6 countries"]
+    T1 --> RUN["run_spanner_benchmark.py<br/>12 real cities, 7 countries"]
     T2 --> T3
     RUN --> T3
     T3 --> OUT["results/*.md, *.json, *.png<br/>committed, single source of truth"]
@@ -193,7 +193,7 @@ An earlier version of `temporal_stretch_certificate()` refined violating edges w
 
 - The diurnal congestion field is a **parametric** model (tidal, CBD-weighted, inbound/outbound-asymmetric), not fitted to floating-car or loop-detector telemetry. `results/spanner_report.json → congestion_sensitivity` quantifies robustness to this choice (±30% severity) but does not substitute for a telemetry-fitted replication.
 - **Congestion model vs. measured traffic: not validated.** The parametric diurnal congestion model has **not** been compared against measured hourly traffic data for any of the twelve cities. A shape-only comparison against NYC DOT Traffic Speeds (Manhattan) was prepared (`tools/validate_congestion_shape.py`), but the data endpoint was not reachable from the authors' network, so no result is reported.
-- Twelve cities across six countries support a *directional* cross-morphology, cross-country generalization claim (`morphology_regression`, `city_level_significance`, `iran_vs_international_comparison` in the report) — not a definitive one. City-level tests are underpowered by design (n = cities, not OD pairs); they are reported with that caveat rather than presented as confirmatory.
+- Twelve cities across seven countries support a *directional* cross-morphology, cross-country generalization claim (`morphology_regression`, `city_level_significance`, `iran_vs_international_comparison` in the report) — not a definitive one. City-level tests are underpowered by design (n = cities, not OD pairs); they are reported with that caveat rather than presented as confirmatory.
 - Cities whose live OSMnx/Overpass fetch is unavailable fall back to a deterministic, morphology-parameterized synthetic generator. Every city's `used_real_osm` flag states which was used for that specific run — check it before citing a number as coming from real map data.
 
 ---
