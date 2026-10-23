@@ -9,7 +9,7 @@
  sensitivity/robustness analysis against congestion-model misspecification.
 ================================================================================
 
-WHAT CHANGED SINCE v2.0.0 (reviewer-driven revision)
+WHAT CHANGED SINCE v2.0.0
 ------------------------------------------------------------------------------
 The v2.0.0 draft fixed the temporal model, the sparsification unit, the
 parameter range, censored metrics, the hierarchical baseline and added
@@ -2163,7 +2163,7 @@ def _json_default(o):
 
 def main() -> None:
     ap = argparse.ArgumentParser(
-        description="Delay-Bounded Time-Varying Geometric t-Spanner — Q1 benchmark")
+        description="Delay-Bounded Time-Varying Geometric t-Spanner — benchmark")
     ap.add_argument("--lat", type=float, default=CENTER_POINT[0])
     ap.add_argument("--lon", type=float, default=CENTER_POINT[1])
     ap.add_argument("--dist", type=int, default=DEFAULT_DIST)
