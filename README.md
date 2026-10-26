@@ -308,7 +308,7 @@ See [`CITATION.cff`](CITATION.cff), or:
 ```bibtex
 @software{delay_bounded_spanner_2026,
   title  = {Delay-Bounded Time-Varying Geometric t-Spanners for Urban Road Networks},
-  author = {Soheyl},
+  author = {Soheil},
   year   = {2026},
   license = {MIT},
   note   = {Certified temporal sparsification, validated on real OpenStreetMap road networks across six Iranian and six international cities}
