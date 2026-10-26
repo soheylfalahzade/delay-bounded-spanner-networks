@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: "Delay-Bounded Time-Varying Geometric t-Spanners for Urban Road Networks"
 authors:
-  - family-names: "Soheil"
+  - family-names: "Fallahzadeh"
     affiliation: "Yazd University"
 version: 2.2.0
 date-released: 2026-09-26
