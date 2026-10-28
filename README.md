@@ -252,28 +252,6 @@ If Overpass/OSMnx is unreachable, the pipeline transparently falls back to the d
 
 ---
 
-## Related Work
-
-<!-- TODO: verify every bibliographic entry below against the publisher record. -->
-
-**Spanners.** The greedy construction and its size bounds are due to Althofer, Das, Dobkin, Joseph and Soares (1993); Peleg and Schaffer (1989) introduced graph spanners; Narasimhan and Smid (2007) is the standard monograph on geometric spanner networks, and Yao (1982) introduced the cone-based sparsification used here as a baseline. Fault-tolerant geometric spanners were studied by Levcopoulos, Narasimhan and Smid (1998). These works treat static, undirected edge weights; the present work differs in that the cost of each edge varies with the hour of day and the network is directed.
-
-**Time-dependent routing.** Cooke and Halsey (1966) and Orda and Rom (1990) established shortest-path computation when edge costs depend on time, including the FIFO property that this repository validates empirically. Geisberger, Sanders, Schultes and Delling (2012) give contraction hierarchies, the dominant practical speed-up for static road graphs; hierarchical road classes appear here only as a baseline.
-
-**Data.** Road networks are obtained with OSMnx (Boeing, 2017) from OpenStreetMap.
-
-### References
-
-- Althofer, I., Das, G., Dobkin, D., Joseph, D., Soares, J. (1993). On sparse spanners of weighted graphs. *Discrete & Computational Geometry* 9(1), 81-100.
-- Boeing, G. (2017). OSMnx: New methods for acquiring, constructing, analyzing, and visualizing complex street networks. *Computers, Environment and Urban Systems* 65, 126-139.
-- Cooke, K. L., Halsey, E. (1966). The shortest route through a network with time-dependent internodal transit times. *Journal of Mathematical Analysis and Applications* 14(3), 493-498.
-- Geisberger, R., Sanders, P., Schultes, D., Delling, D. (2012). Exact routing in large road graphs: contraction hierarchies. *Transportation Science* 46(3), 388-404.
-- Levcopoulos, C., Narasimhan, G., Smid, M. (1998). Efficient algorithms for constructing fault-tolerant geometric spanners. *Proc. 30th ACM STOC*.
-- Narasimhan, G., Smid, M. (2007). *Geometric Spanner Networks*. Cambridge University Press.
-- Orda, A., Rom, R. (1990). Shortest-path and minimum-delay algorithms in networks with time-dependent edge-length. *Journal of the ACM* 37(3), 607-625.
-- Peleg, D., Schaffer, A. A. (1989). Graph spanners. *Journal of Graph Theory* 13(1), 99-116.
-- Yao, A. C.-C. (1982). On constructing minimum spanning trees in k-dimensional spaces and related problems. *SIAM Journal on Computing* 11(4), 721-736.
-
 ## 8. Known limitations
 
 - Snapshot (time-slice) model: no departure-time evolution *within* a single traversal; ex-post validated by a FIFO time-dependent Dijkstra experiment (`fifo_violation_rate` in `results/spanner_report.json`).
@@ -285,13 +263,19 @@ If Overpass/OSMnx is unreachable, the pipeline transparently falls back to the d
 
 ## 9. Related Work
 
-**Fault-tolerant geometric spanners.** Abam, de Berg, Farshi and Gudmundsson study spanners that keep their stretch guarantee after all vertices inside a geometric region fail, and they also treat a geodesic variant in which the faulty set is a disk [1]. Our setting differs: no vertices fail, but edge costs change with the hour of day. The two share the idea that one sparse subgraph must certify a stretch bound under a family of scenarios (failure regions there, hours τ ∈ {0..23} here).
+**Classical spanners.** The greedy construction and its size bounds are due to Althöfer, Das, Dobkin, Joseph and Soares [6]; Peleg and Schäffer [7] studied graph spanners in general; the geometric theory is surveyed in the monograph of Narasimhan and Smid [8]; and Yao graphs [9] are the cone-based sparsifier that one of our baselines adapts to road networks. These works treat static edge weights.
+
+**Fault-tolerant geometric spanners.** Abam, de Berg, Farshi and Gudmundsson study spanners that keep their stretch guarantee after all vertices inside a geometric region fail, and they also treat a geodesic variant in which the faulty set is a disk [1]. Our setting differs: no vertices fail, but edge costs change with the hour of day. The two share the idea that one sparse subgraph must certify a stretch bound under a family of scenarios (failure regions there, hours τ ∈ {0..23} here). The first algorithms for geometric fault-tolerant spanners are due to Levcopoulos, Narasimhan and Smid [10].
 
 **Experimental evaluation of spanner algorithms.** Farshi and Gudmundsson compare geometric t-spanner constructions empirically, in terms of quality and running time [2, 3]. We follow this empirical tradition, but on real road networks with time-dependent travel cost rather than Euclidean point sets.
 
 **Improving stretch by augmentation.** Farshi, Giannopoulos and Gudmundsson study how adding edges to a geometric network reduces its stretch factor [4]; our certificate is a sparsification-side counterpart, deciding which edges can be dropped without breaking the bound.
 
 **Weighted point sets.** Abam et al. construct spanners for point sets with weights [5], whereas we place the weights on the edges and let them vary over time.
+
+**Time-dependent routing.** Cooke and Halsey [11] and Orda and Rom [12] established shortest-path computation when edge costs depend on time, including the FIFO property that we check empirically (`fifo_violation_rate`). Geisberger et al. [13] give contraction hierarchies, a leading speed-up for static road graphs; hierarchical road classes appear here only as a baseline.
+
+**Data.** Road networks are obtained with OSMnx [14] from OpenStreetMap.
 
 **References**
 
@@ -300,6 +284,15 @@ If Overpass/OSMnx is unreachable, the pipeline transparently falls back to the d
 3. M. Farshi, J. Gudmundsson. Experimental study of geometric t-spanners: a running time comparison. WEA 2007, pp. 270–284.
 4. M. Farshi, P. Giannopoulos, J. Gudmundsson. Improving the stretch factor of a geometric network by edge augmentation. *SIAM Journal on Computing* 38(1):226–240, 2008.
 5. M. A. Abam, M. de Berg, M. Farshi, J. Gudmundsson, M. Smid. Geometric spanners for weighted point sets. *Algorithmica* 61(1):207–225, 2011.
+6. I. Althöfer, G. Das, D. Dobkin, D. Joseph, J. Soares. On sparse spanners of weighted graphs. *Discrete & Computational Geometry* 9(1):81–100, 1993. doi:10.1007/BF02189308
+7. D. Peleg, A. A. Schäffer. Graph spanners. *Journal of Graph Theory* 13(1):99–116, 1989. doi:10.1002/jgt.3190130114
+8. G. Narasimhan, M. Smid. *Geometric Spanner Networks*. Cambridge University Press, 2007.
+9. A. C.-C. Yao. On constructing minimum spanning trees in k-dimensional spaces and related problems. *SIAM Journal on Computing* 11(4):721–736, 1982. doi:10.1137/0211059
+10. C. Levcopoulos, G. Narasimhan, M. Smid. Efficient algorithms for constructing fault-tolerant geometric spanners. *Proc. 30th ACM Symposium on Theory of Computing (STOC)*, pp. 186–195, 1998. doi:10.1145/276698.276734
+11. K. L. Cooke, E. Halsey. The shortest route through a network with time-dependent internodal transit times. *Journal of Mathematical Analysis and Applications* 14(3):493–498, 1966. doi:10.1016/0022-247X(66)90009-6
+12. A. Orda, R. Rom. Shortest-path and minimum-delay algorithms in networks with time-dependent edge-length. *Journal of the ACM* 37(3):607–625, 1990. doi:10.1145/79147.214078
+13. R. Geisberger, P. Sanders, D. Schultes, C. Vetter. Exact routing in large road networks using contraction hierarchies. *Transportation Science* 46(3):388–404, 2012. doi:10.1287/trsc.1110.0401
+14. G. Boeing. OSMnx: New methods for acquiring, constructing, analyzing, and visualizing complex street networks. *Computers, Environment and Urban Systems* 65:126–139, 2017. doi:10.1016/j.compenvurbsys.2017.05.004
 
 ## 10. Citation
 
