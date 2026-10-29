@@ -286,6 +286,9 @@ python benchmarks/retention_morphology.py
 ![Baselines](results/figures/fig4_baselines.png)
 *Fig. 4. Joint construction vs. union of per-hour greedy spanners (a), general graphs vs. Baswana-Sen (b), classical lightness-stretch trade-off (c).*
 
+![Forced edges on city street networks](results/figures/fig5_network_maps_t2.png)
+*Fig. 5. Forced edges (Theorem 2, blue), edges kept although not forced (green) and edges removed (red) at t = 2 on four OSM city cores.*
+
 Vector (PDF) versions of all figures are in `results/figures/`. Regenerate with `python benchmarks/make_figures.py`.
 
 ---
