@@ -14,3 +14,4 @@ results/graph_cache/*.pkl
 
 *.bak
 *.bak.*
+results/benchmarks/metrla_cache/
