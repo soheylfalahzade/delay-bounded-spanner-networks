@@ -272,6 +272,24 @@ python benchmarks/retention_morphology.py
 
 ---
 
+## 5e. Figures
+
+![Certification on measured traffic](results/figures/fig1_certification_real_traffic.png)
+*Fig. 1. METR-LA and PEMS-BAY: edges kept and attained worst-edge stretch. Filled markers are certified; hollow markers violate the bound.*
+
+![Forced-edge lower bound](results/figures/fig2_forced_edge_bound.png)
+*Fig. 2. Theorem 2 lower bound vs. delay-bounded greedy retention (a) and the gap per city and t (b).*
+
+![Morphology matrices](results/figures/fig3_morphology_matrix.png)
+*Fig. 3. Spearman matrices with Benjamini-Hochberg-corrected significance, and retention vs. bridge share.*
+
+![Baselines](results/figures/fig4_baselines.png)
+*Fig. 4. Joint construction vs. union of per-hour greedy spanners (a), general graphs vs. Baswana-Sen (b), classical lightness-stretch trade-off (c).*
+
+Vector (PDF) versions of all figures are in `results/figures/`. Regenerate with `python benchmarks/make_figures.py`.
+
+---
+
 ## 6. Reproduce
 
 ```bash
