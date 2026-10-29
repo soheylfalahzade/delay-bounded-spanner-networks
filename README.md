@@ -202,16 +202,18 @@ An earlier version of `temporal_stretch_certificate()` refined violating edges w
 
 All commands below are in `benchmarks/literature_benchmarks.py`; outputs go to `results/benchmarks/`. Protocols follow peer-reviewed experimental studies (see [`docs/LITERATURE_VERIFIED.md`](docs/LITERATURE_VERIFIED.md)).
 
+<!-- BEGIN:literature -->
 | Check | Protocol source | Result |
 |---|---|---|
 | Reduction to the classical path-greedy spanner (constant profile), edge-for-edge against an independent reference; Yao/Theta theoretical stretch bounds | Farshi & Gudmundsson (ESA 2005; WEA 2007); Althofer et al. (1993) | 48/48 instances identical; 0 bound violations |
-| General graphs (ER, BA, random geometric) vs. Baswana-Sen (2k-1)-spanners | Baswana & Sen (2007); Angrick et al. (arXiv:2107.02018) | stretch <= 2k-1 for all; greedy keeps roughly 30-50% of edges vs. roughly 75-100% for Baswana-Sen on these graphs |
+| General graphs (ER, BA, random geometric) vs. Baswana-Sen (2k-1)-spanners | Baswana & Sen (2007); Angrick et al. (arXiv:2107.02018) | stretch <= 2k-1 for all; greedy keeps 28-50% of edges vs. 81-100% for Baswana-Sen on these graphs (range of the per-setting means) |
 | Exhaustive all-pairs, all-hours check of Theorem 1 on random time-varying digraphs, with negative controls | this work | 0 soundness violations on 236 instances |
 | Certified baseline: union of per-hour static greedy spanners | this work | also certified; the delay-bounded construction keeps equal or fewer edges (about 0.82x at t = 3 on random digraphs) |
 | Measured speeds, METR-LA (207 sensors, Los Angeles) | Li et al. (ICLR 2018) | delay-bounded: certified at every t in {1.1,...,3.0}; static free-flow and mean-temporal: not certified (74-533 violating edges). Edges kept vs. union-of-snapshots: 54.5% vs. 55.9% (t = 1.1), 25.0% vs. 28.8% (t = 3.0) |
 | Congestion-model shape vs. METR-LA | this work | Pearson r = 0.86 on normalised hourly mean speed; peak/off-peak slowdown 1.38x measured vs. 1.50x modelled |
 | Measured speeds, PEMS-BAY (325 sensors, SF Bay Area) | Li et al. (ICLR 2018) | delay-bounded: certified at every t; static free-flow: not certified at any t (1-922 violating edges); mean-temporal: certified only at t = 2.0 (21.3% edges vs. 21.9% for delay-bounded). Edges kept vs. union-of-snapshots: 34.7% vs. 36.5% (t = 1.1), 21.7% vs. 24.7% (t = 3.0) |
 | Congestion-model shape vs. PEMS-BAY | this work | Pearson r = 0.94; peak/off-peak slowdown 1.34x measured vs. 1.50x modelled |
+<!-- END:literature -->
 
 ```bash
 python benchmarks/literature_benchmarks.py static   --sizes 40 60 --reps 2 --t 1.25 1.5 2.0
@@ -230,7 +232,8 @@ The METR-LA / PEMS-BAY graphs are sensor graphs (edge = driving distance between
 
 For an edge e = (u, v), let r(e) be the largest over hours of d_{G-e}(u, v) / w(e), where G-e is the network without e. If r(e) > t, then e belongs to every edge-subset t-spanner of G at every stage of any construction, since a subgraph of G-e cannot offer a detour shorter than G-e does. The fraction of such edges is therefore a lower bound on edge retention for any algorithm (`benchmarks/retention_diagnostics.py`, `results/benchmarks/retention_diagnostics.md`).
 
-Mean over the twelve OSM city cores (about 1.5 km radius, degree-2 contracted):
+<!-- BEGIN:retention -->
+Mean over the 12 OSM city cores (about 1.5 km radius, degree-2 contracted):
 
 | t | forced lower bound (%) | delay-bounded greedy retention (%) | share of retained edges that are forced |
 |---|---|---|---|
@@ -239,6 +242,9 @@ Mean over the twelve OSM city cores (about 1.5 km radius, degree-2 contracted):
 | 2.0 | 91.9 | 93.8 | 0.980 |
 | 3.0 | 83.9 | 89.6 | 0.934 |
 | 5.0 | 73.2 | 86.5 | 0.843 |
+
+Source: `results/benchmarks/retention_diagnostics.csv`.
+<!-- END:retention -->
 
 At t <= 1.5 the greedy retention equals the structural lower bound (to within 0.4 points); the small sparsification at small t is a property of road networks, not of the construction. For larger t the bound is not claimed to be tight, so a gap to the greedy retention (13 points at t = 5) leaves room for better constructions.
 
@@ -252,6 +258,7 @@ python benchmarks/retention_diagnostics.py --t 1.1 1.5 2 3 5
 
 Forced-edge lower bound (Theorem 2, [`docs/THEOREM_FORCED_EDGES.md`](docs/THEOREM_FORCED_EDGES.md)) and delay-bounded greedy retention over a wide stretch grid; mean over the twelve OSM city cores (`benchmarks/retention_morphology.py`, `results/benchmarks/retention_large_t.csv`):
 
+<!-- BEGIN:large_t -->
 | t | forced lower bound (%) | greedy retention (%) | gap (points) |
 |---|---|---|---|
 | 1.5 | 96.2 | 96.6 | 0.4 |
@@ -261,10 +268,11 @@ Forced-edge lower bound (Theorem 2, [`docs/THEOREM_FORCED_EDGES.md`](docs/THEORE
 | 7.0 | 65.6 | 84.9 | 19.3 |
 | 10.0 | 58.2 | 83.8 | 25.6 |
 
-- Retention stays above 80% for every city up to t = 3, and above 73% up to t = 10; retention falls to 90% or below at t = 2 (Mashhad) to t = 10 (Tehran); Isfahan stays above 95% through t = 10.
-- Across the twelve cities, retention correlates strongly with the share of arcs that have no alternative directed path (bridge share; Spearman rho = 0.76-0.95 for t >= 2, BH-adjusted p <= 0.042). This is largely structural: such arcs are forced for every t, so the share is itself a lower bound on retention.
+- Retention stays above 81% for every city up to t = 3, and above 73% up to t = 10; retention falls to 90% or below at t = 2 (Mashhad) to t = 10 (Tehran); Isfahan stays above 95% through t = 10.
+- Across the 12 cities, retention correlates strongly with the share of arcs that have no alternative directed path (bridge share; Spearman rho = 0.76-0.95 for t >= 2, BH-adjusted p <= 0.043). This is largely structural: such arcs are forced for every t, so the share is itself a lower bound on retention.
 - None of the geometric morphology descriptors (orientation entropy, circuity, mean degree, edge-length CV) is significant after Benjamini-Hochberg correction over 84 tests (n = 12 cities); the study has low power and reports no morphology effect.
 - The gap between greedy retention and the forced bound grows with t (25.6 points at t = 10). The bound is not claimed to be tight, so no optimality claim is made for the construction.
+<!-- END:large_t -->
 
 ```bash
 python benchmarks/retention_morphology.py
