@@ -144,7 +144,7 @@ Run `python run_spanner_benchmark.py` to (re)generate all of the above from scra
 
 ## 5. Verification & Reproducibility
 
-This is the section most reviewers skim past and most retractions come from skipping.
+This section documents how each result is checked and how to reproduce it.
 
 ```mermaid
 flowchart TD

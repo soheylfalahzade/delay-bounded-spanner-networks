@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Publication figures for the claims in the README / manuscript.
-Reads the CSVs written by the benchmark scripts and writes PNG (README) + PDF (vector, manuscript)
+Figures for the claims in the README.
+Reads the CSVs written by the benchmark scripts and writes PNG (README) + PDF (vector)
 to results/figures/. Figures whose input CSV is missing are skipped with a message.
 
   python benchmarks/make_figures.py

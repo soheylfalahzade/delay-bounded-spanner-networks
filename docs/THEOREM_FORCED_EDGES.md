@@ -1,4 +1,4 @@
-# Theorem 2 (forced edges) - paper-ready statement
+# Theorem 2 (forced edges) - statement
 
 **Setting.** Let G = (V, E) be a strongly connected digraph with positive, hour-dependent arc weights
 w_tau(e), tau in {0,...,23}. A spanning subgraph H = (V, E') with E' subset of E is a *t-spanner of G at hour tau*
@@ -20,7 +20,7 @@ The bound depends on G and t only, not on the construction; it is non-increasing
 It also holds for the weaker edge-wise certificate used in this repository: if every arc e satisfies
 d_{H,tau}(u, v) <= t * w_tau(e), the same argument applies verbatim.
 
-**Remarks for the manuscript.**
+**Remarks.**
 1. Theorem 2 explains why road networks sparsify little at small t: most street segments have no alternative path with detour ratio <= t (bridges, cul-de-sacs, one-way couplets, long blocks).
 2. The bound is generally not tight for large t (empirically a gap of about 13 percentage points at t = 5 on the twelve OSM city cores), so it supports no optimality claim for the greedy construction.
 3. Empirical computation: `python benchmarks/retention_diagnostics.py`; large-t and morphology analysis: `python benchmarks/retention_morphology.py`.
