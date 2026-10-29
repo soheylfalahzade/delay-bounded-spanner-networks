@@ -7,10 +7,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](requirements.txt)
 [![Data](https://img.shields.io/badge/data-OpenStreetMap-7ebc6f.svg)](https://www.openstreetmap.org)
-[![Cities](https://img.shields.io/badge/validated%20on-12%20cities%20%2F%206%20countries-c0392b.svg)](results/crosscity_table.md)
+[![Cities](https://img.shields.io/badge/validated%20on-12%20cities%20%2F%207%20countries-c0392b.svg)](results/crosscity_table.md)
 [![Theorem 1](https://img.shields.io/badge/certificate-Theorem%201%2C%20by%20construction-6f42c1.svg)](#1-problem)
 
-**A certified sparsification framework that extracts a single physical road backbone, guaranteed to preserve bounded travel-time dilation at every hour of the day — validated end-to-end on real metropolitan road networks pulled live from OpenStreetMap, across six Iranian and six international cities spanning five distinct street-network morphologies.**
+**A certified sparsification framework that extracts a single physical road backbone, guaranteed to preserve bounded travel-time dilation at every hour of the day — validated end-to-end on real metropolitan road networks pulled live from OpenStreetMap, across six Iranian and six international cities (seven countries) spanning seven street-network morphology archetypes.**
 
 </div>
 
@@ -198,6 +198,34 @@ An earlier version of `temporal_stretch_certificate()` refined violating edges w
 
 ---
 
+## 5b. Benchmarks against the literature
+
+All commands below are in `benchmarks/literature_benchmarks.py`; outputs go to `results/benchmarks/`. Protocols follow peer-reviewed experimental studies (see [`docs/LITERATURE_VERIFIED.md`](docs/LITERATURE_VERIFIED.md)).
+
+| Check | Protocol source | Result |
+|---|---|---|
+| Reduction to the classical path-greedy spanner (constant profile), edge-for-edge against an independent reference; Yao/Theta theoretical stretch bounds | Farshi & Gudmundsson (ESA 2005; WEA 2007); Althofer et al. (1993) | 48/48 instances identical; 0 bound violations |
+| General graphs (ER, BA, random geometric) vs. Baswana-Sen (2k-1)-spanners | Baswana & Sen (2007); Angrick et al. (arXiv:2107.02018) | stretch <= 2k-1 for all; greedy keeps roughly 30-50% of edges vs. roughly 75-100% for Baswana-Sen on these graphs |
+| Exhaustive all-pairs, all-hours check of Theorem 1 on random time-varying digraphs, with negative controls | this work | 0 soundness violations on 236 instances |
+| Certified baseline: union of per-hour static greedy spanners | this work | also certified; the delay-bounded construction keeps equal or fewer edges (about 0.82x at t = 3 on random digraphs) |
+| Measured speeds, METR-LA (207 sensors, Los Angeles) | Li et al. (ICLR 2018) | delay-bounded: certified at every t in {1.1,...,3.0}; static free-flow and mean-temporal: not certified (74-533 violating edges). Edges kept vs. union-of-snapshots: 54.5% vs. 55.9% (t = 1.1), 25.0% vs. 28.8% (t = 3.0) |
+| Congestion-model shape vs. METR-LA | this work | Pearson r = 0.86 on normalised hourly mean speed; peak/off-peak slowdown 1.38x measured vs. 1.50x modelled |
+| Measured speeds, PEMS-BAY (325 sensors, SF Bay Area) | Li et al. (ICLR 2018) | delay-bounded: certified at every t; static free-flow: not certified at any t (1-922 violating edges); mean-temporal: certified only at t = 2.0 (21.3% edges vs. 21.9% for delay-bounded). Edges kept vs. union-of-snapshots: 34.7% vs. 36.5% (t = 1.1), 21.7% vs. 24.7% (t = 3.0) |
+| Congestion-model shape vs. PEMS-BAY | this work | Pearson r = 0.94; peak/off-peak slowdown 1.34x measured vs. 1.50x modelled |
+
+```bash
+python benchmarks/literature_benchmarks.py static   --sizes 40 60 --reps 2 --t 1.25 1.5 2.0
+python benchmarks/literature_benchmarks.py general  --sizes 100 200 --reps 3
+python benchmarks/literature_benchmarks.py theorem1 --instances 60 --max-n 18
+python benchmarks/literature_benchmarks.py metrla   --speeds METR-LA.csv                    # https://zenodo.org/records/5724362
+python benchmarks/literature_benchmarks.py metrla   --speeds PEMS-BAY.csv --dataset pemsbay
+python benchmarks/literature_benchmarks.py dimacs   --gr USA-road-d.NY.gr.gz
+```
+
+The METR-LA / PEMS-BAY graphs are sensor graphs (edge = driving distance between sensors) with measured hourly weekday-median speeds, not complete street networks.
+
+---
+
 ## 6. Reproduce
 
 ```bash
@@ -258,6 +286,9 @@ If Overpass/OSMnx is unreachable, the pipeline transparently falls back to the d
 - Congestion is a parametric model, not measured telemetry — see §5.
 - Greedy construction carries no approximation guarantee on `|H|`; the matched-density and Yao-cone baselines are empirical, not theoretical, lower-bound proxies.
 - Twelve cities is enough for a directional generalization claim, not a definitive one — see §5.
+- Sparsification on road networks is modest (roughly 93-99% of edges retained at t = 1.5 on the OSM cities): most road edges have no short alternative path, so an edge-wise t-spanner cannot remove them.
+- On OD-pair dilation the construction does not uniformly beat the matched-density betweenness control (advantage ratio below 1 in 8 of 12 cities, `results/crosscity_table.md`); the guarantee is the certificate, not lower empirical dilation.
+- The union of per-hour static greedy spanners is also certified; the advantage of the joint construction over it is small (see §5b).
 
 ---
 

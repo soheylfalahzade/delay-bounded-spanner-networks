@@ -1,0 +1,11 @@
+{
+  "dataset": "pemsbay",
+  "nodes": 325,
+  "edges": 2369,
+  "congestion_shape": {
+    "pearson_r_normalised_hourly_speed": 0.9395070570083014,
+    "measured_peak_to_offpeak_slowdown": 1.3380722493483608,
+    "model_peak_to_offpeak_slowdown": 1.500733558317081
+  },
+  "source": "Li et al., ICLR 2018 (DCRNN); sensor graph from liyaguang/DCRNN"
+}

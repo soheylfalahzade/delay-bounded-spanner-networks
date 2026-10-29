@@ -1,0 +1,10 @@
+{
+  "instances": 236,
+  "soundness_violations": 0,
+  "ours_all_certified_and_bruteforce_ok": true,
+  "union_all_certified_and_bruteforce_ok": true,
+  "negative_controls_rejected_by_certificate": 233,
+  "negative_controls_total": 236,
+  "certificate_conservativeness": 0.0,
+  "note": "conservativeness = P(all-pairs bound still holds | edge-wise certificate fails)"
+}
