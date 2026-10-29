@@ -31,7 +31,7 @@ R10. A classical-geometric-spanner baseline. `yao_cone_sparsifier` is a
      incident edges into k angular cones, keep the cheapest edge per cone).
      This is explicitly NOT the textbook unconstrained-point-set Yao graph
      (whose stretch factor 1/(1-2 sin(pi/k)) is a theorem, not an empirical
-     claim) -- the docstring says so -- but it gives referees a bridge to a
+     claim) -- the docstring says so -- but it gives a bridge to a
      named, citable construction rather than only ad hoc engineering
      baselines.
 R11. Morphology regression. Per-city street-orientation entropy (the
@@ -1159,7 +1159,7 @@ def yao_cone_sparsifier(G: nx.DiGraph, k: int = 8, attr: str = "free_flow") -> n
     each node's EXISTING outgoing edges are partitioned into k cones by
     bearing and the cheapest (free-flow) edge per cone is kept. This carries
     no closed-form stretch guarantee, but it is the standard adaptation used
-    when candidate edges are fixed, and gives referees a named bridge to the
+    when candidate edges are fixed, and gives a named bridge to the
     classical computational-geometry spanner family rather than only
     engineering heuristics.
     """

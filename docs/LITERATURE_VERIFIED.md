@@ -1,7 +1,7 @@
 # Benchmark-bearing literature (peer-reviewed venues only)
 
 Status column: **V** = venue confirmed against a publisher / conference / institutional record during this review;
-**C** = venue must still be confirmed against the publisher page before the reference goes into the manuscript.
+**C** = venue must still be confirmed against the publisher page before the reference is relied on.
 
 | # | Reference | Venue | Status | What it contributes as a benchmark / protocol | Implemented in |
 |---|---|---|---|---|---|
