@@ -226,6 +226,28 @@ The METR-LA / PEMS-BAY graphs are sensor graphs (edge = driving distance between
 
 ---
 
+## 5c. Why road networks barely sparsify: a forced-edge lower bound
+
+For an edge e = (u, v), let r(e) be the largest over hours of d_{G-e}(u, v) / w(e), where G-e is the network without e. If r(e) > t, then e belongs to every edge-subset t-spanner of G at every stage of any construction, since a subgraph of G-e cannot offer a detour shorter than G-e does. The fraction of such edges is therefore a lower bound on edge retention for any algorithm (`benchmarks/retention_diagnostics.py`, `results/benchmarks/retention_diagnostics.md`).
+
+Mean over the twelve OSM city cores (about 1.5 km radius, degree-2 contracted):
+
+| t | forced lower bound (%) | delay-bounded greedy retention (%) | share of retained edges that are forced |
+|---|---|---|---|
+| 1.1 | 98.5 | 98.5 | 1.000 |
+| 1.5 | 96.2 | 96.6 | 0.996 |
+| 2.0 | 91.9 | 93.8 | 0.980 |
+| 3.0 | 83.9 | 89.6 | 0.934 |
+| 5.0 | 73.2 | 86.5 | 0.843 |
+
+At t <= 1.5 the greedy retention equals the structural lower bound (to within 0.4 points); the small sparsification at small t is a property of road networks, not of the construction. For larger t the bound is not claimed to be tight, so a gap to the greedy retention (13 points at t = 5) leaves room for better constructions.
+
+```bash
+python benchmarks/retention_diagnostics.py --t 1.1 1.5 2 3 5
+```
+
+---
+
 ## 6. Reproduce
 
 ```bash
