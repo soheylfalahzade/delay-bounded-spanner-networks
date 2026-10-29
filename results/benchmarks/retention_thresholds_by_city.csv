@@ -1,0 +1,13 @@
+city,t_retention_le_90,t_retention_le_80,t_forced_le_90,t_forced_le_80,country,archetype,bridge_pct,circuity_mean,orientation_entropy,mean_degree,edge_length_cv,n_nodes,n_edges
+Amsterdam,3.0,,2.0,3.0,Netherlands,historic-organic,56.157,1.026,0.951,4.286,1.014,1190,2550
+Barcelona,5.0,,3.0,5.0,Spain,modern-grid,56.72,1.021,0.786,3.663,0.739,849,1555
+Cairo,3.0,,3.0,5.0,Egypt,informal-organic,45.972,1.029,0.942,4.625,1.069,2507,5797
+Isfahan,,,10.0,,Iran,historic-organic,87.483,1.04,0.907,3.825,0.895,3818,7302
+Manhattan,3.0,5.0,2.0,3.0,USA,strict-grid,47.748,1.011,0.353,3.929,0.654,565,1110
+Mashhad,2.0,5.0,2.0,3.0,Iran,radial-grid,38.241,1.022,0.827,5.009,0.85,1185,2968
+Melbourne,7.0,,5.0,7.0,Australia,strict-grid,61.84,1.013,0.773,3.85,1.061,1564,3011
+Qom,3.0,,3.0,5.0,Iran,modern-grid,57.365,1.03,0.865,4.317,1.05,2208,4766
+Shiraz,5.0,,3.0,5.0,Iran,hill-organic,67.165,1.032,0.893,4.293,0.998,1965,4218
+Tehran,10.0,,3.0,7.0,Iran,radial-grid,73.826,1.033,0.777,3.779,0.888,2129,4023
+Tokyo,3.0,7.0,3.0,3.0,Japan,dense-organic,39.188,1.059,0.989,4.799,1.142,1561,3746
+Yazd,7.0,,5.0,7.0,Iran,historic-organic,67.014,1.039,0.946,4.401,0.767,3093,6806

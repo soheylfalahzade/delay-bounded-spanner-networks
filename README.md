@@ -248,6 +248,30 @@ python benchmarks/retention_diagnostics.py --t 1.1 1.5 2 3 5
 
 ---
 
+## 5d. Large-t behaviour and morphology
+
+Forced-edge lower bound (Theorem 2, [`docs/THEOREM_FORCED_EDGES.md`](docs/THEOREM_FORCED_EDGES.md)) and delay-bounded greedy retention over a wide stretch grid; mean over the twelve OSM city cores (`benchmarks/retention_morphology.py`, `results/benchmarks/retention_large_t.csv`):
+
+| t | forced lower bound (%) | greedy retention (%) | gap (points) |
+|---|---|---|---|
+| 1.5 | 96.2 | 96.6 | 0.4 |
+| 2.0 | 91.9 | 93.8 | 1.9 |
+| 3.0 | 83.9 | 89.6 | 5.7 |
+| 5.0 | 73.2 | 86.5 | 13.3 |
+| 7.0 | 65.6 | 84.9 | 19.3 |
+| 10.0 | 58.2 | 83.8 | 25.6 |
+
+- Retention stays above 80% for every city up to t = 3, and above 73% up to t = 10; retention falls to 90% or below at t = 2 (Mashhad) to t = 10 (Tehran); Isfahan stays above 95% through t = 10.
+- Across the twelve cities, retention correlates strongly with the share of arcs that have no alternative directed path (bridge share; Spearman rho = 0.76-0.95 for t >= 2, BH-adjusted p <= 0.042). This is largely structural: such arcs are forced for every t, so the share is itself a lower bound on retention.
+- None of the geometric morphology descriptors (orientation entropy, circuity, mean degree, edge-length CV) is significant after Benjamini-Hochberg correction over 84 tests (n = 12 cities); the study has low power and reports no morphology effect.
+- The gap between greedy retention and the forced bound grows with t (25.6 points at t = 10). The bound is not claimed to be tight, so no optimality claim is made for the construction.
+
+```bash
+python benchmarks/retention_morphology.py
+```
+
+---
+
 ## 6. Reproduce
 
 ```bash
