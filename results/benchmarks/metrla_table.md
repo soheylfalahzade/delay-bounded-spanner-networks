@@ -1,0 +1,22 @@
+|   t | method           |   edges_kept_pct | certified   |   violating_edges |   attained_worst_edge_stretch |
+|----:|:-----------------|-----------------:|:------------|------------------:|------------------------------:|
+| 1.1 | DelayBounded     |           54.521 | True        |                 0 |                         1.1   |
+| 1.1 | UnionOfSnapshots |           55.908 | True        |                 0 |                         1.1   |
+| 1.1 | StaticFreeFlow   |           31.155 | False       |               533 |                         2.033 |
+| 1.1 | MeanTemporal     |           34.983 | False       |               446 |                         2.033 |
+| 1.3 | DelayBounded     |           39.538 | True        |                 0 |                         1.3   |
+| 1.3 | UnionOfSnapshots |           41.65  | True        |                 0 |                         1.3   |
+| 1.3 | StaticFreeFlow   |           28.383 | False       |               291 |                         2.307 |
+| 1.3 | MeanTemporal     |           29.109 | False       |               269 |                         2.307 |
+| 1.5 | DelayBounded     |           33.531 | True        |                 0 |                         1.5   |
+| 1.5 | UnionOfSnapshots |           36.502 | True        |                 0 |                         1.5   |
+| 1.5 | StaticFreeFlow   |           26.997 | False       |               170 |                         2.336 |
+| 1.5 | MeanTemporal     |           27.327 | False       |               164 |                         2.336 |
+| 2   | DelayBounded     |           28.053 | True        |                 0 |                         2     |
+| 2   | UnionOfSnapshots |           30.825 | True        |                 0 |                         2     |
+| 2   | StaticFreeFlow   |           24.29  | False       |                96 |                         3.019 |
+| 2   | MeanTemporal     |           24.356 | False       |                81 |                         2.768 |
+| 3   | DelayBounded     |           25.017 | True        |                 0 |                         3     |
+| 3   | UnionOfSnapshots |           28.845 | True        |                 0 |                         3     |
+| 3   | StaticFreeFlow   |           21.782 | False       |                79 |                         4.604 |
+| 3   | MeanTemporal     |           21.65  | False       |                74 |                         4.604 |
