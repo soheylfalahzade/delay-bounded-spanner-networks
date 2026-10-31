@@ -1,0 +1,4 @@
+graph,T,grid_only_edges_pct,grid_only_worst_offgrid,grid_only_violating_samples,peredge_m,peredge_edges_pct,peredge_worst_offgrid,peredge_violating_samples,peredge_rho_forced_edges_pct,rho_e_median,rho_e_p99,rho_e_max,m,rho,t_prime,robust_edges_pct,robust_certified_on_subgrid,robust_worst_offgrid,robust_violating_samples,note
+metrla,1.5,33.5314,1.4955,0,8,44.0924,1.3934,0,4.0264,1.0598,1.2867,1.353,16,1.1765,,,False,,0,infeasible: rho^2 = 1.384 too large even at m = 16
+metrla,2.0,28.0528,1.9563,0,8,30.8251,1.8619,0,0.0,1.0598,1.2867,1.353,16,1.1765,,,False,,0,infeasible: rho^2 = 1.384 too large even at m = 16
+metrla,3.0,25.0165,2.8761,0,8,24.2904,2.8714,0,0.0,1.0598,1.2867,1.353,16,1.1765,2.1673,26.9307,True,2.1409,0,
