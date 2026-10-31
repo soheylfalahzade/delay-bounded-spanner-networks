@@ -294,6 +294,28 @@ Vector (PDF) versions of all figures are in `results/figures/`. Regenerate with 
 
 ---
 
+## 5f. Continuous-time guarantee (off-grid robustness)
+
+Theorem 1 certifies the 24 grid hours. `benchmarks/offgrid_guarantee.py` implements two provable continuous-time constructions (Theorems 3 and 3b, derivations in the script docstring) based on the piecewise-linear profile `td_cost`. Theorem 3b uses a per-edge interpolation factor rho_e and certifies every time of day. Edges kept (%), measured speeds, sub-grid of 7.5 min:
+
+| Dataset | T | grid-only (Thm 1) | continuous-time (Thm 3b) | edges kept only because rho_e^2 >= T (%) | off-grid violations in sampled checks |
+|---|---|---|---|---|---|
+| METR-LA | 1.5 | 33.5 | 44.1 | 4.03 | 0 |
+| METR-LA | 2.0 | 28.1 | 30.8 | 0.00 | 0 |
+| METR-LA | 3.0 | 25.0 | 24.3 | 0.00 | 0 |
+| PEMS-BAY | 1.5 | 22.7 | 27.0 | 1.22 | 0 |
+| PEMS-BAY | 2.0 | 22.0 | 22.3 | 0.00 | 0 |
+| PEMS-BAY | 3.0 | 21.7 | 21.4 | 0.00 | 0 |
+
+The single global factor of Theorem 3 is feasible only at T = 3 on both datasets (rho = 1.176 / 1.173 even on a 3.75-minute sub-grid); the per-edge version removes that restriction. The sampled off-grid checks are empirical sanity checks; the guarantee is the theorem. Raw results: `results/benchmarks/offgrid_guarantee_metrla.csv`, `offgrid_guarantee_pemsbay.csv`.
+
+```bash
+python benchmarks/offgrid_guarantee.py --dataset metrla  --speeds METR-LA.csv  --T 1.5 2.0 3.0
+python benchmarks/offgrid_guarantee.py --dataset pemsbay --speeds PEMS-BAY.csv --T 1.5 2.0 3.0
+```
+
+---
+
 ## 6. Reproduce
 
 ```bash
