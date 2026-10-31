@@ -21,6 +21,17 @@ class TestOffGridRobust(unittest.TestCase):
                 self.assertLessEqual(worst, T + 1e-9)
 
 
+class TestPerEdgeRobust(unittest.TestCase):
+    def test_per_edge_construction_has_no_offgrid_violation(self):
+        rng = random.Random(8)
+        for _ in range(3):
+            G = lb.random_temporal_digraph(rng.randint(10, 14), 0.4, rng)
+            for T in (1.3, 2.0):
+                H, _, _ = og.per_edge_robust_spanner(G, T, 6)
+                worst, bad = og.offgrid_violation(G, H, T, 10, rng)
+                self.assertEqual(bad, 0)
+
+
 class TestReadmeNumbers(unittest.TestCase):
     """The README quotes numbers from results/benchmarks; keep them in sync with the CSVs."""
     def test_section_5d_matches_csv(self):
