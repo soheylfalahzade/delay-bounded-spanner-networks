@@ -12,3 +12,4 @@ tqdm>=4.65
 #   geopandas
 #   shapely>=2.0
 requests
+requests>=2.28

@@ -1,0 +1,10 @@
+city,dist_m,real_osm,nodes,edges,t,delay_bounded_retention_pct,delay_bounded_certified,forced_lower_bound_pct,static_ff_retention_pct,static_ff_certified,static_ff_violating_edges,union_retention_pct,union_certified
+Isfahan,3500,True,27646,57209,1.5,98.729,True,98.658,98.537,False,110,,
+Isfahan,3500,True,27646,57209,2.0,97.787,True,97.408,97.57,False,127,97.923,True
+Isfahan,3500,True,27646,57209,3.0,96.093,True,94.454,95.859,False,146,,
+Tokyo,3500,True,7596,18938,1.5,95.929,True,95.733,95.026,False,173,,
+Tokyo,3500,True,7596,18938,2.0,92.0,True,90.168,90.58,False,280,92.57,True
+Tokyo,3500,True,7596,18938,3.0,85.046,True,75.884,83.779,False,214,,
+Manhattan,3500,True,2637,5583,1.5,96.812,True,96.615,94.018,False,157,,
+Manhattan,3500,True,2637,5583,2.0,92.585,True,89.773,89.199,False,196,93.856,True
+Manhattan,3500,True,2637,5583,3.0,86.513,True,77.521,83.844,False,158,,
