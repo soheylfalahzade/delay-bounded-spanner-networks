@@ -11,7 +11,7 @@ Sub-commands (python benchmarks/literature_benchmarks.py <cmd> --help):
              (Althofer et al. 1993); checked edge-for-edge against an independent
              reference implementation. Also reports edges / lightness / max degree /
              hop diameter / exact stretch / crossings for Greedy, Yao and Theta graphs.
-  general    General-graph protocol (Angrick et al. 2021 style): Greedy vs
+  general    General-graph protocol (Chimani-Stutzenstein style): Greedy vs
              Baswana-Sen (2k-1)-spanners on ER / BA / random-geometric graphs.
   theorem1   Exhaustive all-pairs, all-hours brute-force check of Theorem 1 on
              thousands of random small time-varying digraphs + negative controls,
