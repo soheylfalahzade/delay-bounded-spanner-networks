@@ -21,7 +21,7 @@ def fetch(start, end, borough):
     import requests
     params = {
         "$select": "date_trunc_ymd(data_as_of) as d, date_extract_hh(data_as_of) as h, "
-                   "avg(speed) as v, count(*) as n",
+                   "avg(speed::number) as v, count(*) as n",
         "$where": f"data_as_of >= '{start}T00:00:00' AND data_as_of < '{end}T00:00:00' "
                   f"AND borough = '{borough}'",
         "$group": "d, h", "$limit": 50000,
@@ -39,10 +39,20 @@ def fetch(start, end, borough):
 
 
 def fetch_csv(path, start, end, borough, chunksize=1_000_000):
-    """Aggregate a (possibly huge) local CSV to per-day, per-hour mean speed."""
+    """Aggregate a (possibly huge) local CSV to per-day, per-hour mean speed. Also accepts a pre-aggregated CSV with columns d,h,v,n."""
+    hdr = [c.strip().lower() for c in pd.read_csv(path, nrows=0).columns]
+    if {"d", "h", "v", "n"} <= set(hdr):   # pre-aggregated
+        df = pd.read_csv(path)
+        df.columns = [c.strip().lower() for c in df.columns]
+        df["d"] = pd.to_datetime(df["d"])
+        df["h"] = df["h"].astype(int)
+        df["v"] = df["v"].astype(float)
+        df["n"] = df["n"].astype(int)
+        return df[["d", "h", "v", "n"]]
     parts = []
-    for ch in pd.read_csv(path, usecols=["data_as_of", "speed", "borough"], chunksize=chunksize):
-        ch = ch[ch["borough"] == borough].copy()
+    for ch in pd.read_csv(path, usecols=lambda c: c.strip().lower() in ("data_as_of", "speed", "borough"), chunksize=chunksize):
+        ch.columns = [c.strip().lower() for c in ch.columns]
+        ch = ch[ch["borough"].astype(str).str.strip().str.lower() == borough.lower()].copy()
         ch["t"] = pd.to_datetime(ch["data_as_of"], errors="coerce")
         ch["speed"] = pd.to_numeric(ch["speed"], errors="coerce")
         ch = ch.dropna(subset=["t", "speed"])
