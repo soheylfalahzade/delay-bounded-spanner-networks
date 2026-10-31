@@ -17,6 +17,8 @@ Output: results/benchmarks/large_scale_<dist>m.csv / .md
 from __future__ import annotations
 
 import argparse
+import glob
+import json
 import os
 import sys
 import time
@@ -34,6 +36,36 @@ from literature_benchmarks import union_of_snapshots_spanner  # noqa: E402
 OUT = os.path.join(ROOT, "results", "benchmarks")
 
 
+def purge_synthetic_cache():
+    """A failed OSM fetch silently falls back to a synthetic grid and caches it under the real-city key; remove such entries."""
+    n = 0
+    for m in glob.glob(os.path.join(ROOT, "results", "graph_cache", "*.meta.json")):
+        try:
+            d = json.load(open(m))
+        except Exception:
+            continue
+        if d.get("source") == "synthetic":
+            os.remove(m)
+            pkl = m.replace(".meta.json", ".pkl")
+            if os.path.exists(pkl):
+                os.remove(pkl)
+            n += 1
+    return n
+
+
+def build_real(spec, grid_n, attempts, wait0):
+    """Retry with exponential backoff until a REAL OSM network is obtained (public Overpass servers are often at capacity)."""
+    for k in range(attempts):
+        G = core.build_city_network(spec, grid_n=grid_n)
+        if G.graph.get("used_real_osm"):
+            return G
+        purge_synthetic_cache()
+        wait = min(wait0 * 2 ** k, 600)
+        print(f"   [retry {k + 1}/{attempts}] OSM fetch failed for {spec['name']}; waiting {wait}s", flush=True)
+        time.sleep(wait)
+    return None
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--cities", nargs="*", default=["Isfahan", "Tokyo", "Manhattan"])
@@ -43,7 +75,14 @@ def main():
     ap.add_argument("--grid-n", type=int, default=15)
     ap.add_argument("--synthetic", action="store_true")
     ap.add_argument("--max-edges", type=int, default=60000)
+    ap.add_argument("--overpass-url", default=None, help="Overpass API base URL (e.g. https://overpass.private.coffee/api)")
+    ap.add_argument("--attempts", type=int, default=6)
+    ap.add_argument("--wait", type=int, default=30, help="first retry wait in seconds (doubles each time)")
     a = ap.parse_args()
+    if a.overpass_url:
+        import osmnx as ox
+        ox.settings.overpass_url = a.overpass_url
+        print('[osmnx] overpass_url =', a.overpass_url, flush=True)
 
     rows = []
     for name in a.cities:
@@ -53,8 +92,17 @@ def main():
             continue
         spec = dict(spec, dist=a.dist)
         t0 = time.time()
-        G = core.build_city_network(spec, grid_n=a.grid_n, force_synthetic=a.synthetic)
+        if a.synthetic:
+            G = core.build_city_network(spec, grid_n=a.grid_n, force_synthetic=True)
+        else:
+            G = build_real(spec, a.grid_n, a.attempts, a.wait)
+            if G is None:
+                print(f"[FAIL] {name}: no real OSM network after {a.attempts} attempts; city skipped (no synthetic numbers reported)", flush=True)
+                continue
         m = G.number_of_edges()
+        if not a.synthetic and not G.graph.get("used_real_osm"):
+            print(f"[FAIL] {name}: OSM fetch failed (synthetic fallback); city skipped, no synthetic numbers reported", flush=True)
+            continue
         print(f"[{name}] {G.number_of_nodes()} nodes / {m} edges (real OSM: {bool(G.graph.get('used_real_osm'))}) "
               f"built in {time.time() - t0:.0f}s", flush=True)
         if m > a.max_edges:

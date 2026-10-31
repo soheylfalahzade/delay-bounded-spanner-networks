@@ -26,7 +26,7 @@ def fetch(start, end, borough):
                   f"AND borough = '{borough}'",
         "$group": "d, h", "$limit": 50000,
     }
-    r = requests.get(API, params=params, timeout=120)
+    r = requests.get(API, params=params, timeout=120, headers={"User-Agent": "Mozilla/5.0 (research script; spanner-validation)", "Accept": "application/json"})
     r.raise_for_status()
     df = pd.DataFrame(r.json())
     if df.empty:
