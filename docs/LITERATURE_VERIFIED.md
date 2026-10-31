@@ -1,31 +1,21 @@
-# Benchmark-bearing literature (peer-reviewed venues only)
+# Benchmark-bearing literature (venues checked against publisher / proceedings / institutional records)
 
-Status column: **V** = venue confirmed against a publisher / conference / institutional record during this review;
-**C** = venue must still be confirmed against the publisher page before the reference is relied on.
+**Corrections to the previous version of this table:** (i) arXiv:2107.02018 *Spanner Approximations in Practice* is by Chimani and Stutzenstein, not "Angrick et al."; (ii) "JCSS 119:60-77, 2021" belongs to a different paper (Enright et al., epidemic size in temporal networks); the journal version of *Temporal Cliques Admit Sparse Spanners* is doi:10.1016/j.jcss.2021.04.004 (volume/pages still to be copied from the publisher page).
 
-| # | Reference | Venue | Status | What it contributes as a benchmark / protocol | Implemented in |
-|---|---|---|---|---|---|
-| 1 | M. Farshi, J. Gudmundsson. *Experimental Study of Geometric t-Spanners.* | ESA 2005, LNCS 3669, pp. 556-567 | V | Point-set families; metrics: #edges, weight, max degree, diameter, crossings | `static` |
-| 2 | M. Farshi, J. Gudmundsson. *Experimental Study of Geometric t-Spanners: A Running Time Comparison.* | WEA 2007, LNCS 4525, pp. 270-284 | V | Running-time protocol for Greedy / Yao / Theta / WSPD etc. | `static` (timing column) |
-| 3 | Bounded-Degree Plane Geometric Spanners in Practice | ACM J. Experimental Algorithmics | V (journal) / C (year, volume, article no.) | Stretch-factor estimation as the bottleneck; lightness, degree | `static` |
-| 4 | G.V. Batz, R. Geisberger, P. Sanders, C. Vetter. *Minimum Time-Dependent Travel Times with Contraction Hierarchies.* | ACM J. Exp. Algorithmics 18, Art. 1.4, 2013 | V | Time-dependent road-network protocol (German network, realistic profiles), earliest-arrival queries | `metrla`, `theorem1` (TD baseline reasoning) |
-| 5 | D. Delling, A.V. Goldberg, T. Pajor, R.F. Werneck. *Customizable Route Planning in Road Networks.* | Transportation Science 51(2):566-591, 2017 | V | Metric-independent preprocessing; real-time traffic metrics | related-work positioning |
-| 6 | Y. Li, R. Yu, C. Shahabi, Y. Liu. *Diffusion Convolutional Recurrent Neural Network: Data-Driven Traffic Forecasting.* | ICLR 2018 | V | METR-LA (207 sensors, Los Angeles) and PEMS-BAY (325 sensors): measured 5-min speeds + directed road-distance sensor graph | `metrla` |
-| 7 | A. Casteigts, J.G. Peters, J. Schoeters. *Temporal Cliques Admit Sparse Spanners.* | ICALP 2019 (LIPIcs 134); JCSS 119:60-77, 2021 | V (ICALP) / C (JCSS pages) | Temporal-graph spanners (journey-based model) - different model, must be contrasted | related-work positioning |
-| 8 | Angrick et al. *Spanner Approximations in Practice* | arXiv:2107.02018 | C (publication venue) | General-graph spanner experiments (Greedy ADDJS vs Baswana-Sen vs others) | `general` |
-| 9 | I. Althofer, G. Das, D. Dobkin, D. Joseph, J. Soares. *On Sparse Spanners of Weighted Graphs.* | Discrete & Computational Geometry 9:81-100, 1993 | already in README references | Path-greedy spanner; reference for the static reduction | `static`, `general` |
-| 10 | S. Baswana, S. Sen. *A Simple and Linear Time Randomized Algorithm for Computing Sparse Spanners in Weighted Graphs.* | Random Structures & Algorithms 30(4):532-563, 2007 | C | Standard randomized (2k-1)-spanner baseline | `general` |
-| 11 | DIMACS 9th Implementation Challenge - Shortest Paths (USA road networks) | challenge data set | C (cite per challenge page) | Standard static road-network instances | `dimacs` |
+| # | Reference | Venue (confirmed) | Still to confirm | Role in this repository |
+|---|---|---|---|---|
+| 1 | M. Farshi, J. Gudmundsson. *Experimental Study of Geometric t-Spanners.* | ESA 2005, LNCS 3669, pp. 556-567 | - | Protocol and metrics for `static` |
+| 2 | M. Farshi, J. Gudmundsson. *Experimental Study of Geometric t-Spanners: A Running Time Comparison.* | WEA 2007, LNCS 4525, pp. 270-284 | - | Running-time protocol |
+| 3 | F. Anderson, A. Ghosh, M. Graham, L. Mougeot, D. Wisnosky. *Bounded-Degree Plane Geometric Spanners in Practice.* | ACM J. Exp. Algorithmics 28(1), Art. 1.1, April 2023, doi:10.1145/3582497 | - | Stretch-factor estimation, lightness/degree metrics |
+| 4 | G.V. Batz, R. Geisberger, P. Sanders, C. Vetter. *Minimum Time-Dependent Travel Times with Contraction Hierarchies.* | ACM J. Exp. Algorithmics 18, Art. 1.4, 2013 | - | Time-dependent road-network protocol |
+| 5 | D. Delling, A.V. Goldberg, T. Pajor, R.F. Werneck. *Customizable Route Planning in Road Networks.* | Transportation Science 51(2):566-591, 2017 | - | Related work (metric-independent preprocessing) |
+| 6 | Y. Li, R. Yu, C. Shahabi, Y. Liu. *Diffusion Convolutional Recurrent Neural Network: Data-Driven Traffic Forecasting.* | ICLR 2018 | - | METR-LA / PEMS-BAY (`metrla`) |
+| 7 | A. Casteigts, J.G. Peters, J. Schoeters. *Temporal Cliques Admit Sparse Spanners.* | ICALP 2019 (LIPIcs 134, doi:10.4230/LIPIcs.ICALP.2019.134); JCSS, doi:10.1016/j.jcss.2021.04.004 | JCSS volume and pages | Temporal-graph spanners (journey model; contrast) |
+| 8 | S. Angrick, B. Bals, T. Friedrich, H. Gawendowicz, N. Hastrich, N. Klodt, P. Lenzner, J. Schmidt, G. Skretas, A. Wells. *How to Reduce Temporal Cliques to Find Sparse Spanners.* | ESA 2024, LIPIcs 308, pp. 11:1-11:15, doi:10.4230/LIPIcs.ESA.2024.11 | - | Temporal-graph spanners (contrast) |
+| 9 | M. Chimani, F. Stutzenstein. *Spanner Approximations in Practice.* | arXiv:2107.02018 (July 2021) | proceedings venue | General-graph spanner experiments (`general`) |
+| 10 | F. Bökler, M. Chimani, H. Jasper. *General Multiplicative Spanners in Practice.* | SEA 2026, LIPIcs 371, Art. 8, pp. 8:1-8:21, doi:10.4230/LIPIcs.SEA.2026.8 | - | Decoupled weight/length spanners; Greedy as practical standard |
+| 11 | S. Baswana, S. Sen. *A Simple and Linear Time Randomized Algorithm for Computing Sparse Spanners in Weighted Graphs.* | Random Structures & Algorithms 30(4):532-563, 2007 (ICALP 2003, LNCS 2719, pp. 384-396 for the conference version) | - | (2k-1)-spanner baseline (`general`) |
+| 12 | I. Althofer, G. Das, D. Dobkin, D. Joseph, J. Soares. *On Sparse Spanners of Weighted Graphs.* | Discrete & Computational Geometry 9:81-100, 1993 | - (already in README) | Path-greedy spanner (`static`) |
+| 13 | C. Demetrescu, A.V. Goldberg, D.S. Johnson (eds.). *The Shortest Path Problem: Ninth DIMACS Implementation Challenge.* | DIMACS Series in Discrete Mathematics and Theoretical Computer Science 74, AMS, 2009, doi:10.1090/dimacs/074 | - | Standard static road-network instances (`dimacs`) |
 
-## Benchmarks that now exist in the repo
-
-| Check | Command | Pass criterion |
-|---|---|---|
-| Static reduction to classical greedy (edge-for-edge vs independent reference), Yao/Theta bounds | `python benchmarks/literature_benchmarks.py static` | 0 mismatches, stretch <= t |
-| General graphs vs Baswana-Sen | `python benchmarks/literature_benchmarks.py general` | stretch <= 2k-1, equality with reference greedy |
-| Exhaustive all-pairs/all-hours Theorem 1 + negative controls + certified union-of-snapshots baseline | `python benchmarks/literature_benchmarks.py theorem1` | 0 soundness violations |
-| Real telemetry (METR-LA) | `python benchmarks/literature_benchmarks.py metrla --speeds METR-LA.csv` | table + congestion-shape correlation |
-| DIMACS static road network | `python benchmarks/literature_benchmarks.py dimacs --gr USA-road-d.NY.gr.gz` | table |
-
-Data for `metrla`: https://zenodo.org/records/5724362 (METR-LA.csv). Sensor graph is fetched automatically from github.com/liyaguang/DCRNN.
-Data for `dimacs`: DIMACS-9 challenge site (USA-road-d.*.gr.gz).
+Implementation cross-check available in NetworkX: `networkx.algorithms.sparsifiers.spanner` implements Baswana-Sen (documented reference: RSA 30(4):532-563, 2007).
