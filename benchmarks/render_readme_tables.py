@@ -80,6 +80,15 @@ def table_literature():
     greedy = g[g.method == "PathGreedy(ref)"].edge_frac
     bs = g[g.method.str.startswith("BaswanaSen")].edge_frac
     r3 = ev[ev.t == 3.0].ours_vs_union_edge_ratio.iloc[0]
+    raw = pd.read_csv(os.path.join(BEN, "theorem1_raw.csv"))
+    diff = raw.ours_edges - raw.union_edges
+    more = diff[diff > 0]
+    if more.empty:
+        union_text = f"also certified; the delay-bounded construction keeps equal or fewer edges in all {len(raw)} instances (about {r3:.2f}x at t = 3 on random digraphs)"
+    else:
+        union_text = (f"also certified; the delay-bounded construction keeps fewer edges on average (about {r3:.2f}x at t = 3 on random digraphs) "
+                      f"but is not provably never larger: in {len(more)} of {len(raw)} random instances (t <= {raw.loc[more.index, 't'].max():g}) "
+                      f"it kept {int(more.min())}-{int(more.max())} more edges")
     rows = [
         ["Reduction to the classical path-greedy spanner (constant profile), edge-for-edge against an independent reference; "
          "Yao/Theta theoretical stretch bounds", "Farshi & Gudmundsson (ESA 2005; WEA 2007); Althofer et al. (1993)",
@@ -90,8 +99,7 @@ def table_literature():
          "(range of the per-setting means)"],
         ["Exhaustive all-pairs, all-hours check of Theorem 1 on random time-varying digraphs, with negative controls", "this work",
          f"{th['soundness_violations']} soundness violations on {th['instances']} instances"],
-        ["Certified baseline: union of per-hour static greedy spanners", "this work",
-         f"also certified; the delay-bounded construction keeps equal or fewer edges (about {r3:.2f}x at t = 3 on random digraphs)"],
+        ["Certified baseline: union of per-hour static greedy spanners", "this work", union_text],
     ]
     rows += sensor_row("metrla", "Measured speeds, METR-LA (207 sensors, Los Angeles)", "METR-LA")
     rows += sensor_row("pemsbay", "Measured speeds, PEMS-BAY (325 sensors, SF Bay Area)", "PEMS-BAY")
