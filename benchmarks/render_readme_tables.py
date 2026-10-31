@@ -94,7 +94,7 @@ def table_literature():
          "Yao/Theta theoretical stretch bounds", "Farshi & Gudmundsson (ESA 2005; WEA 2007); Althofer et al. (1993)",
          f"{n}/{n} instances identical; {st['yao_theta_bound_violations']} bound violations"],
         ["General graphs (ER, BA, random geometric) vs. Baswana-Sen (2k-1)-spanners",
-         "Baswana & Sen (2007); Angrick et al. (arXiv:2107.02018)",
+         "Baswana & Sen (2007); Chimani & Stutzenstein (arXiv:2107.02018)",
          f"stretch <= 2k-1 for all; greedy keeps {pct(greedy)} of edges vs. {pct(bs)} for Baswana-Sen on these graphs "
          "(range of the per-setting means)"],
         ["Exhaustive all-pairs, all-hours check of Theorem 1 on random time-varying digraphs, with negative controls", "this work",
