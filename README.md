@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🕸️ Delay-Bounded Time-Varying Geometric *t*-Spanners
+# Delay-Bounded Time-Varying Geometric *t*-Spanners
 ### for Urban Road Networks
 
 [![CI](https://github.com/soheylfalahzade/delay-bounded-spanner-networks/actions/workflows/ci.yml/badge.svg)](https://github.com/soheylfalahzade/delay-bounded-spanner-networks/actions/workflows/ci.yml)
@@ -11,6 +11,10 @@
 [![Theorem 1](https://img.shields.io/badge/certificate-Theorem%201%2C%20by%20construction-6f42c1.svg)](#1-problem)
 
 **A certified sparsification framework that extracts a single physical road backbone, guaranteed to preserve bounded travel-time dilation at every hour of the day — validated end-to-end on real OpenStreetMap city cores (about 1.5 km radius) pulled live from OpenStreetMap, across six Iranian and six international cities (seven countries) spanning seven street-network morphology archetypes.**
+
+<img src="results/figures/fig0_overview.png" width="900" alt="A small street network at 03:00 and at 17:00, coloured by travel time relative to free flow, and the spanner that keeps only the streets needed to guarantee the travel-time bound in every hour">
+
+<sub>Illustration on a small synthetic network, computed with this repository's construction at t = 2.</sub>
 
 </div>
 
@@ -290,7 +294,19 @@ python benchmarks/retention_morphology.py
 ![Forced edges on city street networks](results/figures/fig5_network_maps_t2.png)
 *Fig. 5. Forced edges (Theorem 2, blue), edges kept although not forced (green) and edges removed (red) at t = 2 on four OSM city cores.*
 
-Vector (PDF) versions of all figures are in `results/figures/`. Regenerate with `python benchmarks/make_figures.py`.
+![Twelve cities at 3.5 km](results/figures/fig7_scale_12cities.png)
+*Fig. 7. 3.5 km street networks of twelve cities: delay-bounded greedy retention against the forced-edge lower bound (a), and the gap in points (b). Every spanner is certified; the orange triangles are the static free-flow baseline, which is not.*
+
+![Exact optimum on small instances](results/figures/fig8_optimality_gap.png)
+*Fig. 8. Exact optimum on small random time-varying digraphs: mean edges kept by the lower bound, the optimum, the greedy construction and the union baseline (a), and how many edges the greedy construction keeps beyond the optimum (b).*
+
+![Continuous-time guarantee](results/figures/fig9_offgrid_cost.png)
+*Fig. 9. Between the grid hours on METR-LA and PEMS-BAY: edges kept by three certificates (top), and the worst sampled stretch relative to the bound (bottom).*
+
+![Severity of the congestion model](results/figures/fig10_severity.png)
+*Fig. 10. Sensitivity to the severity of the congestion model: retention and lower bound at t = 1.5 and t = 2 (a, b), and the static free-flow baseline's violating edges (c).*
+
+Vector (PDF) versions of all figures are in `results/figures/`. Regenerate with `python benchmarks/make_figures.py` and `python benchmarks/make_figures_extra.py`; the overview figure at the top of this page is `fig0_overview`.
 
 ---
 
