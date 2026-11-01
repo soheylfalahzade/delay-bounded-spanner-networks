@@ -29,6 +29,21 @@ for b in a.boroughs:
 if not found:
     sys.exit("no borough CSVs found")
 
+import hashlib
+def _sha(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        h.update(fh.read())
+    return h.hexdigest()
+_seen = {}
+for b in list(found):
+    h = _sha(found[b])
+    if h in _seen:
+        print(f"[SKIP] {b}: file is byte-identical to the {_seen[h]} file (wrong download? check the borough in the URL); not reported", flush=True)
+        del found[b]
+    else:
+        _seen[h] = b
+
 res = {}
 for b, p in found.items():
     out = os.path.join(ROOT, "results", f"congestion_shape_validation_{b}.json")
