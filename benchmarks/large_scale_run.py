@@ -66,6 +66,16 @@ def build_real(spec, grid_n, attempts, wait0):
     return None
 
 
+def merge_results(existing, rows):
+    """Rows of the cities in this run replace the rows of the same cities in an earlier file; other cities are kept."""
+    new = pd.DataFrame(rows)
+    if existing is None or existing.empty:
+        return new
+    if new.empty:
+        return existing
+    return pd.concat([existing[~existing.city.isin(set(new.city))], new], ignore_index=True)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--cities", nargs="*", default=["Isfahan", "Tokyo", "Manhattan"])
@@ -77,6 +87,7 @@ def main():
     ap.add_argument("--max-edges", type=int, default=60000)
     ap.add_argument("--overpass-url", default=None, help="Overpass API base URL (e.g. https://overpass.private.coffee/api)")
     ap.add_argument("--attempts", type=int, default=6)
+    ap.add_argument("--refresh", action="store_true", help="recompute cities that are already in the results file")
     ap.add_argument("--wait", type=int, default=30, help="first retry wait in seconds (doubles each time)")
     a = ap.parse_args()
     if a.overpass_url:
@@ -84,8 +95,13 @@ def main():
         ox.settings.overpass_url = a.overpass_url
         print('[osmnx] overpass_url =', a.overpass_url, flush=True)
 
+    stem = os.path.join(OUT, f"large_scale_{a.dist}m" + ("_synthetic" if a.synthetic else ""))
+    existing = pd.read_csv(stem + ".csv") if os.path.exists(stem + ".csv") else None
     rows = []
     for name in a.cities:
+        if existing is not None and name in set(existing.city) and not a.refresh:
+            print(f"[skip] {name}: already in {os.path.basename(stem)}.csv (use --refresh to recompute)", flush=True)
+            continue
         spec = next((c for c in core.CITY_REGISTRY if c["name"] == name), None)
         if spec is None:
             print("[skip] unknown city", name)
@@ -128,9 +144,10 @@ def main():
             print(f"   t={t}: ours {row['delay_bounded_retention_pct']:.1f}% (certified={cert['certified']}), "
                   f"forced bound {row['forced_lower_bound_pct']:.1f}%, static-ff {row['static_ff_retention_pct']:.1f}% "
                   f"(certified={cs['certified']}), {time.time() - t1:.0f}s", flush=True)
-    df = pd.DataFrame(rows)
+        os.makedirs(OUT, exist_ok=True)  # save after every city so an interrupted run loses nothing
+        merge_results(existing, rows).round(3).to_csv(stem + ".csv", index=False)
+    df = merge_results(existing, rows)
     os.makedirs(OUT, exist_ok=True)
-    stem = os.path.join(OUT, f"large_scale_{a.dist}m" + ("_synthetic" if a.synthetic else ""))
     df.round(3).to_csv(stem + ".csv", index=False)
     with open(stem + ".md", "w", encoding="utf-8") as f:
         f.write(df.round(2).to_markdown(index=False))
