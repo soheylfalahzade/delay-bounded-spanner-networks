@@ -7,6 +7,7 @@ Blocks sit between  <!-- BEGIN:name -->  and  <!-- END:name -->  and are generat
 
     literature   results/benchmarks/{static_reduction,theorem1,general_graph,metrla,pemsbay}_*
     retention    results/benchmarks/retention_diagnostics.csv
+    optimality   results/benchmarks/optimality_gap_raw.csv
     large_t      results/benchmarks/retention_large_t.csv, retention_morphology_correlations.csv
 
 Statements such as "certified at every t" are asserted against the data before they are printed, so a
@@ -148,7 +149,26 @@ def table_large_t():
     return (md(["t", "forced lower bound (%)", "greedy retention (%)", "gap (points)"], rows) + "\n\n" + "\n".join(bullets))
 
 
-RENDERERS = {"literature": table_literature, "retention": table_retention, "large_t": table_large_t}
+def table_optimality():
+    d = pd.read_csv(os.path.join(BEN, "optimality_gap_raw.csv"))
+    assert (d.greedy >= d.optimum).all(), "greedy is smaller than the exact optimum on some instance: the search or the greedy is wrong"
+    assert (d.optimum >= d.forced).all(), "the optimum is smaller than the forced-edge bound: the search or Theorem 2 is wrong"
+    assert (d.union >= d.optimum).all()
+    rows = []
+    for t, g in d.groupby("t"):
+        gap = g.greedy - g.optimum
+        rows.append([f"{t:g}", len(g), f"{g.optimum.mean():.2f}", f"{g.forced.mean():.2f}", f"{g.greedy.mean():.2f}",
+                     f"{g.union.mean():.2f}", f"{100 * (gap == 0).mean():.1f}%", int(gap.max())])
+    inst = d.drop_duplicates("inst")
+    return (md(["t", "Instances", "Exact optimum (edges, mean)", "Forced edges (Theorem 2, mean)", "Greedy (mean)",
+                "Union of per-hour greedy (mean)", "Instances where greedy is optimal", "Largest greedy excess (edges)"], rows) +
+            f"\n\nRandom strongly connected time-varying digraphs with {int(inst.n.min())} to {int(inst.n.max())} nodes and "
+            f"{int(inst.m.min())} to {int(inst.m.max())} edges (mean {inst.m.mean():.1f}); {len(inst)} instances per t. "
+            "The optimum is the fewest edges of any subgraph that satisfies the all-pairs, all-hours bound, found by exhaustive search. "
+            "Source: `results/benchmarks/optimality_gap_raw.csv` (`python benchmarks/optimality_gap.py`).")
+
+
+RENDERERS = {"literature": table_literature, "retention": table_retention, "large_t": table_large_t, "optimality": table_optimality}
 
 
 def render(text):

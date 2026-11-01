@@ -368,6 +368,25 @@ This is a shape comparison for one month; it is not a calibration of congestion 
 
 ---
 
+## 5j. Gap to the exact optimum on small instances
+
+On road networks the optimum is out of reach, so the quality of the greedy construction is measured where it can be computed exactly: random time-varying digraphs small enough for an exhaustive search over subgraphs. This says nothing about road-network size or structure; it shows how far the construction can be from the best possible subgraph when the answer is known.
+
+<!-- BEGIN:optimality -->
+| t | Instances | Exact optimum (edges, mean) | Forced edges (Theorem 2, mean) | Greedy (mean) | Union of per-hour greedy (mean) | Instances where greedy is optimal | Largest greedy excess (edges) |
+|---|---|---|---|---|---|---|---|
+| 1.1 | 265 | 15.72 | 15.72 | 15.72 | 15.73 | 99.6% | 1 |
+| 1.5 | 265 | 14.57 | 14.54 | 14.62 | 14.90 | 95.1% | 2 |
+| 2 | 265 | 13.09 | 12.89 | 13.33 | 14.40 | 77.4% | 3 |
+| 3 | 265 | 11.02 | 10.06 | 11.87 | 14.02 | 38.9% | 4 |
+
+Random strongly connected time-varying digraphs with 5 to 9 nodes and 10 to 26 edges (mean 16.5); 265 instances per t. The optimum is the fewest edges of any subgraph that satisfies the all-pairs, all-hours bound, found by exhaustive search. Source: `results/benchmarks/optimality_gap_raw.csv` (`python benchmarks/optimality_gap.py`).
+<!-- END:optimality -->
+
+The greedy construction is never smaller than the optimum and the optimum is never smaller than the forced-edge bound (both checked on every row). The excess of the greedy construction grows with `t`: it is rare at small `t`, where almost all edges are forced, and common at large `t`, where there is slack to choose among.
+
+---
+
 ## 6. Reproduce
 
 ```bash
@@ -378,6 +397,7 @@ conda install -c conda-forge networkx osmnx geopandas shapely scipy numpy pandas
 python -m unittest discover -s tests -v           # unit tests
 python run_spanner_benchmark.py                    # full run: focus city + 12-city cross-city study
 python verify_results.py                           # independent check of what was just produced
+python benchmarks/optimality_gap.py --instances 600 --max-n 9 --max-m 26 --seed 1   # exact optimum on small instances (resumable)
 
 python run_spanner_benchmark.py --quick             # fast smoke test (stratified Iran + international)
 python run_spanner_benchmark.py --synthetic         # force offline mode everywhere
