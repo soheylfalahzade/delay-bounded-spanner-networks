@@ -7,6 +7,7 @@ Blocks sit between  <!-- BEGIN:name -->  and  <!-- END:name -->  and are generat
 
     literature   results/benchmarks/{static_reduction,theorem1,general_graph,metrla,pemsbay}_*
     retention    results/benchmarks/retention_diagnostics.csv
+    claims       results/benchmarks/{large_scale_3500m,optimality_gap_raw,theorem1_*,metrla_table,pemsbay_table}
     optimality   results/benchmarks/optimality_gap_raw.csv
     large_t      results/benchmarks/retention_large_t.csv, retention_morphology_correlations.csv
 
@@ -168,7 +169,51 @@ def table_optimality():
             "Source: `results/benchmarks/optimality_gap_raw.csv` (`python benchmarks/optimality_gap.py`).")
 
 
-RENDERERS = {"literature": table_literature, "retention": table_retention, "large_t": table_large_t, "optimality": table_optimality}
+def table_claims():
+    ls = pd.read_csv(os.path.join(BEN, "large_scale_3500m.csv"))
+    th = js("theorem1_summary.json")
+    og = pd.read_csv(os.path.join(BEN, "optimality_gap_raw.csv"))
+    raw = pd.read_csv(os.path.join(BEN, "theorem1_raw.csv"))
+    ev = pd.read_csv(os.path.join(BEN, "theorem1_edges_vs_union_baseline.csv"))
+    sens = {n: pd.read_csv(os.path.join(BEN, f"{n}_table.csv")) for n in ("metrla", "pemsbay")}
+    assert ls.delay_bounded_certified.all() and th["soundness_violations"] == 0
+    assert all(d[d.method == "DelayBounded"].certified.all() for d in sens.values())
+    cities = ls.city.nunique()
+    gap = ls.delay_bounded_retention_pct - ls.forced_lower_bound_pct
+    g15, g3 = gap[ls.t == 1.5], gap[ls.t == 3.0]
+    base = pd.concat(d[d.method.isin(["StaticFreeFlow", "MeanTemporal"]) & ~d.certified] for d in sens.values())
+    saved = pd.concat((d[d.method == "UnionOfSnapshots"].set_index("t").edges_kept_pct - d[d.method == "DelayBounded"].set_index("t").edges_kept_pct) for d in sens.values())
+    more = int(((raw.ours_edges - raw.union_edges) > 0).sum())
+    og["gap"] = og.greedy - og.optimum
+    opt = {t: 100 * (g.gap == 0).mean() for t, g in og.groupby("t")}
+    r15 = ls[ls.t == 1.5].delay_bounded_retention_pct
+    rows = [
+        ["The construction returns a certified spanner",
+         f"{len(ls)} of {len(ls)} spanners certified at 3.5 km ({cities} cities, {ls.t.nunique()} values of t); {th['soundness_violations']} violations on "
+         f"{th['instances']} exhaustively checked random instances; delay-bounded certified at every t on METR-LA and PEMS-BAY",
+         "`results/benchmarks/large_scale_3500m.csv`, `theorem1_summary.json`, `metrla_table.csv`, `pemsbay_table.csv`"],
+        ["Retention is close to a structural lower bound",
+         f"gap to the forced-edge bound at t = 1.5: at most {g15.max():.2f} points; at t = 3: {g3.min():.1f} to {g3.max():.1f} points",
+         "`results/benchmarks/large_scale_3500m.csv`, `docs/THEOREM_FORCED_EDGES.md`"],
+        ["Baselines without a certificate break the bound on measured speeds",
+         f"static free-flow and mean-temporal weights leave {int(base.violating_edges.min())} to {int(base.violating_edges.max())} violating edges in the "
+         f"{len(base)} (method, t, dataset) cells where they fail",
+         "`results/benchmarks/metrla_table.csv`, `pemsbay_table.csv`"],
+        ["The greedy construction is close to the exact optimum on small instances",
+         f"equal to the optimum in {opt[1.5]:.0f}% of {og.inst.nunique()} instances at t = 1.5 and {opt[3.0]:.0f}% at t = 3; largest excess {int(og.gap.max())} edges",
+         "`results/benchmarks/optimality_gap_raw.csv`"],
+        ["The joint construction is smaller than the union of per-hour spanners",
+         f"**partially supported:** smaller on average ({ev[ev.t == 3.0].ours_vs_union_edge_ratio.iloc[0]:.2f}x at t = 3 on random digraphs; "
+         f"{saved.min():.1f} to {saved.max():.1f} points of edges on the sensor graphs) but larger in {more} of {len(raw)} random instances",
+         "`results/benchmarks/theorem1_raw.csv`, `theorem1_edges_vs_union_baseline.csv`"],
+        ["Strong sparsification of road networks",
+         f"**not supported:** {r15.min():.1f}% to {r15.max():.1f}% of the edges are kept at t = 1.5 in the {cities} cities",
+         "`results/benchmarks/large_scale_3500m.csv`"],
+    ]
+    return md(["Claim", "Evidence", "File"], rows)
+
+
+RENDERERS = {"literature": table_literature, "retention": table_retention, "large_t": table_large_t, "optimality": table_optimality, "claims": table_claims}
 
 
 def render(text):

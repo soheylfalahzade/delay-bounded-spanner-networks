@@ -10,6 +10,9 @@ Additional figures, drawn from the raw result files (same style as make_figures.
   fig8_optimality_gap      exact optimum vs greedy vs union baseline on small random instances
   fig9_offgrid_cost        cost of the continuous-time guarantee on METR-LA and PEMS-BAY
   fig10_severity           sensitivity of the results to the severity of the congestion model
+  fig11_certification_matrix   which method keeps the bound on measured speeds
+  fig12_edge_anatomy       how much alternative each street segment has
+  fig13_scaling            construction time and probes per edge
 """
 from __future__ import annotations
 
@@ -289,6 +292,111 @@ def fig10(res, out):
     _save(fig, out, "fig10_severity")
 
 
+# --------------------------------------------------------------------------------------------------
+# fig11: certification matrix on measured speeds
+# --------------------------------------------------------------------------------------------------
+def fig11(res, out):
+    from matplotlib.colors import ListedColormap
+    frames = {"METR-LA": _read(res, "metrla_table.csv"), "PEMS-BAY": _read(res, "pemsbay_table.csv")}
+    if any(v is None for v in frames.values()):
+        return
+    methods = [("DelayBounded", "delay-bounded greedy"), ("UnionOfSnapshots", "union of per-hour greedy"),
+               ("MeanTemporal", "mean-temporal weights"), ("StaticFreeFlow", "static free-flow weights")]
+    fig, axes = plt.subplots(2, 1, figsize=(11.6, 6.2), gridspec_kw=dict(hspace=0.42))
+    for ax, (name, d) in zip(axes, frames.items()):
+        ts = sorted(d.t.unique())
+        ok = np.array([[bool(d[(d.method == m) & (d.t == t)].certified.iloc[0]) for t in ts] for m, _ in methods])
+        ax.imshow(ok.astype(int), cmap=ListedColormap(["#f2c4be", "#bfe5d3"]), aspect="auto", vmin=0, vmax=1)
+        for i, (m, _) in enumerate(methods):
+            for j, t in enumerate(ts):
+                r = d[(d.method == m) & (d.t == t)].iloc[0]
+                ax.text(j, i - 0.12, f"{r.edges_kept_pct:.1f}%", ha="center", va="center", fontsize=9.2, fontweight="bold", color="#14304d")
+                ax.text(j, i + 0.24, "certified" if r.certified else f"{int(r.violating_edges)} edge{'' if int(r.violating_edges) == 1 else 's'} violate{'s' if int(r.violating_edges) == 1 else ''}", ha="center", va="center", fontsize=7.6,
+                        color="#1b6b49" if r.certified else "#9b2c20")
+        ax.set_xticks(range(len(ts)))
+        ax.set_xticklabels([f"t = {t:g}" for t in ts])
+        ax.set_yticks(range(len(methods)))
+        ax.set_yticklabels([lab for _, lab in methods], fontsize=9.2)
+        ax.set_xticks(np.arange(-0.5, len(ts), 1), minor=True)
+        ax.set_yticks(np.arange(-0.5, len(methods), 1), minor=True)
+        ax.grid(which="minor", color="white", linewidth=2.5)
+        ax.grid(which="major", visible=False)
+        ax.tick_params(which="both", length=0)
+        for sp in ax.spines.values():
+            sp.set_visible(False)
+        ax.set_title(name, fontsize=11, fontweight="bold", loc="left")
+    fig.suptitle("Who keeps the bound on measured speeds: edges kept (bold) and certification result per method and t", fontsize=12, fontweight="bold", y=0.97)
+    _save(fig, out, "fig11_certification_matrix")
+
+
+# --------------------------------------------------------------------------------------------------
+# fig12: anatomy of the edges
+# --------------------------------------------------------------------------------------------------
+def fig12(res, out):
+    d = _read(res, "retention_edge_ratios.csv")
+    if d is None:
+        return
+    bins = [("no detour at all", lambda r: np.isinf(r)), ("detour ratio above 5", lambda r: np.isfinite(r) & (r > 5)),
+            ("3 to 5", lambda r: (r > 3) & (r <= 5)), ("2 to 3", lambda r: (r > 2) & (r <= 3)), ("1.5 to 2", lambda r: (r > 1.5) & (r <= 2)),
+            ("1.1 to 1.5", lambda r: (r > 1.1) & (r <= 1.5)), ("at most 1.1", lambda r: r <= 1.1)]
+    cols = ["#0b1b2e", "#1f3a93", "#3b6fb6", "#6aa3d6", "#17a398", "#7fd1b9", "#d5f0e6"]
+    shares = {}
+    for city, g in d.groupby("city"):
+        r = g.max_ratio.values.astype(float)
+        sh = np.array([100 * b(r).mean() for _, b in bins])
+        assert abs(sh.sum() - 100) < 1e-6, "the ratio classes do not cover every edge"
+        shares[city] = sh
+    order = sorted(shares, key=lambda c: -shares[c][0])
+    fig, ax = plt.subplots(figsize=(11.4, 5.6))
+    left = np.zeros(len(order))
+    for k, (lab, _) in enumerate(bins):
+        vals = np.array([shares[c][k] for c in order])
+        ax.barh(range(len(order)), vals, left=left, color=cols[k], label=lab, height=0.72, edgecolor="white", linewidth=0.6)
+        for i, v in enumerate(vals):
+            if v >= 5:
+                ax.text(left[i] + v / 2, i, f"{v:.0f}", ha="center", va="center", fontsize=8.2, color="white" if k < 4 else "#14304d")
+        left += vals
+    ax.set_yticks(range(len(order)))
+    ax.set_yticklabels(order)
+    ax.invert_yaxis()
+    ax.set_xlim(0, 100)
+    ax.set_xlabel("share of the edges (%)")
+    ax.legend(title="best detour, worst hour, relative to the edge's own cost", loc="upper center", bbox_to_anchor=(0.5, -0.12), ncol=4, fontsize=8.6, title_fontsize=9)
+    ax.set_title("Most street segments have no cheap alternative: they are forced for every small t", fontsize=12, fontweight="bold")
+    _save(fig, out, "fig12_edge_anatomy")
+
+
+# --------------------------------------------------------------------------------------------------
+# fig13: construction cost
+# --------------------------------------------------------------------------------------------------
+def fig13(res, out):
+    import json
+    path = os.path.join(os.path.dirname(res), "spanner_report.json")
+    if not os.path.exists(path):
+        return
+    sc = pd.DataFrame(json.load(open(path))["scaling_study"])
+    slope, icpt = np.polyfit(np.log(sc.edges), np.log(sc.seconds), 1)
+    fig, axes = plt.subplots(1, 2, figsize=(10.6, 4.1), gridspec_kw=dict(wspace=0.28))
+    ax = axes[0]
+    ax.loglog(sc.edges, sc.seconds, "o-", color=NAVY, lw=2.2, ms=8)
+    xs = np.array([sc.edges.min(), sc.edges.max()])
+    ax.loglog(xs, np.exp(icpt) * xs ** slope, "--", color=GREY, lw=1.4, label=f"fitted growth: edges^{slope:.2f}")
+    ax.set_xlabel("edges of the subnetwork")
+    ax.set_ylabel("construction time (s)")
+    ax.legend(fontsize=9)
+    ax.set_title("Time against network size", fontsize=10.5, fontweight="bold")
+    _panel_label(ax, "a")
+    ax = axes[1]
+    ax.semilogx(sc.edges, sc.probes_per_edge, "s-", color=TEAL, lw=2.2, ms=8)
+    ax.set_ylim(0, max(2.0, sc.probes_per_edge.max() * 1.3))
+    ax.set_xlabel("edges of the subnetwork")
+    ax.set_ylabel("bounded Dijkstra runs per edge")
+    ax.set_title("Probes per edge", fontsize=10.5, fontweight="bold")
+    _panel_label(ax, "b")
+    fig.suptitle("Construction cost on growing subnetworks of the focus city", fontsize=12, fontweight="bold", y=1.02)
+    _save(fig, out, "fig13_scaling")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--results-dir", default=os.path.join(ROOT, "results", "benchmarks"))
@@ -299,6 +407,9 @@ def main():
     fig8(a.results_dir, a.out_dir)
     fig9(a.results_dir, a.out_dir)
     fig10(a.results_dir, a.out_dir)
+    fig11(a.results_dir, a.out_dir)
+    fig12(a.results_dir, a.out_dir)
+    fig13(a.results_dir, a.out_dir)
 
 
 if __name__ == "__main__":

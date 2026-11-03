@@ -3,6 +3,7 @@ message: "If you use this software, please cite it as below."
 title: "Delay-Bounded Time-Varying Geometric t-Spanners for Urban Road Networks"
 authors:
   - family-names: "Fallahzadeh"
+    given-names: "Soheil"
     affiliation: "Yazd University"
 version: 2.2.0
 date-released: 2026-09-26

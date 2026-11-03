@@ -1,7 +1,8 @@
-<div align="center">
+# Delay-Bounded Time-Varying Geometric *t*-Spanners for Urban Road Networks
 
-# Delay-Bounded Time-Varying Geometric *t*-Spanners
-### for Urban Road Networks
+<p align="center"><img src="docs/assets/banner.svg" width="100%" alt="Headline results: all spanners certified, small gap to the structural lower bound, greedy equal to the exact optimum on most small instances"></p>
+
+**A certified sparsification framework that extracts a single physical road backbone, guaranteed to preserve bounded travel-time dilation at every hour of the day — validated end-to-end on real OpenStreetMap city cores (about 1.5 km radius) pulled live from OpenStreetMap, across six Iranian and six international cities (seven countries) spanning seven street-network morphology archetypes.**
 
 [![CI](https://github.com/soheylfalahzade/delay-bounded-spanner-networks/actions/workflows/ci.yml/badge.svg)](https://github.com/soheylfalahzade/delay-bounded-spanner-networks/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -10,18 +11,11 @@
 [![Cities](https://img.shields.io/badge/validated%20on-12%20cities%20%2F%207%20countries-c0392b.svg)](results/crosscity_table.md)
 [![Theorem 1](https://img.shields.io/badge/certificate-Theorem%201%2C%20by%20construction-6f42c1.svg)](#1-problem)
 
-**A certified sparsification framework that extracts a single physical road backbone, guaranteed to preserve bounded travel-time dilation at every hour of the day — validated end-to-end on real OpenStreetMap city cores (about 1.5 km radius) pulled live from OpenStreetMap, across six Iranian and six international cities (seven countries) spanning seven street-network morphology archetypes.**
+<p align="center"><img src="docs/assets/pipeline.svg" width="100%" alt="From hourly travel times to a certified sparse road network: order the edges, check each one with a bounded Dijkstra in every hour, keep or drop, verify"></p>
 
-<img src="results/figures/fig0_overview.png" width="900" alt="A small street network at 03:00 and at 17:00, coloured by travel time relative to free flow, and the spanner that keeps only the streets needed to guarantee the travel-time bound in every hour">
+<p align="center"><img src="results/figures/greedy_construction.gif" width="860" alt="Animation of the greedy construction on a small network: for each street segment the best detour in the current spanner is compared with the bound in all 24 hours"></p>
 
-<sub>Illustration on a small synthetic network, computed with this repository's construction at t = 2.</sub>
-
-</div>
-
-
----
-
-> **Research line.** This repository is the time-varying, delay-bounded branch of a single line of work on geometric spanners: `geometric-spanners-lab` (classical baselines), `Research_Geometric_ML_Optimization` / Geo-SmartSpanner (the same construction problem with ML acceleration), and this repository.
+<sub>Animation: the greedy construction on a small synthetic network. For each street segment (orange) the best detour in the spanner built so far is compared with the bound in every hour; the segment is kept as soon as one hour has no detour within the bound. Regenerate with `python benchmarks/make_visuals.py`.</sub>
 
 ## Research Program
 
@@ -37,6 +31,10 @@ This repository is one component of a connected research program on emergency-aw
 Integration of the local control layer with the network layer is planned and has not been demonstrated. Open items per repository: the OpenStreetMap experiments in the lab repository use node coordinates only; the learned-pruning repository does not transfer to Tokyo scale (0.09% of edges pruned); the delay-bounded repository uses a parametric congestion field, compared with measured speeds only on two sensor graphs; the signal-control repository tests hand-set membership functions on at most three junctions.
 
 ## 1. Problem
+
+<p align="center"><img src="results/figures/fig0_overview.png" width="900" alt="A small street network at 03:00 and at 17:00, coloured by travel time relative to free flow, and the spanner that keeps only the streets needed to guarantee the travel-time bound in every hour"></p>
+
+<sub>Illustration on a small synthetic network, computed with this repository's construction at t = 2.</sub>
 
 Let $G = (V, E)$ be a directed geometric road network. Each edge $e$ carries a length $\ell(e)$ and an hourly diurnal speed profile $v(e, \tau)$ for $\tau \in \{0, \dots, 23\}$, giving the time-sliced travel-time cost
 
@@ -306,7 +304,16 @@ python benchmarks/retention_morphology.py
 ![Severity of the congestion model](results/figures/fig10_severity.png)
 *Fig. 10. Sensitivity to the severity of the congestion model: retention and lower bound at t = 1.5 and t = 2 (a, b), and the static free-flow baseline's violating edges (c).*
 
-Vector (PDF) versions of all figures are in `results/figures/`. Regenerate with `python benchmarks/make_figures.py` and `python benchmarks/make_figures_extra.py`; the overview figure at the top of this page is `fig0_overview`.
+![Certification matrix](results/figures/fig11_certification_matrix.png)
+*Fig. 11. Certification matrix on measured speeds: edges kept and certification result of four constructions for each t, on METR-LA and PEMS-BAY.*
+
+![Edge anatomy](results/figures/fig12_edge_anatomy.png)
+*Fig. 12. Anatomy of the street segments in the twelve cities: how much alternative each segment has, measured by the best detour at the worst hour relative to the segment's own cost.*
+
+![Construction cost](results/figures/fig13_scaling.png)
+*Fig. 13. Construction time and bounded-Dijkstra runs per edge on four growing subnetworks of the focus city (four points only; no claim about asymptotics is made).*
+
+Vector (PDF) versions of all figures are in `results/figures/`. Regenerate with `python benchmarks/make_figures.py` and `python benchmarks/make_figures_extra.py`; the banner, the pipeline diagram and the animation come from `python benchmarks/make_visuals.py`.
 
 ---
 
@@ -485,6 +492,26 @@ If Overpass/OSMnx is unreachable, the pipeline transparently falls back to the d
 
 ---
 
+## Claims and evidence
+
+<!-- BEGIN:claims -->
+| Claim | Evidence | File |
+|---|---|---|
+| The construction returns a certified spanner | 36 of 36 spanners certified at 3.5 km (12 cities, 3 values of t); 0 violations on 236 exhaustively checked random instances; delay-bounded certified at every t on METR-LA and PEMS-BAY | `results/benchmarks/large_scale_3500m.csv`, `theorem1_summary.json`, `metrla_table.csv`, `pemsbay_table.csv` |
+| Retention is close to a structural lower bound | gap to the forced-edge bound at t = 1.5: at most 1.05 points; at t = 3: 1.6 to 9.2 points | `results/benchmarks/large_scale_3500m.csv`, `docs/THEOREM_FORCED_EDGES.md` |
+| Baselines without a certificate break the bound on measured speeds | static free-flow and mean-temporal weights leave 1 to 922 violating edges in the 19 (method, t, dataset) cells where they fail | `results/benchmarks/metrla_table.csv`, `pemsbay_table.csv` |
+| The greedy construction is close to the exact optimum on small instances | equal to the optimum in 95% of 265 instances at t = 1.5 and 39% at t = 3; largest excess 4 edges | `results/benchmarks/optimality_gap_raw.csv` |
+| The joint construction is smaller than the union of per-hour spanners | **partially supported:** smaller on average (0.82x at t = 3 on random digraphs; 1.4 to 3.8 points of edges on the sensor graphs) but larger in 6 of 236 random instances | `results/benchmarks/theorem1_raw.csv`, `theorem1_edges_vs_union_baseline.csv` |
+| Strong sparsification of road networks | **not supported:** 94.2% to 98.7% of the edges are kept at t = 1.5 in the 12 cities | `results/benchmarks/large_scale_3500m.csv` |
+<!-- END:claims -->
+
+## Threats to validity
+
+- **Construct:** the congestion model on the street networks is parametric, not fitted to street-level speeds; only its hourly shape is compared with measured speeds, and only on freeway sensor networks and, where available, on street data (section 5h).
+- **Internal:** the certificate is exact for the 24 grid hours; between the hours it is guaranteed only by the continuous-time variants of section 5f. Random seeds, origin-destination samples and the exhaustive instances are fixed and listed with the results.
+- **External:** twelve cities, one radius for the main tables and one larger radius for three-value sweeps; random digraphs for the exact optimum are small and are not road-like.
+- **Statistical:** tests across cities have low power; no result is presented as a general law.
+
 ## 8. Known limitations
 
 - The certificate (Theorem 1) holds at the 24 grid hours only. With the piecewise-linear interpolation used by `td_cost`, off-grid times and time-dependent traversal can exceed `t` slightly (observed: at most about 0.5% above `t` in random-instance tests, `benchmarks/offgrid_guarantee.py`). Theorem 3 gives a provable continuous-time bound `t` by certifying on a finer grid at `t / rho^2`, at the price of more retained edges.
@@ -534,7 +561,7 @@ If Overpass/OSMnx is unreachable, the pipeline transparently falls back to the d
 
 ## Data and attribution
 
-Street-network data: (c) OpenStreetMap contributors, available under the Open Database Licence (ODbL, https://www.openstreetmap.org/copyright). Derived graphs cached in `results/graph_cache/` are derivative databases under the same licence. Traffic speeds: METR-LA and PEMS-BAY as distributed by Li et al. (ICLR 2018; https://zenodo.org/records/5724362), sensor graphs from `liyaguang/DCRNN`. The graph snapshots behind the reported numbers should be archived with a DOI (e.g. Zenodo) at submission time.
+Street-network data: (c) OpenStreetMap contributors, available under the Open Database Licence (ODbL, https://www.openstreetmap.org/copyright). Derived graphs cached in `results/graph_cache/` are derivative databases under the same licence. Traffic speeds: METR-LA and PEMS-BAY as distributed by Li et al. (ICLR 2018; https://zenodo.org/records/5724362), sensor graphs from `liyaguang/DCRNN`. The graph snapshots behind the reported numbers should be archived with a persistent identifier (for example a Zenodo DOI) for long-term reference.
 
 ---
 
@@ -545,9 +572,9 @@ See [`CITATION.cff`](CITATION.cff), or:
 ```bibtex
 @software{delay_bounded_spanner_2026,
   title  = {Delay-Bounded Time-Varying Geometric t-Spanners for Urban Road Networks},
-  author = {Soheil},
+  author = {Fallahzadeh, Soheil},
   year   = {2026},
   license = {MIT},
-  note   = {Certified temporal sparsification, validated on real OpenStreetMap road networks across six Iranian and six international cities}
+  note   = {Certified temporal sparsification, validated on real OpenStreetMap road networks and on measured sensor speeds}
 }
 ```

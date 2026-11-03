@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="320" viewBox="0 0 1100 320" role="img" aria-label="Delay-bounded spanners: headline results">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b1b2e"/><stop offset="1" stop-color="#15304d"/></linearGradient></defs>
+<rect width="1100" height="320" rx="18" fill="url(#bg)"/>
+<circle cx="1030" cy="40" r="95" fill="#ffffff" fill-opacity="0.04"/>
+<text x="48" y="78" font-family="Georgia, 'Times New Roman', serif" font-size="40" font-weight="700" fill="#ffffff">delay-bounded-spanner-networks</text>
+<text x="48" y="112" font-family="Georgia, 'Times New Roman', serif" font-size="20" font-style="italic" fill="#f0a030">Which streets can go without slowing anyone down, at any hour?</text>
+<text x="48" y="142" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#b9c7d8">Certified sparsification of road networks with hourly travel times: a per-edge certificate, a structural lower bound and the exact optimum on small instances</text>
+<rect x="48" y="176" width="320" height="108" rx="6" fill="#0f2238" stroke="#243f60"/>
+<rect x="48" y="176" width="320" height="4" rx="2" fill="#f0a030"/>
+<text x="68" y="226" font-family="Georgia, serif" font-size="38" font-weight="700" fill="#f0a030">12/12</text>
+<text x="68" y="251" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#ffffff">cities certified at 3.5 km</text>
+<text x="68" y="272" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#8fa3ba">36 spanners, every one passes the check</text>
+<rect x="388" y="176" width="320" height="108" rx="6" fill="#0f2238" stroke="#243f60"/>
+<rect x="388" y="176" width="320" height="4" rx="2" fill="#f0a030"/>
+<text x="408" y="226" font-family="Georgia, serif" font-size="38" font-weight="700" fill="#f0a030">1.05 pts</text>
+<text x="408" y="251" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#ffffff">largest gap to the structural lower bound</text>
+<text x="408" y="272" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#8fa3ba">t = 1.5, 12 cities</text>
+<rect x="728" y="176" width="320" height="108" rx="6" fill="#0f2238" stroke="#243f60"/>
+<rect x="728" y="176" width="320" height="4" rx="2" fill="#f0a030"/>
+<text x="748" y="226" font-family="Georgia, serif" font-size="38" font-weight="700" fill="#f0a030">95%</text>
+<text x="748" y="251" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#ffffff">greedy equals the exact optimum</text>
+<text x="748" y="272" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#8fa3ba">t = 1.5, 265 small instances</text>
+</svg>

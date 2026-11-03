@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="190" viewBox="0 0 1100 190" role="img" aria-label="Construction pipeline">
+<defs><marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#46607f"/></marker></defs>
+<rect width="1100" height="190" rx="14" fill="#ffffff" stroke="#d0d7de"/>
+<text x="550" y="34" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="15" fill="#46607f">from hourly travel times to a certified sparse road network</text>
+<rect x="28" y="66" width="150" height="70" rx="9" fill="#e8f1fb" stroke="#46607f"/>
+<text x="103.0" y="96" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#14304d">Hourly costs</text>
+<text x="103.0" y="114" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11.5" fill="#46607f">w(e, hour), 24 values</text>
+<line x1="180" y1="101.0" x2="197" y2="101.0" stroke="#46607f" stroke-width="1.8" marker-end="url(#ar)"/>
+<rect x="200" y="66" width="150" height="70" rx="9" fill="#e8f1fb" stroke="#46607f"/>
+<text x="275.0" y="96" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#14304d">Order edges</text>
+<text x="275.0" y="114" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11.5" fill="#46607f">by their largest cost</text>
+<line x1="352" y1="101.0" x2="369" y2="101.0" stroke="#46607f" stroke-width="1.8" marker-end="url(#ar)"/>
+<rect x="372" y="66" width="150" height="70" rx="9" fill="#e8f1fb" stroke="#46607f"/>
+<text x="447.0" y="96" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#14304d">Check each edge</text>
+<text x="447.0" y="114" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11.5" fill="#46607f">bounded Dijkstra in</text>
+<text x="447.0" y="128" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11.5" fill="#46607f">H, per hour</text>
+<line x1="524" y1="101.0" x2="541" y2="101.0" stroke="#46607f" stroke-width="1.8" marker-end="url(#ar)"/>
+<rect x="544" y="66" width="150" height="70" rx="9" fill="#e8f1fb" stroke="#46607f"/>
+<text x="619.0" y="96" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#14304d">Keep or drop</text>
+<text x="619.0" y="114" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11.5" fill="#46607f">keep if some hour has</text>
+<text x="619.0" y="128" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11.5" fill="#46607f">no detour within t</text>
+<line x1="696" y1="101.0" x2="713" y2="101.0" stroke="#46607f" stroke-width="1.8" marker-end="url(#ar)"/>
+<rect x="716" y="66" width="150" height="70" rx="9" fill="#e3f6ef" stroke="#46607f"/>
+<text x="791.0" y="96" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#14304d">Spanner H</text>
+<text x="791.0" y="114" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11.5" fill="#46607f">certified in every</text>
+<text x="791.0" y="128" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11.5" fill="#46607f">hour</text>
+<line x1="868" y1="101.0" x2="885" y2="101.0" stroke="#46607f" stroke-width="1.8" marker-end="url(#ar)"/>
+<rect x="888" y="66" width="150" height="70" rx="9" fill="#e8f1fb" stroke="#46607f"/>
+<text x="963.0" y="96" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#14304d">Verify</text>
+<text x="963.0" y="114" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11.5" fill="#46607f">bound, optimum,</text>
+<text x="963.0" y="128" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11.5" fill="#46607f">independent check</text>
+<text x="550" y="172" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#6a7b90">every dropped edge keeps a detour of at most t times its own cost in every hour, which makes every pair of places t-close</text>
+</svg>

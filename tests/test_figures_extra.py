@@ -20,9 +20,10 @@ class TestFiguresExtra(unittest.TestCase):
         out = tempfile.mkdtemp()
         try:
             mfe.fig0(out)
-            for f in (mfe.fig7, mfe.fig8, mfe.fig9, mfe.fig10):
+            for f in (mfe.fig7, mfe.fig8, mfe.fig9, mfe.fig10, mfe.fig11, mfe.fig12, mfe.fig13):
                 f(RES, out)
-            for name in ("fig0_overview", "fig7_scale_12cities", "fig8_optimality_gap", "fig9_offgrid_cost", "fig10_severity"):
+            for name in ("fig0_overview", "fig7_scale_12cities", "fig8_optimality_gap", "fig9_offgrid_cost", "fig10_severity",
+                         "fig11_certification_matrix", "fig12_edge_anatomy", "fig13_scaling"):
                 for ext in (".png", ".pdf"):
                     self.assertGreater(os.path.getsize(os.path.join(out, name + ext)), 5000)
         finally:
