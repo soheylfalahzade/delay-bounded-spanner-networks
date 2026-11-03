@@ -12,7 +12,8 @@ Additional figures, drawn from the raw result files (same style as make_figures.
   fig10_severity           sensitivity of the results to the severity of the congestion model
   fig11_certification_matrix   which method keeps the bound on measured speeds
   fig12_edge_anatomy       how much alternative each street segment has
-  fig13_scaling            construction time and probes per edge
+  fig13_scaling            construction time and probes per edge (four subnetworks of one city)
+  fig14_scaling_large      scaling study over many sizes, synthetic and real
 """
 from __future__ import annotations
 
@@ -397,6 +398,59 @@ def fig13(res, out):
     _save(fig, out, "fig13_scaling")
 
 
+# --------------------------------------------------------------------------------------------------
+# fig14: scaling study
+# --------------------------------------------------------------------------------------------------
+def fig14(res, out):
+    path = os.path.join(res, "scaling_large.csv")
+    if not os.path.exists(path):
+        return
+    from scaling_fit import fit_exponent
+    d = pd.read_csv(path)
+    d = d[d.t == d.t.min()]
+    fig, axes = plt.subplots(1, 3, figsize=(13.4, 4.4), gridspec_kw=dict(wspace=0.3))
+    kinds = [("synthetic", "thinned Delaunay networks", NAVY, "o"), ("real", "OpenStreetMap networks", ORANGE, "s")]
+    ax = axes[0]
+    for kind, lab, colr, mk in kinds:
+        g = d[d.kind == kind].sort_values("edges")
+        if len(g) < 4:
+            continue
+        slope, lo, hi = fit_exponent(g.edges, g.seconds)
+        ax.loglog(g.edges, g.seconds, mk, color=colr, ms=7, alpha=0.9, label=f"{lab}: edges^{slope:.2f} ({lo:.2f} to {hi:.2f})")
+        xs = np.array([g.edges.min(), g.edges.max()])
+        ax.loglog(xs, np.exp(np.polyval(np.polyfit(np.log(g.edges), np.log(g.seconds), 1), np.log(xs))), "-", color=colr, lw=1.4, alpha=0.7)
+    xs = np.array([d.edges.min(), d.edges.max()])
+    ref = d.seconds.iloc[d.edges.argmin()] * (xs / d.edges.min())
+    ax.loglog(xs, ref, ":", color=GREY, lw=1.4, label="linear reference")
+    ax.set_xlabel("edges")
+    ax.set_ylabel("construction time (s)")
+    ax.legend(fontsize=7.8, loc="upper left")
+    ax.set_title(f"Time against size (t = {d.t.min():g})", fontsize=10.5, fontweight="bold")
+    _panel_label(ax, "a")
+    ax = axes[1]
+    for kind, lab, colr, mk in kinds:
+        g = d[d.kind == kind].sort_values("edges")
+        if len(g):
+            ax.semilogx(g.edges, g.settled_per_probe, "-" + mk, color=colr, ms=6, lw=1.6)
+    ax.set_ylim(0, max(10, d.settled_per_probe.max() * 1.3))
+    ax.set_xlabel("edges")
+    ax.set_ylabel("nodes settled per probe")
+    ax.set_title("Work per probe", fontsize=10.5, fontweight="bold")
+    _panel_label(ax, "b")
+    ax = axes[2]
+    for kind, lab, colr, mk in kinds:
+        g = d[d.kind == kind].sort_values("edges")
+        if len(g):
+            ax.semilogx(g.edges, g.probes_per_edge, "-" + mk, color=colr, ms=6, lw=1.6)
+    ax.set_ylim(0, max(2.0, d.probes_per_edge.max() * 1.3))
+    ax.set_xlabel("edges")
+    ax.set_ylabel("probes per edge")
+    ax.set_title("Probes per edge", fontsize=10.5, fontweight="bold")
+    _panel_label(ax, "c")
+    fig.suptitle("Scaling of the construction: time, and the machine-independent work behind it", fontsize=12, fontweight="bold", y=1.03)
+    _save(fig, out, "fig14_scaling_large")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--results-dir", default=os.path.join(ROOT, "results", "benchmarks"))
@@ -410,6 +464,7 @@ def main():
     fig11(a.results_dir, a.out_dir)
     fig12(a.results_dir, a.out_dir)
     fig13(a.results_dir, a.out_dir)
+    fig14(a.results_dir, a.out_dir)
 
 
 if __name__ == "__main__":

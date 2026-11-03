@@ -23,6 +23,8 @@ import sys
 
 import pandas as pd
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 BEN = os.path.join(ROOT, "results", "benchmarks")
 README = os.path.join(ROOT, "README.md")
@@ -169,6 +171,27 @@ def table_optimality():
             "Source: `results/benchmarks/optimality_gap_raw.csv` (`python benchmarks/optimality_gap.py`).")
 
 
+def _scaling_claim_rows():
+    res = _scaling_groups()
+    if res is None:
+        return []
+    d, groups = res
+    parts = []
+    for G in groups:
+        g = G["g"]
+        parts.append(f"{G['kind']}: time ~ edges^{G['slope']:.2f} (95% interval {G['lo']:.2f} to {G['hi']:.2f}) from {int(g.edges.min()):,} to {int(g.edges.max()):,} edges")
+    spp = d.settled_per_probe
+    if max(G["hi"] for G in groups) <= 1.2:
+        verdict = "consistent with near-linear growth"
+    elif min(G["lo"] for G in groups) > 1.2:
+        verdict = "growth is super-linear in the measured range"
+    else:
+        verdict = "the interval is too wide to decide between near-linear and super-linear growth"
+    return [["The construction scales to large networks",
+             "; ".join(parts) + f"; nodes settled per probe stay between {spp.min():.1f} and {spp.max():.1f}; {verdict}",
+             "`results/benchmarks/scaling_large.csv`"]]
+
+
 def table_claims():
     ls = pd.read_csv(os.path.join(BEN, "large_scale_3500m.csv"))
     th = js("theorem1_summary.json")
@@ -206,6 +229,7 @@ def table_claims():
          f"**partially supported:** smaller on average ({ev[ev.t == 3.0].ours_vs_union_edge_ratio.iloc[0]:.2f}x at t = 3 on random digraphs; "
          f"{saved.min():.1f} to {saved.max():.1f} points of edges on the sensor graphs) but larger in {more} of {len(raw)} random instances",
          "`results/benchmarks/theorem1_raw.csv`, `theorem1_edges_vs_union_baseline.csv`"],
+        *_scaling_claim_rows(),
         ["Strong sparsification of road networks",
          f"**not supported:** {r15.min():.1f}% to {r15.max():.1f}% of the edges are kept at t = 1.5 in the {cities} cities",
          "`results/benchmarks/large_scale_3500m.csv`"],
@@ -213,7 +237,39 @@ def table_claims():
     return md(["Claim", "Evidence", "File"], rows)
 
 
-RENDERERS = {"literature": table_literature, "retention": table_retention, "large_t": table_large_t, "optimality": table_optimality, "claims": table_claims}
+def _scaling_groups():
+    path = os.path.join(BEN, "scaling_large.csv")
+    if not os.path.exists(path):
+        return None
+    from scaling_fit import fit_exponent
+    d = pd.read_csv(path)
+    d = d[d.t == d.t.min()] if d.t.nunique() > 1 else d
+    out = []
+    for kind, g in d.groupby("kind", sort=False):
+        g = g.sort_values("edges")
+        assert len(g) >= 4, f"too few {kind} networks for a fit"
+        slope, lo, hi = fit_exponent(g.edges, g.seconds)
+        out.append(dict(kind=kind, g=g, slope=slope, lo=lo, hi=hi))
+    return d, out
+
+
+def table_scaling():
+    res = _scaling_groups()
+    if res is None:
+        return "The scaling study has not been run yet: `python benchmarks/scaling_large.py` (see the module docstring)."
+    d, groups = res
+    rows = []
+    for G in groups:
+        g = G["g"]
+        rows.append([G["kind"] + (" (thinned Delaunay)" if G["kind"] == "synthetic" else " (OpenStreetMap)"), len(g), f"{int(g.edges.min()):,} to {int(g.edges.max()):,}",
+                     f"{g.seconds.iloc[-1]:.1f} s at {int(g.edges.iloc[-1]):,} edges", f"{G['slope']:.2f} ({G['lo']:.2f} to {G['hi']:.2f})",
+                     f"{g.settled_per_probe.min():.1f} to {g.settled_per_probe.max():.1f}", f"{g.probes_per_edge.min():.2f} to {g.probes_per_edge.max():.2f}"])
+    return (md(["Networks", "Runs", "Edges", "Largest run", "Time exponent (95% bootstrap interval)", "Nodes settled per probe", "Probes per edge"], rows) +
+            f"\n\nThe exponent is the slope of log time on log edges at t = {d.t.min():g}; settled nodes and probes are counted by a replica that is checked against the library on every row. "
+            "Source: `results/benchmarks/scaling_large.csv` (`python benchmarks/scaling_large.py`).")
+
+
+RENDERERS = {"literature": table_literature, "retention": table_retention, "large_t": table_large_t, "optimality": table_optimality, "claims": table_claims, "scaling": table_scaling}
 
 
 def render(text):
