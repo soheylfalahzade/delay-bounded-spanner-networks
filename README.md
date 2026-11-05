@@ -530,7 +530,7 @@ If Overpass/OSMnx is unreachable, the pipeline transparently falls back to the d
 - **Construct:** the congestion model on the street networks is parametric, not fitted to street-level speeds; only its hourly shape is compared with measured speeds, and only on freeway sensor networks and, where available, on street data (section 5h).
 - **Internal:** the certificate is exact for the 24 grid hours; between the hours it is guaranteed only by the continuous-time variants of section 5f. Random seeds, origin-destination samples and the exhaustive instances are fixed and listed with the results.
 - **External:** twelve cities, one radius for the main tables and one larger radius for three-value sweeps; random digraphs for the exact optimum are small and are not road-like.
-- **Statistical:** tests across cities have low power; no result is presented as a general law.
+- **Statistical:** tests across cities have low power; no result is presented as a general law. The scaling exponent for real networks pools rows from four cities, and its bootstrap interval treats the rows as independent although rows of one city come from the same street network and the larger radii contain the smaller ones; the interval is therefore likely too narrow.
 
 ## 8. Known limitations
 
