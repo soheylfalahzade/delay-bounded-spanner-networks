@@ -188,7 +188,7 @@ def _scaling_claim_rows():
     else:
         verdict = "the interval is too wide to decide between near-linear and super-linear growth"
     return [["The construction scales to large networks",
-             "; ".join(parts) + f"; nodes settled per probe stay between {spp.min():.1f} and {spp.max():.1f}; {verdict}",
+             "; ".join(parts) + f"; nodes settled per probe range from {spp.min():.1f} to {spp.max():.1f}; {verdict}",
              "`results/benchmarks/scaling_large.csv`"]]
 
 

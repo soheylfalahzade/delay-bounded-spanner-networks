@@ -424,14 +424,15 @@ def fig14(res, out):
     ax.loglog(xs, ref, ":", color=GREY, lw=1.4, label="linear reference")
     ax.set_xlabel("edges")
     ax.set_ylabel("construction time (s)")
-    ax.legend(fontsize=7.8, loc="upper left")
+    ax.set_ylim(top=ax.get_ylim()[1] * 40)  # head-room so the legend does not cover data
+    ax.legend(fontsize=7.2, loc="upper left")
     ax.set_title(f"Time against size (t = {d.t.min():g})", fontsize=10.5, fontweight="bold")
     _panel_label(ax, "a")
     ax = axes[1]
     for kind, lab, colr, mk in kinds:
         g = d[d.kind == kind].sort_values("edges")
         if len(g):
-            ax.semilogx(g.edges, g.settled_per_probe, "-" + mk, color=colr, ms=6, lw=1.6)
+            ax.semilogx(g.edges, g.settled_per_probe, ("-" if kind == "synthetic" else "") + mk, color=colr, ms=6, lw=1.6)
     ax.set_ylim(0, max(10, d.settled_per_probe.max() * 1.3))
     ax.set_xlabel("edges")
     ax.set_ylabel("nodes settled per probe")
@@ -441,7 +442,7 @@ def fig14(res, out):
     for kind, lab, colr, mk in kinds:
         g = d[d.kind == kind].sort_values("edges")
         if len(g):
-            ax.semilogx(g.edges, g.probes_per_edge, "-" + mk, color=colr, ms=6, lw=1.6)
+            ax.semilogx(g.edges, g.probes_per_edge, ("-" if kind == "synthetic" else "") + mk, color=colr, ms=6, lw=1.6)
     ax.set_ylim(0, max(2.0, d.probes_per_edge.max() * 1.3))
     ax.set_xlabel("edges")
     ax.set_ylabel("probes per edge")
