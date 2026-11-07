@@ -19,3 +19,14 @@
 | 13 | C. Demetrescu, A.V. Goldberg, D.S. Johnson (eds.). *The Shortest Path Problem: Ninth DIMACS Implementation Challenge.* | DIMACS Series in Discrete Mathematics and Theoretical Computer Science 74, AMS, 2009, doi:10.1090/dimacs/074 | - | Standard static road-network instances (`dimacs`) |
 
 Implementation cross-check available in NetworkX: `networkx.algorithms.sparsifiers.spanner` implements Baswana-Sen (documented reference: RSA 30(4):532-563, 2007).
+
+## Additional references (added with README 5l-5m; metadata not yet checked against publisher records)
+
+| # | Reference | Confirmed from | Still to confirm | Role in this repository |
+|---|---|---|---|---|
+| 15 | A. Filtser, S. Solomon. *The Greedy Spanner is Existentially Optimal.* | arXiv:1605.06852 (preliminary version PODC 2016; SICOMP 2020 according to the arXiv record) | SICOMP volume, issue and pages; exact statement and number of the lemma that the only t-spanner of a greedy t-spanner is itself | Related work; forced edges vs greedy |
+| 16 | H. Le, S. Solomon. *Truly Optimal Euclidean Spanners.* | FOCS 2019 proceedings listing | Pages, DOI | Related work |
+| 17 | H. Le, S. Solomon, C. Than, C. D. Tóth, T. Zhang. *Towards Instance-Optimal Euclidean Spanners.* | arXiv listing (authors, title) | Venue, identifier | Instance optimality of greedy fails for Euclidean point sets |
+| 18 | Casteigts, Peters, Schoeters (see row 7) | see row 7 | JCSS volume and pages | Temporal spanners (contrast) |
+| - | M. A. Abam, M. de Berg, M. Farshi, J. Gudmundsson. *Region-Fault Tolerant Geometric Spanners.* | DCG 41(4):556-582, 2009 (README reference 1) | Check the formal definition quoted in README 5l against the paper's text (reference graph = complete graph minus F) | Definition used in 5l |
+

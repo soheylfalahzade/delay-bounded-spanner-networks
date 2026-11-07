@@ -1,0 +1,109 @@
+dataset,city,t,retention_pct,forced_lower_bound_pct,removable_slack_pct,removed_pct,capture
+12 OSM city cores (1.5 km),Yazd,1.5,98.281,98.207,1.793,1.719,0.9587
+12 OSM city cores (1.5 km),Yazd,2.0,96.283,95.284,4.716,3.717,0.7882
+12 OSM city cores (1.5 km),Yazd,3.0,93.418,90.259,9.741,6.582,0.6757
+12 OSM city cores (1.5 km),Yazd,5.0,91.037,81.751,18.249,8.963,0.4912
+12 OSM city cores (1.5 km),Yazd,7.0,89.818,74.831,25.169,10.182,0.4045
+12 OSM city cores (1.5 km),Yazd,10.0,88.922,67.014,32.986,11.078,0.3358
+12 OSM city cores (1.5 km),Tehran,1.5,97.688,97.539,2.461,2.312,0.9395
+12 OSM city cores (1.5 km),Tehran,2.0,95.824,94.656,5.344,4.176,0.7814
+12 OSM city cores (1.5 km),Tehran,3.0,93.363,89.709,10.291,6.637,0.6449
+12 OSM city cores (1.5 km),Tehran,5.0,91.201,83.296,16.704,8.799,0.5268
+12 OSM city cores (1.5 km),Tehran,7.0,90.007,78.623,21.377,9.993,0.4675
+12 OSM city cores (1.5 km),Tehran,10.0,89.038,73.826,26.174,10.962,0.4188
+12 OSM city cores (1.5 km),Isfahan,1.5,98.795,98.767,1.233,1.205,0.9773
+12 OSM city cores (1.5 km),Isfahan,2.0,98.247,98.028,1.972,1.753,0.8889
+12 OSM city cores (1.5 km),Isfahan,3.0,97.371,96.165,3.835,2.629,0.6855
+12 OSM city cores (1.5 km),Isfahan,5.0,96.453,92.892,7.108,3.547,0.499
+12 OSM city cores (1.5 km),Isfahan,7.0,96.001,90.742,9.258,3.999,0.432
+12 OSM city cores (1.5 km),Isfahan,10.0,95.508,87.483,12.517,4.492,0.3589
+12 OSM city cores (1.5 km),Shiraz,1.5,96.302,95.733,4.267,3.698,0.8667
+12 OSM city cores (1.5 km),Shiraz,2.0,93.243,90.944,9.056,6.757,0.7461
+12 OSM city cores (1.5 km),Shiraz,3.0,90.422,85.491,14.509,9.578,0.6601
+12 OSM city cores (1.5 km),Shiraz,5.0,88.288,78.853,21.147,11.712,0.5538
+12 OSM city cores (1.5 km),Shiraz,7.0,87.103,72.854,27.146,12.897,0.4751
+12 OSM city cores (1.5 km),Shiraz,10.0,86.581,67.165,32.835,13.419,0.4087
+12 OSM city cores (1.5 km),Mashhad,1.5,95.148,94.205,5.795,4.852,0.8373
+12 OSM city cores (1.5 km),Mashhad,2.0,88.544,83.659,16.341,11.456,0.7011
+12 OSM city cores (1.5 km),Mashhad,3.0,81.098,71.125,28.875,18.902,0.6546
+12 OSM city cores (1.5 km),Mashhad,5.0,76.853,58.053,41.947,23.147,0.5518
+12 OSM city cores (1.5 km),Mashhad,7.0,75.067,46.799,53.201,24.933,0.4687
+12 OSM city cores (1.5 km),Mashhad,10.0,73.888,38.241,61.759,26.112,0.4228
+12 OSM city cores (1.5 km),Qom,1.5,97.356,97.251,2.749,2.644,0.9618
+12 OSM city cores (1.5 km),Qom,2.0,93.789,92.048,7.952,6.211,0.7811
+12 OSM city cores (1.5 km),Qom,3.0,88.838,83.256,16.744,11.162,0.6666
+12 OSM city cores (1.5 km),Qom,5.0,86.173,71.758,28.242,13.827,0.4896
+12 OSM city cores (1.5 km),Qom,7.0,84.725,64.079,35.921,15.275,0.4252
+12 OSM city cores (1.5 km),Qom,10.0,84.033,57.365,42.635,15.967,0.3745
+12 OSM city cores (1.5 km),Barcelona,1.5,96.463,96.141,3.859,3.537,0.9166
+12 OSM city cores (1.5 km),Barcelona,2.0,95.563,94.148,5.852,4.437,0.7582
+12 OSM city cores (1.5 km),Barcelona,3.0,91.961,86.624,13.376,8.039,0.601
+12 OSM city cores (1.5 km),Barcelona,5.0,87.91,73.376,26.624,12.09,0.4541
+12 OSM city cores (1.5 km),Barcelona,7.0,85.916,64.373,35.627,14.084,0.3953
+12 OSM city cores (1.5 km),Barcelona,10.0,84.437,56.72,43.28,15.563,0.3596
+12 OSM city cores (1.5 km),Manhattan,1.5,94.144,93.874,6.126,5.856,0.9559
+12 OSM city cores (1.5 km),Manhattan,2.0,90.09,88.649,11.351,9.91,0.8731
+12 OSM city cores (1.5 km),Manhattan,3.0,84.324,75.946,24.054,15.676,0.6517
+12 OSM city cores (1.5 km),Manhattan,5.0,79.099,62.703,37.297,20.901,0.5604
+12 OSM city cores (1.5 km),Manhattan,7.0,76.216,55.135,44.865,23.784,0.5301
+12 OSM city cores (1.5 km),Manhattan,10.0,73.694,47.748,52.252,26.306,0.5034
+12 OSM city cores (1.5 km),Amsterdam,1.5,93.804,92.118,7.882,6.196,0.7861
+12 OSM city cores (1.5 km),Amsterdam,2.0,91.373,86.627,13.373,8.627,0.6451
+12 OSM city cores (1.5 km),Amsterdam,3.0,86.706,78.471,21.529,13.294,0.6175
+12 OSM city cores (1.5 km),Amsterdam,5.0,84.157,70.235,29.765,15.843,0.5323
+12 OSM city cores (1.5 km),Amsterdam,7.0,82.824,63.765,36.235,17.176,0.474
+12 OSM city cores (1.5 km),Amsterdam,10.0,82.235,56.196,43.804,17.765,0.4056
+12 OSM city cores (1.5 km),Tokyo,1.5,95.435,95.248,4.752,4.565,0.9606
+12 OSM city cores (1.5 km),Tokyo,2.0,91.778,90.336,9.664,8.222,0.8508
+12 OSM city cores (1.5 km),Tokyo,3.0,86.332,77.977,22.023,13.668,0.6206
+12 OSM city cores (1.5 km),Tokyo,5.0,81.287,59.877,40.123,18.713,0.4664
+12 OSM city cores (1.5 km),Tokyo,7.0,79.151,49.386,50.614,20.849,0.4119
+12 OSM city cores (1.5 km),Tokyo,10.0,77.87,39.188,60.812,22.13,0.3639
+12 OSM city cores (1.5 km),Cairo,1.5,97.619,97.481,2.519,2.381,0.9452
+12 OSM city cores (1.5 km),Cairo,2.0,95.084,94.049,5.951,4.916,0.8261
+12 OSM city cores (1.5 km),Cairo,3.0,88.546,80.921,19.079,11.454,0.6003
+12 OSM city cores (1.5 km),Cairo,5.0,84.44,63.602,36.398,15.56,0.4275
+12 OSM city cores (1.5 km),Cairo,7.0,82.525,53.631,46.369,17.475,0.3769
+12 OSM city cores (1.5 km),Cairo,10.0,81.094,45.972,54.028,18.906,0.3499
+12 OSM city cores (1.5 km),Melbourne,1.5,97.841,97.576,2.424,2.159,0.8907
+12 OSM city cores (1.5 km),Melbourne,2.0,95.948,94.952,5.048,4.052,0.8027
+12 OSM city cores (1.5 km),Melbourne,3.0,93.125,90.734,9.266,6.875,0.742
+12 OSM city cores (1.5 km),Melbourne,5.0,90.634,81.833,18.167,9.366,0.5156
+12 OSM city cores (1.5 km),Melbourne,7.0,89.538,72.6,27.4,10.462,0.3818
+12 OSM city cores (1.5 km),Melbourne,10.0,88.276,61.84,38.16,11.724,0.3072
+12 OSM cities (3.5 km),Isfahan,1.5,98.729,98.658,1.342,1.271,0.9471
+12 OSM cities (3.5 km),Isfahan,2.0,97.787,97.408,2.592,2.213,0.8538
+12 OSM cities (3.5 km),Isfahan,3.0,96.093,94.454,5.546,3.907,0.7045
+12 OSM cities (3.5 km),Tokyo,1.5,95.929,95.733,4.267,4.071,0.9541
+12 OSM cities (3.5 km),Tokyo,2.0,92.0,90.168,9.832,8.0,0.8137
+12 OSM cities (3.5 km),Tokyo,3.0,85.046,75.884,24.116,14.954,0.6201
+12 OSM cities (3.5 km),Manhattan,1.5,96.812,96.615,3.385,3.188,0.9418
+12 OSM cities (3.5 km),Manhattan,2.0,92.585,89.773,10.227,7.415,0.725
+12 OSM cities (3.5 km),Manhattan,3.0,86.513,77.521,22.479,13.487,0.6
+12 OSM cities (3.5 km),Mashhad,1.5,96.22,95.575,4.425,3.78,0.8542
+12 OSM cities (3.5 km),Mashhad,2.0,91.45,88.128,11.872,8.55,0.7202
+12 OSM cities (3.5 km),Mashhad,3.0,85.361,77.741,22.259,14.639,0.6577
+12 OSM cities (3.5 km),Qom,1.5,96.177,95.462,4.538,3.823,0.8424
+12 OSM cities (3.5 km),Qom,2.0,91.112,87.897,12.103,8.888,0.7344
+12 OSM cities (3.5 km),Qom,3.0,85.561,78.455,21.545,14.439,0.6702
+12 OSM cities (3.5 km),Tehran,1.5,98.114,97.771,2.229,1.886,0.8461
+12 OSM cities (3.5 km),Tehran,2.0,96.418,95.061,4.939,3.582,0.7252
+12 OSM cities (3.5 km),Tehran,3.0,93.868,90.393,9.607,6.132,0.6383
+12 OSM cities (3.5 km),Shiraz,1.5,97.12,96.613,3.387,2.88,0.8503
+12 OSM cities (3.5 km),Shiraz,2.0,94.663,92.912,7.088,5.337,0.753
+12 OSM cities (3.5 km),Shiraz,3.0,91.726,88.03,11.97,8.274,0.6912
+12 OSM cities (3.5 km),Yazd,1.5,97.747,97.412,2.588,2.253,0.8706
+12 OSM cities (3.5 km),Yazd,2.0,95.25,93.875,6.125,4.75,0.7755
+12 OSM cities (3.5 km),Yazd,3.0,91.591,88.024,11.976,8.409,0.7022
+12 OSM cities (3.5 km),Melbourne,1.5,97.248,96.867,3.133,2.752,0.8784
+12 OSM cities (3.5 km),Melbourne,2.0,94.503,93.019,6.981,5.497,0.7874
+12 OSM cities (3.5 km),Melbourne,3.0,90.181,85.985,14.015,9.819,0.7006
+12 OSM cities (3.5 km),Cairo,1.5,97.761,97.511,2.489,2.239,0.8996
+12 OSM cities (3.5 km),Cairo,2.0,94.01,91.741,8.259,5.99,0.7253
+12 OSM cities (3.5 km),Cairo,3.0,87.823,80.664,19.336,12.177,0.6298
+12 OSM cities (3.5 km),Barcelona,1.5,97.678,97.515,2.485,2.322,0.9344
+12 OSM cities (3.5 km),Barcelona,2.0,95.904,94.959,5.041,4.096,0.8125
+12 OSM cities (3.5 km),Barcelona,3.0,92.544,88.53,11.47,7.456,0.65
+12 OSM cities (3.5 km),Amsterdam,1.5,94.16,93.112,6.888,5.84,0.8479
+12 OSM cities (3.5 km),Amsterdam,2.0,90.972,87.762,12.238,9.028,0.7377
+12 OSM cities (3.5 km),Amsterdam,3.0,86.699,79.555,20.445,13.301,0.6506

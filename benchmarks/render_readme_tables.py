@@ -141,9 +141,10 @@ def table_large_t():
         f"- Retention stays above {int(lo3)}% for every city up to t = 3, and above {int(lo10)}% up to t = {tmax_t:g}; retention falls to 90% or below "
         f"at t = {hit[tmin]:g} ({tmin}) to t = {hit[tmax]:g} ({tmax}); " +
         ", ".join(f"{c} stays above {int(piv.loc[c].min())}% through t = {tmax_t:g}" for c in flat) + ".",
-        f"- Across the {n} cities, retention correlates strongly with the share of arcs that have no alternative directed path "
-        f"(bridge share; Spearman rho = {br.spearman_rho.min():.2f}-{br.spearman_rho.max():.2f} for t >= 2, BH-adjusted p <= {math.ceil(br.p_BH.max() * 1000) / 1000:.3f}). "
-        "This is largely structural: such arcs are forced for every t, so the share is itself a lower bound on retention.",
+        f"- Across the {n} cities, retention correlates strongly with the share of arcs that have no detour within {tmax_t:g} times their own travel time "
+        f"(`bridge_pct`, an upper bound on the share of true bridges, i.e. arcs with no alternative directed path at all; "
+        f"Spearman rho = {br.spearman_rho.min():.2f}-{br.spearman_rho.max():.2f} for t >= 2, BH-adjusted p <= {math.ceil(br.p_BH.max() * 1000) / 1000:.3f}). "
+        f"This is largely structural: such arcs are forced for every t up to {tmax_t:g}, so the share is itself a lower bound on retention.",
         f"- None of the geometric morphology descriptors (orientation entropy, circuity, mean degree, edge-length CV) is significant after "
         f"Benjamini-Hochberg correction over {len(C)} tests (n = {int(C.n.iloc[0])} cities); the study has low power and reports no morphology effect.",
         f"- The gap between greedy retention and the forced bound grows with t ({g.gap_pct[tmax_t]:.1f} points at t = {tmax_t:g}). "
@@ -269,7 +270,20 @@ def table_scaling():
             "Source: `results/benchmarks/scaling_large.csv` (`python benchmarks/scaling_large.py`).")
 
 
-RENDERERS = {"literature": table_literature, "retention": table_retention, "large_t": table_large_t, "optimality": table_optimality, "claims": table_claims, "scaling": table_scaling}
+def table_slack():
+    S = pd.read_csv(os.path.join(BEN, "slack_capture.csv"))
+    assert (S.removed_pct <= S.removable_slack_pct + 1e-6).all(), "removed more than the forced bound allows"
+    rows = []
+    for ds in ["12 OSM city cores (1.5 km)", "12 OSM cities (3.5 km)"]:
+        d = S[S.dataset == ds]
+        for t, g in d.groupby("t"):
+            rows.append([ds, f"{t:g}", f"{g.removable_slack_pct.mean():.1f}", f"{g.removed_pct.mean():.1f}",
+                         f"{100 * g.capture.mean():.0f}% ({100 * g.capture.min():.0f}-{100 * g.capture.max():.0f}%)"])
+    return md(["Networks", "t", "removable slack, 100 - forced bound (%)", "removed by the construction (%)",
+               "share of the slack removed: mean (range over cities)"], rows)
+
+
+RENDERERS = {"literature": table_literature, "retention": table_retention, "large_t": table_large_t, "slack": table_slack, "optimality": table_optimality, "claims": table_claims, "scaling": table_scaling}
 
 
 def render(text):

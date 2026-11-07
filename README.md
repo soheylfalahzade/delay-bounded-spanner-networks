@@ -49,6 +49,8 @@ $$\forall\, u, v \in V,\ \ \forall\, \tau \in \{0,\dots,23\}:\qquad \mathrm{dist
 >
 > *Proof.* Fix $\tau$; $w(\cdot,\tau)$ is a static, non-negative weighting, so concatenating the edge-wise invariant along a $\tau$-optimal path and applying the triangle inequality in $H_\tau$ gives the all-pairs bound, independently for every $\tau$. $\blacksquare$
 
+*Status.* This is the standard edge-wise argument for graph spanners (compare Althöfer et al. [6]); it is stated here because it holds hour by hour on directed graphs, which makes the certificate exact and cheap to check. It is not presented as a new theorem. Theorem 2 (section 5c) is equally elementary: the same detour test underlies the fact that a greedy spanner has no proper t-spanner of itself [15]. What this repository adds is the measurement of the forced share on real road networks, by hour (section 5m) and under region faults (section 5l).
+
 This collapses $|V|^2 \cdot 24$ pairwise constraints into $|E| \cdot 24$ *local* certificates, each decidable by a Dijkstra search pruned to the ball of radius $t \cdot w(e,\tau)$ — the diagram below shows the full pipeline this enables, and the animation under §2 shows the certificate decision actually running.
 
 ```mermaid
@@ -264,7 +266,7 @@ Forced-edge lower bound (Theorem 2, [`docs/THEOREM_FORCED_EDGES.md`](docs/THEORE
 | 10.0 | 58.2 | 83.8 | 25.6 |
 
 - Retention stays above 81% for every city up to t = 3, and above 73% up to t = 10; retention falls to 90% or below at t = 2 (Mashhad) to t = 10 (Tehran); Isfahan stays above 95% through t = 10.
-- Across the 12 cities, retention correlates strongly with the share of arcs that have no alternative directed path (bridge share; Spearman rho = 0.76-0.95 for t >= 2, BH-adjusted p <= 0.043). This is largely structural: such arcs are forced for every t, so the share is itself a lower bound on retention.
+- Across the 12 cities, retention correlates strongly with the share of arcs that have no detour within 10 times their own travel time (`bridge_pct`, an upper bound on the share of true bridges, i.e. arcs with no alternative directed path at all; Spearman rho = 0.76-0.95 for t >= 2, BH-adjusted p <= 0.043). This is largely structural: such arcs are forced for every t up to 10, so the share is itself a lower bound on retention.
 - None of the geometric morphology descriptors (orientation entropy, circuity, mean degree, edge-length CV) is significant after Benjamini-Hochberg correction over 84 tests (n = 12 cities); the study has low power and reports no morphology effect.
 - The gap between greedy retention and the forced bound grows with t (25.6 points at t = 10). The bound is not claimed to be tight, so no optimality claim is made for the construction.
 <!-- END:large_t -->
@@ -272,6 +274,26 @@ Forced-edge lower bound (Theorem 2, [`docs/THEOREM_FORCED_EDGES.md`](docs/THEORE
 ```bash
 python benchmarks/retention_morphology.py
 ```
+
+### Slack captured
+
+Because the forced share is close to 100% at small t, retention is close to the bound for any construction, including one that keeps every edge (retention 100% is within `100 - forced` points of the bound). The gap to the bound is therefore a weak measure at small t. A more informative quantity is the share of the *removable slack* (`100 - forced bound`) that the construction actually removes: 100% would mean it removes every edge that the bound allows to be removed, 0% that it removes nothing. The slack is an upper bound on what any edge-subset spanner can remove (the removable edges need not all be removable together), so this share is a lower bound on the fraction of the best possible removal that the construction achieves, when the forced bound is the binding limit. It is computed from the files already in `results/benchmarks/` by `benchmarks/slack_capture.py`.
+
+<!-- BEGIN:slack -->
+| Networks | t | removable slack, 100 - forced bound (%) | removed by the construction (%) | share of the slack removed: mean (range over cities) |
+|---|---|---|---|---|
+| 12 OSM city cores (1.5 km) | 1.5 | 3.8 | 3.4 | 92% (79-98%) |
+| 12 OSM city cores (1.5 km) | 2 | 8.1 | 6.2 | 79% (65-89%) |
+| 12 OSM city cores (1.5 km) | 3 | 16.1 | 10.4 | 65% (60-74%) |
+| 12 OSM city cores (1.5 km) | 5 | 26.8 | 13.5 | 51% (43-56%) |
+| 12 OSM city cores (1.5 km) | 7 | 34.4 | 15.1 | 44% (38-53%) |
+| 12 OSM city cores (1.5 km) | 10 | 41.8 | 16.2 | 38% (31-50%) |
+| 12 OSM cities (3.5 km) | 1.5 | 3.4 | 3.0 | 89% (84-95%) |
+| 12 OSM cities (3.5 km) | 2 | 8.1 | 6.1 | 76% (72-85%) |
+| 12 OSM cities (3.5 km) | 3 | 16.2 | 10.6 | 66% (60-70%) |
+<!-- END:slack -->
+
+The share removed falls as t grows, in line with the growing gap in the table above: at large t the forced bound is far from what the greedy construction reaches, and the exact-optimum study in section 5j (small random instances only) shows that the greedy excess is also larger there.
 
 ---
 
@@ -467,6 +489,10 @@ python run_spanner_benchmark.py                    # full run: focus city + 12-c
 python verify_results.py                           # independent check of what was just produced
 python benchmarks/optimality_gap.py --instances 600 --max-n 9 --max-m 26 --seed 1   # exact optimum on small instances (resumable)
 python benchmarks/scaling_large.py --synthetic --sizes 1000 3000 10000 30000 100000 300000 1000000 --t 2   # scaling study (resumable)
+python benchmarks/slack_capture.py                                             # share of the removable slack removed (reads existing results)
+python benchmarks/forced_by_hour.py --t 1.5 2 3                                # forced edges by hour (section 5m)
+python benchmarks/region_fault.py --t 2                                        # region faults, G-F vs H-F (section 5l)
+python scripts/update_readme_new_sections.py                                   # write sections 5l and 5m from the result files
 
 python run_spanner_benchmark.py --quick             # fast smoke test (stratified Iran + international)
 python run_spanner_benchmark.py --synthetic         # force offline mode everywhere
@@ -490,7 +516,7 @@ If Overpass/OSMnx is unreachable, the pipeline transparently falls back to the d
 │   └── test_congestion_shape.py   # unit tests + negative controls for the congestion-shape validator
 ├── tools/
 │   ├── make_algorithm_animation.py  # regenerates assets/algorithm_demo.gif from the real algorithm
-│   └── validate_congestion_shape.py # shape-only check of the congestion model vs measured NYC DOT speeds (not yet run: data unreachable)
+│   └── validate_congestion_shape.py # shape-only check of the congestion model vs measured NYC DOT speeds (results in section 5h)
 ├── assets/
 │   └── algorithm_demo.gif         # illustrative only — not a benchmark result, feeds no number in this README
 ├── .github/workflows/ci.yml       # unit tests + smoke run + verification, on every push
@@ -558,6 +584,10 @@ If Overpass/OSMnx is unreachable, the pipeline transparently falls back to the d
 
 **Weighted point sets.** Abam et al. construct spanners for point sets with weights [5], whereas we place the weights on the edges and let them vary over time.
 
+**Optimality of the greedy spanner.** Filtser and Solomon prove that the greedy spanner is existentially optimal, and that the only t-spanner of a greedy t-spanner is the spanner itself [15]; Le and Solomon give truly optimal Euclidean spanners [16]. Existential optimality is a worst-case statement over a graph family and does not bound the greedy size on a given instance; for Euclidean point sets, instance-optimality of the greedy spanner fails [17]. The forced-edge bound and the small exact-optimum study of section 5j are instance-level evidence of a different kind, and no instance-optimality claim is made for road networks.
+
+**Temporal spanners.** Spanners of temporal graphs, whose edges carry time labels and whose paths are time-respecting journeys, are studied by Casteigts, Peters and Schoeters [18]. The model here differs: the graph is fixed, edge costs vary with the hour, and the guarantee is per hourly snapshot (with the continuous-time variants of section 5f).
+
 **Time-dependent routing.** Cooke and Halsey [11] and Orda and Rom [12] established shortest-path computation when edge costs depend on time, including the FIFO property that we check empirically (`fifo_violation_rate`). Geisberger et al. [13] give contraction hierarchies, a leading speed-up for static road graphs; hierarchical road classes appear here only as a baseline.
 
 **Data.** Road networks are obtained with OSMnx [14] from OpenStreetMap.
@@ -578,6 +608,11 @@ If Overpass/OSMnx is unreachable, the pipeline transparently falls back to the d
 12. A. Orda, R. Rom. Shortest-path and minimum-delay algorithms in networks with time-dependent edge-length. *Journal of the ACM* 37(3):607–625, 1990. doi:10.1145/79147.214078
 13. R. Geisberger, P. Sanders, D. Schultes, C. Vetter. Exact routing in large road networks using contraction hierarchies. *Transportation Science* 46(3):388–404, 2012. doi:10.1287/trsc.1110.0401
 14. G. Boeing. OSMnx: New methods for acquiring, constructing, analyzing, and visualizing complex street networks. *Computers, Environment and Urban Systems* 65:126–139, 2017. doi:10.1016/j.compenvurbsys.2017.05.004
+
+15. A. Filtser, S. Solomon. The greedy spanner is existentially optimal. arXiv:1605.06852 (preliminary version: PODC 2016).
+16. H. Le, S. Solomon. Truly optimal Euclidean spanners. FOCS 2019.
+17. H. Le, S. Solomon, C. Than, C. D. Tóth, T. Zhang. Towards instance-optimal Euclidean spanners. arXiv preprint.
+18. A. Casteigts, J. G. Peters, J. Schoeters. Temporal cliques admit sparse spanners. *ICALP 2019* (LIPIcs 134); journal version doi:10.1016/j.jcss.2021.04.004.
 
 ## Data and attribution
 

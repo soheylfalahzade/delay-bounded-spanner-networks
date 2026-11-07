@@ -35,6 +35,12 @@ jobs:
       - name: Pipeline smoke test (offline, synthetic, stratified Iran + international)
         run: python run_spanner_benchmark.py --quick --synthetic
 
+      - name: Smoke tests of the forced-edge-by-hour and region-fault experiments (offline, synthetic)
+        run: |
+          python benchmarks/forced_by_hour.py --synthetic --cities Yazd --t 2
+          python benchmarks/region_fault.py --synthetic --cities Yazd --regions 4 --heldout 6
+          rm -f results/benchmarks/forced_by_hour*.csv results/benchmarks/forced_by_hour.md results/benchmarks/region_fault.*
+
       - name: Independent verification of the smoke-test results
         run: python verify_results.py
 
