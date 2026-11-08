@@ -744,6 +744,8 @@ If Overpass/OSMnx is unreachable, the pipeline transparently falls back to the d
 
 **Weighted point sets.** Abam et al. construct spanners for point sets with weights [5], whereas we place the weights on the edges and let them vary over time.
 
+A longer, source-by-source positioning (what was found, what is unchecked) is in [docs/RELATED_WORK.md](docs/RELATED_WORK.md).
+
 **Optimality of the greedy spanner.** Filtser and Solomon prove that the greedy spanner is existentially optimal, and that the only t-spanner of a greedy t-spanner is the spanner itself [15]; Le and Solomon give truly optimal Euclidean spanners [16]. Existential optimality is a worst-case statement over a graph family and does not bound the greedy size on a given instance; for Euclidean point sets, instance-optimality of the greedy spanner fails [17]. The forced-edge bound and the small exact-optimum study of section 5j are instance-level evidence of a different kind, and no instance-optimality claim is made for road networks.
 
 **Temporal spanners.** Spanners of temporal graphs, whose edges carry time labels and whose paths are time-respecting journeys, are studied by Casteigts, Peters and Schoeters [18]. The model here differs: the graph is fixed, edge costs vary with the hour, and the guarantee is per hourly snapshot (with the continuous-time variants of section 5f).

@@ -29,4 +29,10 @@ Implementation cross-check available in NetworkX: `networkx.algorithms.sparsifie
 | 17 | H. Le, S. Solomon, C. Than, C. D. Tóth, T. Zhang. *Towards Instance-Optimal Euclidean Spanners.* | arXiv listing (authors, title) | Venue, identifier | Instance optimality of greedy fails for Euclidean point sets |
 | 18 | Casteigts, Peters, Schoeters (see row 7) | see row 7 | JCSS volume and pages | Temporal spanners (contrast) |
 | - | M. A. Abam, M. de Berg, M. Farshi, J. Gudmundsson. *Region-Fault Tolerant Geometric Spanners.* | DCG 41(4):556-582, 2009 (README reference 1) | Check the formal definition quoted in README 5l against the paper's text (reference graph = complete graph minus F) | Definition used in 5l |
-
+| 19 | U. Brandes, D. Handke. *NP-completeness results for minimum planar spanners.* DMTCS 3(1):1-10, 1998 | doi:10.46298/dmtcs.257 (abstract) | none | Hardness (docs/RELATED_WORK.md, section 3) |
+| 20 | D. Bilo, G. D'Angelo, L. Guala, S. Leucci, M. Rossi. *Sparse temporal spanners with low stretch.* ESA 2022, LIPIcs 244, 19:1-19:16 | doi:10.4230/LIPIcs.ESA.2022.19 | none | Temporal spanners (contrast) |
+| 21 | Same authors. *Blackout-tolerant temporal spanners.* JCSS 141 (2024) 103495 | doi:10.1016/j.jcss.2023.103495 | none | Fault model in time (contrast) |
+| 22 | S. Chechik, M. Langberg, D. Peleg, L. Roditty. *Fault tolerant spanners for general graphs.* STOC 2009, 435-444; SICOMP 39(7):3403-3423, 2010 | publisher and library records | none | Fault tolerance, G-F convention |
+| 23 | M. Dinitz, R. Krauthgamer. *Fault-tolerant spanners: better and simpler.* PODC 2011 | arXiv:1101.5753 | PODC pages | Fault tolerance |
+| 24 | L. Roditty, M. Thorup, U. Zwick. *Roundtrip spanners and roundtrip routing in directed graphs.* ACM TALG 4(3), 2008 | ACM record | none | Directed spanners (section 5) |
+| 25 | M. Farshi, M. J. Hekmat Nasab. Experimental study of greedy spanners. *Scientia Iranica* 21 (2014) 2142-2152 | page header of the PDF | exact title | Greedy spanners in practice |
