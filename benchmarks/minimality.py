@@ -3,9 +3,13 @@
 """
 Is the delay-bounded greedy spanner edge-minimal?
 
-For a single static weighting the greedy t-spanner has no proper t-spanner inside itself (every edge is forced
-in H; Filtser and Solomon).  With hourly weights the construction orders edges by their maximum travel time, so an
-edge kept early may become redundant after later edges are added in an hour in which it was cheaper to bypass.
+For an UNDIRECTED graph with one static weighting the greedy t-spanner has no proper t-spanner inside itself (Filtser and
+Solomon): the cycle formed by a removed edge and its bypass would have been closed by its last edge only if that edge
+already had a bypass in the other direction of the same cycle.  For directed graphs that argument does not apply, because
+the cycle closed by the last arc gives a path in the wrong direction, so non-minimality is possible even with one static
+weighting; with hourly weights the construction orders arcs by their maximum travel time, so an arc kept early may also
+become redundant once later arcs are added.  Both versions are run on every network: the hourly profile, and a static
+profile (free-flow travel time at every hour).
 This script tests that directly: after the greedy construction, edges of H are examined in reverse order and an edge
 is deleted whenever H minus that edge still satisfies the exact Theorem-1 certificate for all of G at all 24 hours.
 It reports how many edges are removable and verifies the pruned spanner exactly.
@@ -77,25 +81,35 @@ def reverse_delete(G, H, t: float) -> Tuple[List[Edge], int]:
     return removed, full_checks
 
 
+def static_version(G):
+    """Same network with a constant (free-flow) profile at every hour: separates the effect of direction from the
+    effect of time variation."""
+    S = G.copy()
+    for u, v, d in S.edges(data=True):
+        S[u][v]["tt"] = [d["free_flow"]] * 24
+    return S
+
+
 def run_city(spec: Dict, ts, synthetic: bool, grid_n: int):
-    G = load_city(spec, grid_n, synthetic)
-    if G is None:
+    G0 = load_city(spec, grid_n, synthetic)
+    if G0 is None:
         return []
-    m = G.number_of_edges()
+    m = G0.number_of_edges()
     rows = []
-    for t in ts:
-        H = core.delay_bounded_greedy_spanner(G, t, show_progress=False)
-        removed, full = reverse_delete(G, H, t)
-        H2 = H.copy()
-        H2.remove_edges_from(removed)
-        assert core.temporal_stretch_certificate(G, H2, t)["certified"], "pruned spanner is not certified: bug"
-        rows.append(dict(city=spec["name"], real_osm=bool(G.graph.get("used_real_osm")), edges=m, t=t,
-                         greedy_retention_pct=100.0 * H.number_of_edges() / m,
-                         removable_edges=len(removed),
-                         removable_pct_of_spanner=100.0 * len(removed) / max(1, H.number_of_edges()),
-                         pruned_retention_pct=100.0 * H2.number_of_edges() / m,
-                         greedy_is_minimal=len(removed) == 0, full_certificate_checks=full))
-        print(f"[ok] {spec['name']} t={t}: {len(removed)} of {H.number_of_edges()} spanner edges removable")
+    for profile, G in (("hourly", G0), ("static", static_version(G0))):
+        for t in ts:
+            H = core.delay_bounded_greedy_spanner(G, t, show_progress=False)
+            removed, full = reverse_delete(G, H, t)
+            H2 = H.copy()
+            H2.remove_edges_from(removed)
+            assert core.temporal_stretch_certificate(G, H2, t)["certified"], "pruned spanner is not certified: bug"
+            rows.append(dict(city=spec["name"], real_osm=bool(G0.graph.get("used_real_osm")), profile=profile, edges=m,
+                             t=t, greedy_retention_pct=100.0 * H.number_of_edges() / m,
+                             removable_edges=len(removed),
+                             removable_pct_of_spanner=100.0 * len(removed) / max(1, H.number_of_edges()),
+                             pruned_retention_pct=100.0 * H2.number_of_edges() / m,
+                             greedy_is_minimal=len(removed) == 0, full_certificate_checks=full))
+            print(f"[ok] {spec['name']} {profile} t={t}: {len(removed)} of {H.number_of_edges()} spanner edges removable")
     return rows
 
 

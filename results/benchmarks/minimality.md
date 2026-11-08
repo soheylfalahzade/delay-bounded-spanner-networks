@@ -1,14 +1,26 @@
-| city | real_osm | edges | t | greedy_retention_pct | removable_edges | removable_pct_of_spanner | pruned_retention_pct | greedy_is_minimal | full_certificate_checks |
-|---|---|---|---|---|---|---|---|---|---|
-| Yazd | True | 6806 | 1.50 | 98.28 | 0 | 0.00 | 98.28 | True | 0 |
-| Yazd | True | 6806 | 2.00 | 96.28 | 5 | 0.08 | 96.21 | False | 5 |
-| Yazd | True | 6806 | 3.00 | 93.42 | 26 | 0.41 | 93.04 | False | 31 |
-| Isfahan | True | 7302 | 1.50 | 98.79 | 2 | 0.03 | 98.77 | False | 2 |
-| Isfahan | True | 7302 | 2.00 | 98.25 | 8 | 0.11 | 98.14 | False | 8 |
-| Isfahan | True | 7302 | 3.00 | 97.37 | 28 | 0.39 | 96.99 | False | 31 |
-| Manhattan | True | 1110 | 1.50 | 94.14 | 1 | 0.10 | 94.05 | False | 1 |
-| Manhattan | True | 1110 | 2.00 | 90.09 | 8 | 0.80 | 89.37 | False | 9 |
-| Manhattan | True | 1110 | 3.00 | 84.32 | 29 | 3.10 | 81.71 | False | 41 |
-| Tokyo | True | 3746 | 1.50 | 95.44 | 0 | 0.00 | 95.44 | True | 0 |
-| Tokyo | True | 3746 | 2.00 | 91.78 | 12 | 0.35 | 91.46 | False | 13 |
-| Tokyo | True | 3746 | 3.00 | 86.33 | 73 | 2.26 | 84.38 | False | 85 |
+| city | real_osm | profile | edges | t | greedy_retention_pct | removable_edges | removable_pct_of_spanner | pruned_retention_pct | greedy_is_minimal | full_certificate_checks |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Yazd | True | hourly | 6806 | 1.50 | 98.28 | 0 | 0.00 | 98.28 | True | 0 |
+| Yazd | True | hourly | 6806 | 2.00 | 96.28 | 5 | 0.08 | 96.21 | False | 5 |
+| Yazd | True | hourly | 6806 | 3.00 | 93.42 | 26 | 0.41 | 93.04 | False | 31 |
+| Yazd | True | static | 6806 | 1.50 | 97.83 | 0 | 0.00 | 97.83 | True | 0 |
+| Yazd | True | static | 6806 | 2.00 | 95.77 | 5 | 0.08 | 95.69 | False | 6 |
+| Yazd | True | static | 6806 | 3.00 | 92.93 | 17 | 0.27 | 92.68 | False | 21 |
+| Isfahan | True | hourly | 7302 | 1.50 | 98.79 | 2 | 0.03 | 98.77 | False | 2 |
+| Isfahan | True | hourly | 7302 | 2.00 | 98.25 | 8 | 0.11 | 98.14 | False | 8 |
+| Isfahan | True | hourly | 7302 | 3.00 | 97.37 | 28 | 0.39 | 96.99 | False | 31 |
+| Isfahan | True | static | 7302 | 1.50 | 98.56 | 2 | 0.03 | 98.53 | False | 2 |
+| Isfahan | True | static | 7302 | 2.00 | 98.14 | 10 | 0.14 | 98.00 | False | 10 |
+| Isfahan | True | static | 7302 | 3.00 | 97.18 | 31 | 0.44 | 96.75 | False | 35 |
+| Manhattan | True | hourly | 1110 | 1.50 | 94.14 | 1 | 0.10 | 94.05 | False | 1 |
+| Manhattan | True | hourly | 1110 | 2.00 | 90.09 | 8 | 0.80 | 89.37 | False | 9 |
+| Manhattan | True | hourly | 1110 | 3.00 | 84.32 | 29 | 3.10 | 81.71 | False | 41 |
+| Manhattan | True | static | 1110 | 1.50 | 89.55 | 2 | 0.20 | 89.37 | False | 2 |
+| Manhattan | True | static | 1110 | 2.00 | 85.32 | 6 | 0.63 | 84.77 | False | 7 |
+| Manhattan | True | static | 1110 | 3.00 | 81.71 | 24 | 2.65 | 79.55 | False | 36 |
+| Tokyo | True | hourly | 3746 | 1.50 | 95.44 | 0 | 0.00 | 95.44 | True | 0 |
+| Tokyo | True | hourly | 3746 | 2.00 | 91.78 | 12 | 0.35 | 91.46 | False | 13 |
+| Tokyo | True | hourly | 3746 | 3.00 | 86.33 | 73 | 2.26 | 84.38 | False | 85 |
+| Tokyo | True | static | 3746 | 1.50 | 94.74 | 0 | 0.00 | 94.74 | True | 0 |
+| Tokyo | True | static | 3746 | 2.00 | 90.66 | 15 | 0.44 | 90.26 | False | 16 |
+| Tokyo | True | static | 3746 | 3.00 | 84.84 | 84 | 2.64 | 82.59 | False | 99 |

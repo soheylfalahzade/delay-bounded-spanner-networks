@@ -5,6 +5,7 @@
 #   JOBS=3 bash scripts/run_parallel_analyses.sh          # fewer parallel jobs
 #   QUICK=1 bash scripts/run_parallel_analyses.sh         # Yazd and Isfahan only, few cities/windows (first look)
 #   SKIP_METRO=1 bash scripts/run_parallel_analyses.sh    # skip the metropolitan-scale run (largest memory/time)
+#   ONLY="directedness lightness edge_order minimality" bash scripts/run_parallel_analyses.sh   # run a subset of the jobs
 #
 # Logs: logs/<job>.log.  A job that fails is reported at the end; the README is refreshed from the jobs that succeeded.
 set -uo pipefail
@@ -22,6 +23,7 @@ fi
 rm -f logs/.failed
 run() {
   local name="$1"; shift
+  if [ -n "${ONLY:-}" ] && [[ " $ONLY " != *" $name "* ]]; then return; fi
   while [ "$(jobs -rp | wc -l)" -ge "$JOBS" ]; do sleep 2; done
   ( if "$@" > "logs/$name.log" 2>&1; then echo "[done]   $name"; else echo "[FAILED] $name (logs/$name.log)"; echo "$name" >> logs/.failed; fi ) &
 }
@@ -39,6 +41,14 @@ fi
 if [ "${SKIP_METRO:-0}" != "1" ]; then
   run metro           python benchmarks/large_scale_run.py --cities $METRO_CITIES --dist "$METRO_DIST" --t 2 --max-edges 400000
 fi
+if [ "$ADDED" = "0" ]; then
+  run directedness    python benchmarks/directedness.py --t 2 3
+  run lightness       python benchmarks/lightness.py --t 2 3
+else
+  run directedness    python benchmarks/directedness.py --t 2 3 --max-cities "$ADDED"
+  run lightness       python benchmarks/lightness.py --t 2 3 --max-cities "$ADDED"
+fi
+run edge_order        python benchmarks/edge_order.py --cities $CITIES --t 2 3 --seeds 5
 run region_fault      python benchmarks/region_fault.py --cities $CITIES --t 2 --regions "$REGIONS" --heldout "$HELDOUT"
 run forced_by_hour    python benchmarks/forced_by_hour.py --t 1.5 2 3
 wait

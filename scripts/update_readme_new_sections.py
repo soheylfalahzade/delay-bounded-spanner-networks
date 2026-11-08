@@ -103,19 +103,27 @@ The congestion profiles of the street networks are parametric (section 8), so th
 
 def minimality_section(df: pd.DataFrame) -> str:
     real_only(df, "minimality")
-    rows = [[r.city, f"{r.edges}", f"{r.t:g}", f"{r.greedy_retention_pct:.1f}", f"{r.removable_edges}",
+    df = df.copy()
+    if "profile" not in df.columns:
+        df["profile"] = "hourly"
+    rows = [[r.city, r.profile, f"{r.edges}", f"{r.t:g}", f"{r.greedy_retention_pct:.1f}", f"{r.removable_edges}",
              f"{r.removable_pct_of_spanner:.2f}", f"{r.pruned_retention_pct:.1f}"] for r in df.itertuples()]
-    table = md(["City", "Edges", "t", "Greedy retention (%)", "Removable spanner edges", "Removable (% of spanner)",
-                "Retention after pruning (%)"], rows)
+    table = md(["City", "Profile", "Arcs", "t", "Greedy retention (%)", "Removable spanner arcs",
+                "Removable (% of spanner)", "Retention after pruning (%)"], rows)
     n_min = int(df.greedy_is_minimal.astype(bool).sum())
+    bits = []
+    for prof, g in df.groupby("profile"):
+        nz = g[g.removable_edges > 0]
+        rng = f"{nz.removable_pct_of_spanner.min():.2f}% to {g.removable_pct_of_spanner.max():.2f}%" if len(nz) else "none"
+        bits.append(f"with the {prof} profile the construction is edge-minimal in {int(g.greedy_is_minimal.astype(bool).sum())} of {len(g)} (city, t) cells and the removable share of the spanner is {rng}")
     return f"""### 5n. Is the greedy spanner edge-minimal?
 
-For one static weighting the greedy spanner contains no proper t-spanner of itself [15]. With hourly weights the construction orders edges by their maximum travel time, so an edge kept early can become redundant once later edges provide a bypass in the hour that matters. `benchmarks/minimality.py` tests this: after the construction, edges of H are examined in reverse order and deleted whenever H minus the edge still satisfies the exact Theorem-1 certificate for every edge of G at all 24 hours. Every pruned spanner is re-certified exactly. (With a constant profile no edge is removable; this is checked in `tests/test_minimality.py`.)
+For an undirected graph with one static weighting, the greedy spanner has no proper t-spanner of itself [15]. The argument does not carry over to directed graphs: the cycle closed by the last arc of a removed arc's bypass gives a path in the wrong direction. So non-minimality is possible on a directed network even with one static weighting, and with hourly weights the construction also orders arcs by their maximum travel time, so an arc kept early can become redundant once later arcs provide a bypass in the hour that matters. `benchmarks/minimality.py` tests this on every network with the hourly profile and with a static profile (free-flow travel time at every hour): after the construction, arcs of H are examined in reverse order and deleted whenever H minus the arc still satisfies the exact Theorem-1 certificate for every arc of G at all 24 hours. Every pruned spanner is re-certified exactly.
 
 <!-- BEGIN:minimality -->
 {table}
 
-The construction is edge-minimal in {n_min} of {len(df)} (city, t) cells. Where it is not, {df[df.removable_edges > 0].removable_pct_of_spanner.min():.2f}% to {df.removable_pct_of_spanner.max():.2f}% of the spanner's edges can be removed by the pruning pass (largest over cells), without losing the certificate.
+Over {len(df)} (city, profile, t) cells: {'; '.join(bits)}.
 <!-- END:minimality -->
 
 """
@@ -228,6 +236,85 @@ The largest network has {int(df.edges.max())} edges.
 """
 
 
+
+def directedness_section(df: pd.DataFrame) -> str:
+    real_only(df, "directedness")
+    cp = os.path.join(BEN, "directedness_correlations.csv")
+    cor = pd.read_csv(cp) if os.path.exists(cp) else pd.DataFrame()
+    rows = []
+    for t, g in df.groupby("t"):
+        rows.append([f"{t:g}", f"{g.city.nunique()}", f"{g.one_way_pct.mean():.1f}", f"{g.forced_directed.mean():.1f}",
+                     f"{g.forced_two_way.mean():.1f}", f"{g.retention_directed.mean():.1f}",
+                     f"{g.retention_two_way.mean():.1f}", f"{g.diff_retention.mean():+.2f}"])
+    table = md(["t", "Cities", "One-way arcs (%)", "Forced, directed (%)", "Forced, two-way version (%)",
+                "Retention, directed (%)", "Retention, two-way version (%)", "Retention difference (points)"], rows)
+    if len(cor):
+        ct = md(["t", "Target", "n", "Spearman rho (one-way share)", "BH-adjusted p"],
+                [[f"{r.t:g}", r.target, f"{int(r.n)}", f"{r.spearman_rho:.2f}", f"{r.p_BH:.3f}"] for r in cor.itertuples()])
+        ctext = "\n\nRelation to the share of one-way arcs across cities:\n\n" + ct
+    else:
+        ctext = ""
+    return f"""### 5s. How much does direction matter?
+
+Each network is compared with its two-way version, in which every arc without a reverse arc gets one with the same hourly travel times; arcs that already have a reverse are unchanged. The two versions are different graphs, so percentages are of each graph's own arcs. `benchmarks/directedness.py`.
+
+<!-- BEGIN:directedness -->
+{table}{ctext}
+<!-- END:directedness -->
+
+Scope: the two-way version is a counterfactual (the same congestion on the added arcs), not a real network; the cities are a convenience sample.
+
+"""
+
+
+def lightness_section(df: pd.DataFrame) -> str:
+    real_only(df, "lightness")
+    rows = []
+    for t, g in df.groupby("t"):
+        rows.append([f"{t:g}", f"{g.city.nunique()}", f"{g.kept_count_pct.mean():.1f}", f"{g.kept_length_pct.mean():.1f}",
+                     f"{g.forced_length_pct.mean():.1f}", f"{g.lightness_graph.mean():.2f}", f"{g.lightness_spanner.mean():.2f}",
+                     f"{g.lightness_lower_bound.mean():.2f}",
+                     f"{100 * g.capture_length.mean():.0f}% ({100 * g.capture_length.min():.0f}-{100 * g.capture_length.max():.0f}%)"])
+    table = md(["t", "Cities", "Arcs kept (%)", "Street length kept (%)", "Forced street length (%)",
+                "Lightness of the network", "Lightness of the spanner", "Lightness lower bound",
+                "Share of the removable length removed: mean (range)"], rows)
+    return f"""### 5t. Total street length and lightness
+
+Street length, not the number of arcs, is what a road authority maintains. On physical street segments (a two-way street counts once; a segment is kept if any of its arcs is kept) this section reports the share of the street length kept, the lightness (kept length divided by the length of a minimum spanning tree of the segments, the standard spanner measure), and a lower bound for the length of any edge-subset spanner: the length of the segments that carry a forced arc. `benchmarks/lightness.py`.
+
+<!-- BEGIN:lightness -->
+{table}
+<!-- END:lightness -->
+
+The lower bound is a bound on edge-subset spanners, as elsewhere; the minimum spanning tree is computed on the undirected segment graph, so lightness ignores one-way restrictions.
+
+"""
+
+
+def edge_order_section(df: pd.DataFrame) -> str:
+    real_only(df, "edge_order")
+    rows = []
+    for t, g in df.groupby("t"):
+        base = g[g["order"] == "temporal_max"].groupby("city").retention_pct.mean()
+        for name, h in g.groupby("order"):
+            per_city = h.groupby("city")[["retention_pct", "pruned_retention_pct"]].mean()
+            diff = per_city.retention_pct - base.reindex(per_city.index)
+            rows.append([f"{t:g}", name, f"{per_city.index.nunique()}", f"{per_city.retention_pct.mean():.2f}",
+                         f"{diff.mean():+.2f}", f"{diff.min():+.2f} to {diff.max():+.2f}",
+                         f"{per_city.pruned_retention_pct.mean():.2f}"])
+    table = md(["t", "Order", "Cities", "Retention (%)", "Difference from temporal_max (points)",
+                "Range over cities (points)", "Retention after pruning (%)"], rows)
+    return f"""### 5u. Does the processing order matter?
+
+The greedy construction depends on the order in which arcs are examined. Six orders are compared on every network, each result certified exactly and also pruned by the reverse-delete pass of section 5n: ascending maximum travel time (default), ascending mean, a betweenness-damped order, ascending free-flow time, random (several seeds, averaged) and, as a negative control, descending maximum. `benchmarks/edge_order.py`.
+
+<!-- BEGIN:edge_order -->
+{table}
+<!-- END:edge_order -->
+
+"""
+
+
 def metro_frame():
     frames = []
     for f in sorted(glob.glob(os.path.join(BEN, "large_scale_*m.csv"))):
@@ -256,7 +343,8 @@ def render(text: str) -> str:
     jobs = [("region_fault", "region_fault.csv", region_fault_section), ("by_hour", "forced_by_hour.csv", by_hour_section),
             ("minimality", "minimality.csv", minimality_section), ("road_exact", "road_exact_raw.csv", road_exact_section),
             ("emergency", "emergency_response.csv", emergency_section), ("more_cities", "more_cities.csv", more_cities_section),
-            ("metro", None, metro_section)]
+            ("directedness", "directedness.csv", directedness_section), ("lightness", "lightness.csv", lightness_section),
+            ("edge_order", "edge_order.csv", edge_order_section), ("metro", None, metro_section)]
     for name, csv, fn in jobs:
         if name == "metro":
             frame = metro_frame()

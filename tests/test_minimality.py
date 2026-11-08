@@ -20,7 +20,8 @@ def small_city(name="Yazd"):
 
 
 class TestMinimality(unittest.TestCase):
-    def test_constant_profile_greedy_is_minimal(self):
+    def test_bidirectional_unit_grid_with_the_default_order_has_nothing_to_remove(self):
+        # an observation for this order on this graph, not a theorem: for digraphs the undirected argument does not apply
         G = unit_grid(5)
         for t in (1.5, 3.0, 4.0):
             H = core.delay_bounded_greedy_spanner(G, t, show_progress=False)
@@ -41,6 +42,13 @@ class TestMinimality(unittest.TestCase):
                 H3 = H2.copy()
                 H3.remove_edge(*e)
                 self.assertFalse(core.temporal_stretch_certificate(G, H3, t)["certified"])
+
+    def test_static_version_has_a_constant_profile(self):
+        G = small_city("Yazd")
+        S = mn.static_version(G)
+        for u, v, d in S.edges(data=True):
+            self.assertEqual(d["tt"], [d["free_flow"]] * 24)
+        self.assertEqual(S.number_of_edges(), G.number_of_edges())
 
     def test_greedy_can_be_non_minimal_with_time_varying_weights(self):
         G = small_city("Manhattan")

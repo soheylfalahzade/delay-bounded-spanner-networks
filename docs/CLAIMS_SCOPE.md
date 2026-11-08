@@ -17,7 +17,7 @@
 - Region faults (README 5l): fault tolerance is certified for the sampled family of disc faults only (Theorem 1 applied to each G-F); other regions are covered by an empirical held-out column, not by a guarantee. Faults are discs; a segment touches a disc if its stored polyline does. The forced bound over the family is a lower bound for that family only.
 - Forced edges by hour (README 5m): describes the parametric congestion model, not measured street speeds.
 - Slack captured (README 5d, subsection "Slack captured"): the share of the removable slack removed is a lower bound on the share of the best possible removal only when the forced bound is the binding limit; the exact optimum is known only for the small random instances of 5j.
-- Theorem 1 and Theorem 2 are elementary (the standard edge-wise argument; the detour test behind the greedy spanner having no proper t-spanner of itself); they are not presented as new theorems.
+- Theorem 1 and Theorem 2 are elementary (the standard edge-wise argument; the detour test behind the undirected greedy spanner having no proper t-spanner of itself); they are not presented as new theorems.
 
 **Suggested summary sentence**
 "We give an edge-wise certificate that makes a subgraph of a road network a t-spanner for every hourly snapshot of a time-varying travel-time profile (and, with a per-edge interpolation factor, for every time of day), prove that edges without a detour of ratio at most t are forced in every such spanner, and show on twelve OpenStreetMap city cores and two measured-speed sensor networks that this forced-edge bound explains why little sparsification is possible at small t."

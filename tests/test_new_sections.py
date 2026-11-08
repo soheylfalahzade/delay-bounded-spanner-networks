@@ -33,7 +33,7 @@ def bh_frame():
 
 
 def min_frame(**over):
-    row = dict(city="A", real_osm=True, edges=100, t=2.0, greedy_retention_pct=90.0, removable_edges=2,
+    row = dict(city="A", real_osm=True, profile="hourly", edges=100, t=2.0, greedy_retention_pct=90.0, removable_edges=2,
                removable_pct_of_spanner=2.2, pruned_retention_pct=88.0, greedy_is_minimal=False, full_certificate_checks=2)
     row.update(over)
     return pd.DataFrame([row, dict(row, t=3.0, removable_edges=0, removable_pct_of_spanner=0.0, greedy_is_minimal=True)])
@@ -63,7 +63,9 @@ class TestMoreSections(unittest.TestCase):
     def test_minimality_section(self):
         mod = load()
         s = mod.minimality_section(min_frame())
-        self.assertIn("edge-minimal in 1 of 2", s)
+        self.assertIn("with the hourly profile the construction is edge-minimal in 1 of 2", s)
+        old = min_frame().drop(columns=["profile"])                      # result files written before the profile column
+        self.assertIn("hourly profile", mod.minimality_section(old))
         with self.assertRaises(AssertionError):
             mod.minimality_section(min_frame(real_osm=False))
 
@@ -80,6 +82,26 @@ class TestMoreSections(unittest.TestCase):
         self.assertIn("never exceeds t", mod.emergency_section(emer_frame()))
         with self.assertRaises(AssertionError):
             mod.emergency_section(emer_frame(over_intact=0.5))
+
+    def test_directedness_lightness_edge_order_sections(self):
+        mod = load()
+        d = pd.DataFrame([dict(city=f"c{i}", source="registry", real_osm=True, arcs_directed=100, arcs_two_way=110,
+                               one_way_pct=10.0, t=2.0, forced_directed=90.0, retention_directed=92.0, capture_directed=0.8,
+                               forced_two_way=88.0, retention_two_way=91.0, capture_two_way=0.7, diff_forced=2.0,
+                               diff_retention=1.0) for i in range(3)])
+        self.assertIn("+1.00", mod.directedness_section(d))
+        with self.assertRaises(AssertionError):
+            mod.directedness_section(d.assign(real_osm=False))
+        l = pd.DataFrame([dict(city="A", source="registry", real_osm=True, t=2.0, segments=50, total_km=10.0, mst_km=4.0,
+                               kept_length_pct=90.0, kept_count_pct=91.0, forced_length_pct=85.0, lightness_graph=2.5,
+                               lightness_spanner=2.25, lightness_lower_bound=2.1, capture_length=0.66)])
+        self.assertIn("66%", mod.lightness_section(l))
+        o = pd.DataFrame([dict(city=c, real_osm=True, edges=100, t=2.0, order=n, seed=0, retention_pct=r,
+                               pruned_retention_pct=r - 1) for c in ("A", "B")
+                          for n, r in (("temporal_max", 90.0), ("random", 92.0))])
+        s = mod.edge_order_section(o)
+        self.assertIn("+2.00", s)
+        self.assertIn("+0.00", s)
 
     def test_sections_are_skipped_without_files_and_inserted_in_order(self):
         mod = load()

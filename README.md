@@ -49,7 +49,7 @@ $$\forall\, u, v \in V,\ \ \forall\, \tau \in \{0,\dots,23\}:\qquad \mathrm{dist
 >
 > *Proof.* Fix $\tau$; $w(\cdot,\tau)$ is a static, non-negative weighting, so concatenating the edge-wise invariant along a $\tau$-optimal path and applying the triangle inequality in $H_\tau$ gives the all-pairs bound, independently for every $\tau$. $\blacksquare$
 
-*Status.* This is the standard edge-wise argument for graph spanners (compare Althöfer et al. [6]); it is stated here because it holds hour by hour on directed graphs, which makes the certificate exact and cheap to check. It is not presented as a new theorem. Theorem 2 (section 5c) is equally elementary: the same detour test underlies the fact that a greedy spanner has no proper t-spanner of itself [15]. What this repository adds is the measurement of the forced share on real road networks, by hour (section 5m) and under region faults (section 5l).
+*Status.* This is the standard edge-wise argument for graph spanners (compare Althöfer et al. [6]); it is stated here because it holds hour by hour on directed graphs, which makes the certificate exact and cheap to check. It is not presented as a new theorem. Theorem 2 (section 5c) is equally elementary: the same detour test underlies the fact that, for undirected graphs, a greedy spanner has no proper t-spanner of itself [15] (the argument does not carry over to directed graphs, see section 5n). What this repository adds is the measurement of the forced share on real road networks, by hour (section 5m) and under region faults (section 5l).
 
 This collapses $|V|^2 \cdot 24$ pairwise constraints into $|E| \cdot 24$ *local* certificates, each decidable by a Dijkstra search pruned to the ball of radius $t \cdot w(e,\tau)$ — the diagram below shows the full pipeline this enables, and the animation under §2 shows the certificate decision actually running.
 
@@ -336,25 +336,37 @@ The congestion profiles of the street networks are parametric (section 8), so th
 
 ### 5n. Is the greedy spanner edge-minimal?
 
-For one static weighting the greedy spanner contains no proper t-spanner of itself [15]. With hourly weights the construction orders edges by their maximum travel time, so an edge kept early can become redundant once later edges provide a bypass in the hour that matters. `benchmarks/minimality.py` tests this: after the construction, edges of H are examined in reverse order and deleted whenever H minus the edge still satisfies the exact Theorem-1 certificate for every edge of G at all 24 hours. Every pruned spanner is re-certified exactly. (With a constant profile no edge is removable; this is checked in `tests/test_minimality.py`.)
+For an undirected graph with one static weighting, the greedy spanner has no proper t-spanner of itself [15]. The argument does not carry over to directed graphs: the cycle closed by the last arc of a removed arc's bypass gives a path in the wrong direction. So non-minimality is possible on a directed network even with one static weighting, and with hourly weights the construction also orders arcs by their maximum travel time, so an arc kept early can become redundant once later arcs provide a bypass in the hour that matters. `benchmarks/minimality.py` tests this on every network with the hourly profile and with a static profile (free-flow travel time at every hour): after the construction, arcs of H are examined in reverse order and deleted whenever H minus the arc still satisfies the exact Theorem-1 certificate for every arc of G at all 24 hours. Every pruned spanner is re-certified exactly.
 
 <!-- BEGIN:minimality -->
-| City | Edges | t | Greedy retention (%) | Removable spanner edges | Removable (% of spanner) | Retention after pruning (%) |
-|---|---|---|---|---|---|---|
-| Yazd | 6806 | 1.5 | 98.3 | 0 | 0.00 | 98.3 |
-| Yazd | 6806 | 2 | 96.3 | 5 | 0.08 | 96.2 |
-| Yazd | 6806 | 3 | 93.4 | 26 | 0.41 | 93.0 |
-| Isfahan | 7302 | 1.5 | 98.8 | 2 | 0.03 | 98.8 |
-| Isfahan | 7302 | 2 | 98.2 | 8 | 0.11 | 98.1 |
-| Isfahan | 7302 | 3 | 97.4 | 28 | 0.39 | 97.0 |
-| Manhattan | 1110 | 1.5 | 94.1 | 1 | 0.10 | 94.1 |
-| Manhattan | 1110 | 2 | 90.1 | 8 | 0.80 | 89.4 |
-| Manhattan | 1110 | 3 | 84.3 | 29 | 3.10 | 81.7 |
-| Tokyo | 3746 | 1.5 | 95.4 | 0 | 0.00 | 95.4 |
-| Tokyo | 3746 | 2 | 91.8 | 12 | 0.35 | 91.5 |
-| Tokyo | 3746 | 3 | 86.3 | 73 | 2.26 | 84.4 |
+| City | Profile | Arcs | t | Greedy retention (%) | Removable spanner arcs | Removable (% of spanner) | Retention after pruning (%) |
+|---|---|---|---|---|---|---|---|
+| Yazd | hourly | 6806 | 1.5 | 98.3 | 0 | 0.00 | 98.3 |
+| Yazd | hourly | 6806 | 2 | 96.3 | 5 | 0.08 | 96.2 |
+| Yazd | hourly | 6806 | 3 | 93.4 | 26 | 0.41 | 93.0 |
+| Yazd | static | 6806 | 1.5 | 97.8 | 0 | 0.00 | 97.8 |
+| Yazd | static | 6806 | 2 | 95.8 | 5 | 0.08 | 95.7 |
+| Yazd | static | 6806 | 3 | 92.9 | 17 | 0.27 | 92.7 |
+| Isfahan | hourly | 7302 | 1.5 | 98.8 | 2 | 0.03 | 98.8 |
+| Isfahan | hourly | 7302 | 2 | 98.2 | 8 | 0.11 | 98.1 |
+| Isfahan | hourly | 7302 | 3 | 97.4 | 28 | 0.39 | 97.0 |
+| Isfahan | static | 7302 | 1.5 | 98.6 | 2 | 0.03 | 98.5 |
+| Isfahan | static | 7302 | 2 | 98.1 | 10 | 0.14 | 98.0 |
+| Isfahan | static | 7302 | 3 | 97.2 | 31 | 0.44 | 96.8 |
+| Manhattan | hourly | 1110 | 1.5 | 94.1 | 1 | 0.10 | 94.1 |
+| Manhattan | hourly | 1110 | 2 | 90.1 | 8 | 0.80 | 89.4 |
+| Manhattan | hourly | 1110 | 3 | 84.3 | 29 | 3.10 | 81.7 |
+| Manhattan | static | 1110 | 1.5 | 89.5 | 2 | 0.20 | 89.4 |
+| Manhattan | static | 1110 | 2 | 85.3 | 6 | 0.63 | 84.8 |
+| Manhattan | static | 1110 | 3 | 81.7 | 24 | 2.65 | 79.5 |
+| Tokyo | hourly | 3746 | 1.5 | 95.4 | 0 | 0.00 | 95.4 |
+| Tokyo | hourly | 3746 | 2 | 91.8 | 12 | 0.35 | 91.5 |
+| Tokyo | hourly | 3746 | 3 | 86.3 | 73 | 2.26 | 84.4 |
+| Tokyo | static | 3746 | 1.5 | 94.7 | 0 | 0.00 | 94.7 |
+| Tokyo | static | 3746 | 2 | 90.7 | 15 | 0.44 | 90.3 |
+| Tokyo | static | 3746 | 3 | 84.8 | 84 | 2.64 | 82.6 |
 
-The construction is edge-minimal in 2 of 12 (city, t) cells. Where it is not, 0.03% to 3.10% of the spanner's edges can be removed by the pruning pass (largest over cells), without losing the certificate.
+Over 24 (city, profile, t) cells: with the hourly profile the construction is edge-minimal in 2 of 12 (city, t) cells and the removable share of the spanner is 0.03% to 3.10%; with the static profile the construction is edge-minimal in 2 of 12 (city, t) cells and the removable share of the spanner is 0.03% to 2.65%.
 <!-- END:minimality -->
 
 ### 5o. Exact optimum on windows of real road networks
@@ -448,6 +460,62 @@ Real OpenStreetMap networks at radii above 3.5 km (`python benchmarks/large_scal
 
 The largest network has 140434 edges.
 <!-- END:metro -->
+
+### 5s. How much does direction matter?
+
+Each network is compared with its two-way version, in which every arc without a reverse arc gets one with the same hourly travel times; arcs that already have a reverse are unchanged. The two versions are different graphs, so percentages are of each graph's own arcs. `benchmarks/directedness.py`.
+
+<!-- BEGIN:directedness -->
+| t | Cities | One-way arcs (%) | Forced, directed (%) | Forced, two-way version (%) | Retention, directed (%) | Retention, two-way version (%) | Retention difference (points) |
+|---|---|---|---|---|---|---|---|
+| 2 | 38 | 37.9 | 91.7 | 81.1 | 93.4 | 85.9 | +7.44 |
+| 3 | 38 | 37.9 | 82.9 | 65.3 | 89.1 | 78.4 | +10.69 |
+
+Relation to the share of one-way arcs across cities:
+
+| t | Target | n | Spearman rho (one-way share) | BH-adjusted p |
+|---|---|---|---|---|
+| 2 | diff_forced | 38 | 0.85 | 0.000 |
+| 2 | diff_retention | 38 | 0.91 | 0.000 |
+| 3 | diff_forced | 38 | 0.91 | 0.000 |
+| 3 | diff_retention | 38 | 0.93 | 0.000 |
+<!-- END:directedness -->
+
+Scope: the two-way version is a counterfactual (the same congestion on the added arcs), not a real network; the cities are a convenience sample.
+
+### 5t. Total street length and lightness
+
+Street length, not the number of arcs, is what a road authority maintains. On physical street segments (a two-way street counts once; a segment is kept if any of its arcs is kept) this section reports the share of the street length kept, the lightness (kept length divided by the length of a minimum spanning tree of the segments, the standard spanner measure), and a lower bound for the length of any edge-subset spanner: the length of the segments that carry a forced arc. `benchmarks/lightness.py`.
+
+<!-- BEGIN:lightness -->
+| t | Cities | Arcs kept (%) | Street length kept (%) | Forced street length (%) | Lightness of the network | Lightness of the spanner | Lightness lower bound | Share of the removable length removed: mean (range) |
+|---|---|---|---|---|---|---|---|---|
+| 2 | 38 | 93.4 | 90.2 | 87.5 | 2.14 | 1.92 | 1.87 | 79% (54-94%) |
+| 3 | 38 | 89.1 | 84.2 | 76.6 | 2.14 | 1.79 | 1.62 | 68% (51-79%) |
+<!-- END:lightness -->
+
+The lower bound is a bound on edge-subset spanners, as elsewhere; the minimum spanning tree is computed on the undirected segment graph, so lightness ignores one-way restrictions.
+
+### 5u. Does the processing order matter?
+
+The greedy construction depends on the order in which arcs are examined. Six orders are compared on every network, each result certified exactly and also pruned by the reverse-delete pass of section 5n: ascending maximum travel time (default), ascending mean, a betweenness-damped order, ascending free-flow time, random (several seeds, averaged) and, as a negative control, descending maximum. `benchmarks/edge_order.py`.
+
+<!-- BEGIN:edge_order -->
+| t | Order | Cities | Retention (%) | Difference from temporal_max (points) | Range over cities (points) | Retention after pruning (%) |
+|---|---|---|---|---|---|---|
+| 2 | centrality | 4 | 94.09 | -0.01 | -0.03 to +0.00 | 93.79 |
+| 2 | descending_max | 4 | 100.00 | +5.90 | +1.75 to +9.91 | 93.76 |
+| 2 | free_flow | 4 | 94.04 | -0.06 | -0.27 to +0.05 | 93.79 |
+| 2 | random | 4 | 98.38 | +4.28 | +1.16 to +7.66 | 93.78 |
+| 2 | temporal_max | 4 | 94.10 | +0.00 | +0.00 to +0.00 | 93.79 |
+| 2 | temporal_mean | 4 | 94.02 | -0.08 | -0.27 to +0.00 | 93.79 |
+| 3 | centrality | 4 | 90.36 | -0.00 | -0.01 to +0.00 | 89.05 |
+| 3 | descending_max | 4 | 99.89 | +9.53 | +2.62 to +15.59 | 88.99 |
+| 3 | free_flow | 4 | 89.97 | -0.39 | -1.26 to +0.03 | 89.04 |
+| 3 | random | 4 | 96.66 | +6.30 | +1.61 to +11.17 | 89.05 |
+| 3 | temporal_max | 4 | 90.36 | +0.00 | +0.00 to +0.00 | 89.03 |
+| 3 | temporal_mean | 4 | 90.02 | -0.34 | -0.99 to +0.01 | 89.01 |
+<!-- END:edge_order -->
 
 ---
 
