@@ -32,6 +32,67 @@ def bh_frame():
     return pd.DataFrame([dict(base, t=2.0), dict(base, t=3.0, forced_any_pct=70.0)])
 
 
+def min_frame(**over):
+    row = dict(city="A", real_osm=True, edges=100, t=2.0, greedy_retention_pct=90.0, removable_edges=2,
+               removable_pct_of_spanner=2.2, pruned_retention_pct=88.0, greedy_is_minimal=False, full_certificate_checks=2)
+    row.update(over)
+    return pd.DataFrame([row, dict(row, t=3.0, removable_edges=0, removable_pct_of_spanner=0.0, greedy_is_minimal=True)])
+
+
+def exact_frame(**over):
+    base = dict(city="A", real_osm=True, t=2.0, nodes=10, edges=30, skipped=False, forced=20, free=6, optimum=24,
+                greedy=25, greedy_pruned=24)
+    base.update(over)
+    return pd.DataFrame([dict(base, window=0), dict(base, window=1, greedy=24),
+                         dict(base, window=2, skipped=True, forced=None, free=None, optimum=None, greedy=None,
+                              greedy_pruned=None)])
+
+
+def emer_frame(over_intact=0.0):
+    rows = []
+    for sc in ("intact", "training faults", "held-out faults"):
+        for sp in ("intact-network spanner", "fault-tolerant spanner"):
+            rows.append(dict(city="A", real_osm=True, t=2.0, hour=17, stations=5, spanner=sp, scenario=sc, regions=1,
+                             pairs=100, unreachable_pct=1.0 if sp.startswith("intact") and sc != "intact" else 0.0,
+                             mean_ratio=1.1, p95_ratio=1.5, max_ratio=1.9,
+                             over_t_pct=over_intact if sc == "intact" else 3.0))
+    return pd.DataFrame(rows)
+
+
+class TestMoreSections(unittest.TestCase):
+    def test_minimality_section(self):
+        mod = load()
+        s = mod.minimality_section(min_frame())
+        self.assertIn("edge-minimal in 1 of 2", s)
+        with self.assertRaises(AssertionError):
+            mod.minimality_section(min_frame(real_osm=False))
+
+    def test_road_exact_section_counts_and_skips(self):
+        mod = load()
+        s = mod.road_exact_section(exact_frame())
+        self.assertIn("(1 here)", s)
+        self.assertIn("optimal in 50% of the cases", s)
+        with self.assertRaises(AssertionError):
+            mod.road_exact_section(exact_frame(optimum=19))        # optimum below the forced count
+
+    def test_emergency_section_requires_certificate_on_the_intact_network(self):
+        mod = load()
+        self.assertIn("never exceeds t", mod.emergency_section(emer_frame()))
+        with self.assertRaises(AssertionError):
+            mod.emergency_section(emer_frame(over_intact=0.5))
+
+    def test_sections_are_skipped_without_files_and_inserted_in_order(self):
+        mod = load()
+        with tempfile.TemporaryDirectory() as d:
+            min_frame().to_csv(os.path.join(d, "minimality.csv"), index=False)
+            emer_frame().to_csv(os.path.join(d, "emergency_response.csv"), index=False)
+            mod.BEN = d
+            out = mod.render("x\n\n" + mod.ANCHOR + "\n")
+            self.assertLess(out.index("5n."), out.index("5p."))
+            self.assertNotIn("5o.", out)
+            self.assertEqual(mod.render(out), out)
+
+
 class TestNewSections(unittest.TestCase):
     def test_region_fault_section_uses_the_data(self):
         mod = load()
@@ -66,7 +127,23 @@ class TestNewSections(unittest.TestCase):
             self.assertNotIn("5m. Forced edges by hour", once)     # no CSV, no section
             self.assertEqual(mod.render(once), once)
             changed = once.replace("40% to 40%", "1% to 1%")
-            self.assertEqual(mod.render(changed), once)             # a hand edit inside the block is overwritten
+            self.assertEqual(mod.render(changed), once)             # a hand edit inside the section is overwritten
+
+    def test_numbers_in_the_introduction_are_refreshed(self):
+        mod = load()
+        with tempfile.TemporaryDirectory() as d:
+            mod.BEN = d
+            text = "intro\n\n" + mod.ANCHOR + "\n\nrest\n"
+            rf_frame(regions_train=10).to_csv(os.path.join(d, "region_fault.csv"), index=False)
+            first = mod.render(text)
+            self.assertIn("family of 10 disc faults", first)
+            rf_frame(regions_train=20).to_csv(os.path.join(d, "region_fault.csv"), index=False)
+            second = mod.render(first)
+            self.assertIn("family of 20 disc faults", second)
+            self.assertNotIn("family of 10 disc faults", second)
+            self.assertEqual(second.count("### 5l."), 1)
+            self.assertTrue(second.endswith("rest\n"))
+            self.assertIn(mod.ANCHOR, second)
 
 
 if __name__ == "__main__":

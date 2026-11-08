@@ -39,7 +39,11 @@ jobs:
         run: |
           python benchmarks/forced_by_hour.py --synthetic --cities Yazd --t 2
           python benchmarks/region_fault.py --synthetic --cities Yazd --regions 4 --heldout 6
-          rm -f results/benchmarks/forced_by_hour*.csv results/benchmarks/forced_by_hour.md results/benchmarks/region_fault.*
+          python benchmarks/minimality.py --synthetic --cities Yazd --t 2
+          python benchmarks/road_exact.py --synthetic --cities Yazd --t 3 --windows 4
+          python benchmarks/emergency_response.py --synthetic --cities Yazd --regions 3 --heldout 4
+          python benchmarks/more_cities.py --synthetic --registry-only --t 2
+          rm -f results/benchmarks/forced_by_hour*.csv results/benchmarks/forced_by_hour.md results/benchmarks/region_fault.* results/benchmarks/minimality.* results/benchmarks/road_exact* results/benchmarks/emergency_response.* results/benchmarks/more_cities*
 
       - name: Independent verification of the smoke-test results
         run: python verify_results.py

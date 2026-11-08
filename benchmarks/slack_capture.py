@@ -26,6 +26,10 @@ import os
 import numpy as np
 import pandas as pd
 
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from common import md_table  # noqa: E402
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 B = os.path.join(ROOT, "results", "benchmarks")
 
@@ -60,7 +64,7 @@ def main() -> None:
               .reset_index())
     summ["capture_of_means"] = summ.removed_pct / summ.removable_slack_pct
     with open(os.path.join(B, "slack_capture.md"), "w", encoding="utf-8") as f:
-        f.write(summ.round(3).to_markdown(index=False))
+        f.write(md_table(summ, 3))
     print(summ.round(3).to_string(index=False))
 
 

@@ -32,6 +32,7 @@ sys.path.insert(0, os.path.join(ROOT, "benchmarks"))
 import run_spanner_benchmark as core  # noqa: E402
 from retention_diagnostics import per_edge_max_ratio  # noqa: E402
 from literature_benchmarks import union_of_snapshots_spanner  # noqa: E402
+from common import md_table  # noqa: E402
 
 OUT = os.path.join(ROOT, "results", "benchmarks")
 
@@ -150,7 +151,7 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     df.round(3).to_csv(stem + ".csv", index=False)
     with open(stem + ".md", "w", encoding="utf-8") as f:
-        f.write(df.round(2).to_markdown(index=False))
+        f.write(md_table(df))
     print(df.round(2).to_string(index=False))
 
 

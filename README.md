@@ -295,6 +295,160 @@ Because the forced share is close to 100% at small t, retention is close to the 
 
 The share removed falls as t grows, in line with the growing gap in the table above: at large t the forced bound is far from what the greedy construction reaches, and the exact-optimum study in section 5j (small random instances only) shows that the greedy excess is also larger there.
 
+### 5l. Region faults (the definition of Abam et al. applied to road networks)
+
+Abam, de Berg, Farshi and Gudmundsson define region-fault tolerance by comparing the spanner and the reference graph *after the same fault*: for a convex region F, the spanner minus F must be a t-spanner of the reference graph minus F [1]. Here a fault is a disc: every intersection inside it and every street segment touching it is removed from both G and H, and H-F must satisfy the delay bound against G-F at every hour. Theorem 1 applies unchanged to the pair (G-F, H-F), so the check is exact (`benchmarks/region_fault.py`).
+
+Three quantities are measured on a random family of 20 disc faults (radii 5%, 10% and 20% of the network radius, centred on random intersections):
+
+1. how often the spanner built for the intact network fails the bound after a fault;
+2. a lower bound for any edge-subset spanner that is fault tolerant for the family: an edge with detour ratio above t in some G-F is forced in every such spanner, and nominally forced edges stay forced because G-F is a subgraph of G;
+3. a fault-tolerant greedy construction that drops an edge only if a detour within budget exists in H-F for every fault of the family that leaves the edge intact and every hour, certified for the family by Theorem 1 and checked exactly.
+
+<!-- BEGIN:region_fault -->
+| City | Edges | t | Nominal retention (%) | Nominal forced bound (%) | Forced bound over the family (%) | Fault-tolerant retention (%) | Regions where the nominal spanner fails (%) | Violating edges of G-F, nominal (%, mean) | Held-out regions where the fault-tolerant spanner fails (%) | Held-out regions where the nominal spanner fails (%) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Yazd | 6806 | 2 | 96.3 | 95.3 | 95.4 | 96.4 | 25 | 0.01 | 12 | 15 |
+| Isfahan | 7302 | 2 | 98.2 | 98.0 | 98.1 | 98.3 | 10 | 0.00 | 5 | 5 |
+| Manhattan | 1110 | 2 | 90.1 | 88.6 | 90.2 | 91.5 | 55 | 0.08 | 52 | 55 |
+| Tokyo | 3746 | 2 | 91.8 | 90.3 | 90.7 | 92.0 | 30 | 0.02 | 32 | 38 |
+
+Fault-tolerant retention exceeds the nominal retention by 0.04 to 1.44 points. The spanner built for the intact network fails the bound in 10% to 55% of the family's regions. On 40 held-out regions drawn with a different seed, the fault-tolerant spanner fails in 5% to 52% of regions, against 5% to 55% for the nominal spanner.
+<!-- END:region_fault -->
+
+Scope: tolerance holds for the sampled family only; regions outside it are covered by the held-out column, not by the certificate. Faults are discs, a street segment touches a disc if its stored polyline does, and the family is a finite random sample. The traffic model is the parametric one used elsewhere in this repository. The forced-bound over the family is a lower bound for that family only and is not claimed to be tight.
+
+### 5m. Forced edges by hour
+
+An edge is forced (Theorem 2) if its detour ratio exceeds t at *some* hour. `benchmarks/forced_by_hour.py` splits that set by hour and compares it with the forced set that a static analysis would obtain from free-flow weights, to show how much of the bound depends on time variation. Mean over 12 networks:
+
+<!-- BEGIN:by_hour -->
+| t | forced at some hour (%) | forced at every hour (%) | forced at some but not all hours (%) | forced with free-flow weights (%) | forced only because of time variation (%) | forced at free flow but at no hour (%) | forced at a peak hour and at no night hour (%) |
+|---|---|---|---|---|---|---|---|
+| 1.5 | 96.2 | 94.4 | 1.7 | 95.1 | 1.1 | 0.0 | 1.0 |
+| 2 | 91.9 | 89.3 | 2.6 | 90.5 | 1.4 | 0.0 | 1.3 |
+| 3 | 83.9 | 80.5 | 3.4 | 82.3 | 1.6 | 0.0 | 1.4 |
+
+At t = 2, 91.9% of the edges are forced at some hour, 89.3% at every hour, and 1.4% are forced only because of the hourly profile (not forced with free-flow weights). The share of true bridges (arcs with no alternative directed path at all) is 13.9% to 65.7% across the networks. Per-city values: `results/benchmarks/forced_by_hour.csv`; share forced at each hour: `forced_by_hour_profile.csv`.
+<!-- END:by_hour -->
+
+The congestion profiles of the street networks are parametric (section 8), so the time-dependent part of this decomposition describes the model, not measured street speeds.
+
+### 5n. Is the greedy spanner edge-minimal?
+
+For one static weighting the greedy spanner contains no proper t-spanner of itself [15]. With hourly weights the construction orders edges by their maximum travel time, so an edge kept early can become redundant once later edges provide a bypass in the hour that matters. `benchmarks/minimality.py` tests this: after the construction, edges of H are examined in reverse order and deleted whenever H minus the edge still satisfies the exact Theorem-1 certificate for every edge of G at all 24 hours. Every pruned spanner is re-certified exactly. (With a constant profile no edge is removable; this is checked in `tests/test_minimality.py`.)
+
+<!-- BEGIN:minimality -->
+| City | Edges | t | Greedy retention (%) | Removable spanner edges | Removable (% of spanner) | Retention after pruning (%) |
+|---|---|---|---|---|---|---|
+| Yazd | 6806 | 1.5 | 98.3 | 0 | 0.00 | 98.3 |
+| Yazd | 6806 | 2 | 96.3 | 5 | 0.08 | 96.2 |
+| Yazd | 6806 | 3 | 93.4 | 26 | 0.41 | 93.0 |
+| Isfahan | 7302 | 1.5 | 98.8 | 2 | 0.03 | 98.8 |
+| Isfahan | 7302 | 2 | 98.2 | 8 | 0.11 | 98.1 |
+| Isfahan | 7302 | 3 | 97.4 | 28 | 0.39 | 97.0 |
+| Manhattan | 1110 | 1.5 | 94.1 | 1 | 0.10 | 94.1 |
+| Manhattan | 1110 | 2 | 90.1 | 8 | 0.80 | 89.4 |
+| Manhattan | 1110 | 3 | 84.3 | 29 | 3.10 | 81.7 |
+| Tokyo | 3746 | 1.5 | 95.4 | 0 | 0.00 | 95.4 |
+| Tokyo | 3746 | 2 | 91.8 | 12 | 0.35 | 91.5 |
+| Tokyo | 3746 | 3 | 86.3 | 73 | 2.26 | 84.4 |
+
+The construction is edge-minimal in 2 of 12 (city, t) cells. Where it is not, 0.03% to 3.10% of the spanner's edges can be removed by the pruning pass (largest over cells), without losing the certificate.
+<!-- END:minimality -->
+
+### 5o. Exact optimum on windows of real road networks
+
+Section 5j compares the greedy construction with the exact optimum on small random digraphs. `benchmarks/road_exact.py` repeats the comparison on windows cut from the real city cores: the subgraph induced by the first k intersections of a breadth-first search from a random intersection, restricted to its largest strongly connected component. The edge-wise certificate is necessary and sufficient for the all-pairs, all-hours bound, and every forced edge is in every spanner, so the optimum is the number of forced edges plus the size of the smallest set of non-forced edges completing the certificate; subsets are enumerated by increasing size. Windows with too many non-forced edges for the enumeration are skipped (1 here), never approximated.
+
+<!-- BEGIN:road_exact -->
+| t | Windows solved exactly | Edges per window (mean) | Non-forced edges per window (mean) | Greedy optimal (%) | Greedy + pruning optimal (%) | Mean greedy excess (edges) | Largest greedy excess (edges) |
+|---|---|---|---|---|---|---|---|
+| 2 | 92 | 22.7 | 0.9 | 98 | 100 | 0.02 | 1 |
+| 3 | 92 | 22.7 | 2.3 | 86 | 98 | 0.17 | 2 |
+| 5 | 91 | 22.6 | 3.8 | 58 | 75 | 0.75 | 4 |
+
+Over all solved windows the greedy construction is optimal in 81% of the cases and exceeds the optimum by at most 4 edge(s); after the pruning pass of section 5n it is optimal in 91%.
+<!-- END:road_exact -->
+
+Scope: windows are small induced subgraphs of the city cores, so their boundary is artificial, and the windows solved exactly are biased towards those with few non-forced edges. This is a statement about small road-like instances, not about a whole network.
+
+### 5p. Emergency response times
+
+Response bases are placed by farthest-point sampling (they stand for response bases, not for real hospitals or fire stations). For each base and each target the travel time on the spanner is compared with the travel time on the full network at 17:00, ratio = d_H / d_G, at t = 2. After a disc fault the comparison is between H-F and G-F (bases and targets outside the fault). Two spanners are compared: the one built for the intact network and the fault-tolerant one of section 5l, built for a training family of faults. `benchmarks/emergency_response.py`.
+
+<!-- BEGIN:emergency -->
+| City | Scenario | Spanner | Targets unreachable (%) | Mean ratio | 95th percentile ratio | Maximum ratio | Ratio above t (%) |
+|---|---|---|---|---|---|---|---|
+| Yazd | intact | intact-network spanner | 0.00 | 1.013 | 1.048 | 1.489 | 0.00 |
+| Yazd | intact | fault-tolerant spanner | 0.00 | 1.012 | 1.048 | 1.325 | 0.00 |
+| Yazd | training faults | intact-network spanner | 0.02 | 1.013 | 1.048 | 1.489 | 0.00 |
+| Yazd | training faults | fault-tolerant spanner | 0.00 | 1.013 | 1.048 | 1.325 | 0.00 |
+| Yazd | held-out faults | intact-network spanner | 0.00 | 1.013 | 1.049 | 1.489 | 0.00 |
+| Yazd | held-out faults | fault-tolerant spanner | 0.00 | 1.013 | 1.049 | 1.391 | 0.00 |
+| Isfahan | intact | intact-network spanner | 0.00 | 1.007 | 1.053 | 1.198 | 0.00 |
+| Isfahan | intact | fault-tolerant spanner | 0.00 | 1.007 | 1.053 | 1.198 | 0.00 |
+| Isfahan | training faults | intact-network spanner | 0.00 | 1.007 | 1.054 | 1.198 | 0.00 |
+| Isfahan | training faults | fault-tolerant spanner | 0.00 | 1.007 | 1.054 | 1.198 | 0.00 |
+| Isfahan | held-out faults | intact-network spanner | 0.00 | 1.006 | 1.050 | 1.431 | 0.00 |
+| Isfahan | held-out faults | fault-tolerant spanner | 0.00 | 1.006 | 1.050 | 1.431 | 0.00 |
+| Manhattan | intact | intact-network spanner | 0.00 | 1.008 | 1.042 | 1.331 | 0.00 |
+| Manhattan | intact | fault-tolerant spanner | 0.00 | 1.006 | 1.038 | 1.331 | 0.00 |
+| Manhattan | training faults | intact-network spanner | 0.11 | 1.008 | 1.045 | 1.553 | 0.00 |
+| Manhattan | training faults | fault-tolerant spanner | 0.00 | 1.007 | 1.039 | 1.331 | 0.00 |
+| Manhattan | held-out faults | intact-network spanner | 0.10 | 1.008 | 1.043 | 2.019 | 0.00 |
+| Manhattan | held-out faults | fault-tolerant spanner | 0.08 | 1.007 | 1.039 | 2.019 | 0.00 |
+| Tokyo | intact | intact-network spanner | 0.00 | 1.016 | 1.083 | 1.189 | 0.00 |
+| Tokyo | intact | fault-tolerant spanner | 0.00 | 1.016 | 1.082 | 1.189 | 0.00 |
+| Tokyo | training faults | intact-network spanner | 0.06 | 1.015 | 1.081 | 1.454 | 0.00 |
+| Tokyo | training faults | fault-tolerant spanner | 0.00 | 1.014 | 1.080 | 1.189 | 0.00 |
+| Tokyo | held-out faults | intact-network spanner | 0.01 | 1.016 | 1.082 | 1.458 | 0.00 |
+| Tokyo | held-out faults | fault-tolerant spanner | 0.01 | 1.015 | 1.081 | 1.269 | 0.00 |
+
+On the intact network the ratio never exceeds t (the certificate). Under faults the intact-network spanner leaves 0.03% of the targets unreachable on average over held-out faults, the fault-tolerant spanner 0.02%; the ratio exceeds t for 0.00% and 0.00% of the (base, target) pairs respectively (means over cities).
+<!-- END:emergency -->
+
+Scope: one hour of the day, the parametric traffic model, disc faults, five bases per city.
+
+### 5q. More cities
+
+The twelve registry cities give a low-powered morphology test (section 5d). `benchmarks/more_cities.py` adds further real OpenStreetMap city cores (about 1.5 km radius; a city whose download fails is skipped, never replaced by a synthetic network) and pools them with the registry cities: 38 cities in total (26 added).
+
+<!-- BEGIN:more_cities -->
+| t | Cities | Forced bound (%, mean) | Greedy retention (%, mean) | Share of slack removed: mean (range) |
+|---|---|---|---|---|
+| 2 | 38 | 91.7 | 93.4 | 80% (65-91%) |
+| 3 | 38 | 82.9 | 89.1 | 64% (55-74%) |
+
+Spearman correlations with the morphology descriptors, 24 tests pooled; significant after adjustment:
+
+| t | Target | Descriptor | n | Spearman rho | BH-adjusted p |
+|---|---|---|---|---|---|
+| 2 | retention_pct | bridge_pct | 38 | 0.90 | 0.000 |
+| 2 | retention_pct | true_bridge_pct | 38 | 0.50 | 0.006 |
+| 2 | retention_pct | mean_degree | 38 | -0.58 | 0.001 |
+| 2 | capture | circuity_mean | 38 | 0.48 | 0.008 |
+| 3 | retention_pct | bridge_pct | 38 | 0.99 | 0.000 |
+| 3 | retention_pct | true_bridge_pct | 38 | 0.66 | 0.000 |
+| 3 | retention_pct | mean_degree | 38 | -0.72 | 0.000 |
+<!-- END:more_cities -->
+
+`bridge_pct` is, by construction, a lower bound on retention (an arc with no detour within ten times its travel time is forced for every t up to ten), so its correlation with retention is structural; `true_bridge_pct`, `mean_degree` and the other descriptors are the informative ones. Correlations are descriptive: the descriptors are correlated with each other, city cores are not independent draws from a population of cities, and the added cities are a convenience sample.
+
+### 5r. Metropolitan scale
+
+Real OpenStreetMap networks at radii above 3.5 km (`python benchmarks/large_scale_run.py --dist ...`), every spanner certified.
+
+<!-- BEGIN:metro -->
+| City | Radius (m) | Nodes | Edges | t | Delay-bounded kept (%) | Forced lower bound (%) |
+|---|---|---|---|---|---|---|
+| Yazd | 5000 | 22918 | 51979 | 2 | 95.0 | 93.4 |
+| Isfahan | 7000 | 66212 | 140434 | 2 | 96.9 | 96.2 |
+| Tokyo | 7000 | 33225 | 83540 | 2 | 92.4 | 90.5 |
+
+The largest network has 140434 edges.
+<!-- END:metro -->
+
 ---
 
 ## 5e. Figures
@@ -493,6 +647,12 @@ python benchmarks/slack_capture.py                                             #
 python benchmarks/forced_by_hour.py --t 1.5 2 3                                # forced edges by hour (section 5m)
 python benchmarks/region_fault.py --t 2                                        # region faults, G-F vs H-F (section 5l)
 python scripts/update_readme_new_sections.py                                   # write sections 5l and 5m from the result files
+python benchmarks/minimality.py --t 1.5 2 3                                    # is the greedy spanner edge-minimal? (section 5n)
+python benchmarks/road_exact.py --t 2 3 5                                      # exact optimum on windows of real networks (section 5o)
+python benchmarks/emergency_response.py --t 2                                  # response times, intact and after faults (section 5p)
+python benchmarks/more_cities.py --t 2 3                                       # more cities, pooled morphology test (section 5q)
+python benchmarks/large_scale_run.py --cities Isfahan Tokyo --dist 7000 --t 2 --max-edges 400000   # metropolitan scale (section 5r)
+bash scripts/run_parallel_analyses.sh                                          # all of the above in parallel, then refresh the README
 
 python run_spanner_benchmark.py --quick             # fast smoke test (stratified Iran + international)
 python run_spanner_benchmark.py --synthetic         # force offline mode everywhere

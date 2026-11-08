@@ -1,0 +1,3 @@
+| city | dist_m | real_osm | nodes | edges | t | delay_bounded_retention_pct | delay_bounded_certified | forced_lower_bound_pct | static_ff_retention_pct | static_ff_certified | static_ff_violating_edges | union_retention_pct | union_certified |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Yazd | 5000 | True | 22918 | 51979 | 2.00 | 94.96 | True | 93.39 | 94.30 | False | 381 | 95.64 | True |

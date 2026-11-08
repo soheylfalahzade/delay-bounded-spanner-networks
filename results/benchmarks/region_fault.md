@@ -1,0 +1,6 @@
+| city | real_osm | nodes | edges | t | regions_train | regions_heldout | radius_fracs | nominal_retention_pct | nominal_forced_lb_pct | fault_forced_lb_pct | fault_tolerant_retention_pct | extra_edges_for_fault_tolerance_pct | nominal_fails_train_regions_pct | nominal_mean_violating_edge_pct | nominal_fails_heldout_regions_pct | ft_fails_train_regions_pct | ft_fails_heldout_regions_pct | ft_mean_violating_edge_heldout_pct |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Yazd | True | 3093 | 6806 | 2.00 | 20 | 40 | 0.05/0.1/0.2 | 96.28 | 95.28 | 95.45 | 96.39 | 0.10 | 25.00 | 0.01 | 15.00 | 0.00 | 12.50 | 0.00 |
+| Isfahan | True | 3818 | 7302 | 2.00 | 20 | 40 | 0.05/0.1/0.2 | 98.25 | 98.03 | 98.08 | 98.29 | 0.04 | 10.00 | 0.00 | 5.00 | 0.00 | 5.00 | 0.00 |
+| Manhattan | True | 565 | 1110 | 2.00 | 20 | 40 | 0.05/0.1/0.2 | 90.09 | 88.65 | 90.18 | 91.53 | 1.44 | 55.00 | 0.08 | 55.00 | 0.00 | 52.50 | 0.06 |
+| Tokyo | True | 1561 | 3746 | 2.00 | 20 | 40 | 0.05/0.1/0.2 | 91.78 | 90.34 | 90.66 | 92.04 | 0.27 | 30.00 | 0.02 | 37.50 | 0.00 | 32.50 | 0.01 |

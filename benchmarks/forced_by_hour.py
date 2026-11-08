@@ -41,6 +41,7 @@ sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "benchmarks"))
 import run_spanner_benchmark as core  # noqa: E402
 import retention_diagnostics as rd  # noqa: E402
+from common import md_table, load_city  # noqa: E402
 
 OUT = os.path.join(ROOT, "results", "benchmarks")
 H24 = list(range(24))
@@ -118,7 +119,9 @@ def main() -> None:
     rows: List[Dict] = []
     profile: List[Dict] = []
     for spec in specs:
-        G = core.build_city_network(spec, grid_n=args.grid_n, force_synthetic=args.synthetic)
+        G = load_city(spec, args.grid_n, args.synthetic)
+        if G is None:
+            continue
         if args.max_nodes and G.number_of_nodes() > args.max_nodes:
             print(f"[skip] {spec['name']}: {G.number_of_nodes()} nodes")
             continue
@@ -132,6 +135,8 @@ def main() -> None:
                 profile.append(dict(city=spec["name"], t=t, hour=tau,
                                     forced_pct=100.0 * float((R[:, tau] > t).mean())))
         print(f"[ok] {spec['name']}: {len(edges)} edges")
+    if not rows:
+        sys.exit("no network available; nothing written")
     df = pd.DataFrame(rows)
     pf = pd.DataFrame(profile)
     os.makedirs(OUT, exist_ok=True)
@@ -139,9 +144,9 @@ def main() -> None:
     pf.round(3).to_csv(os.path.join(OUT, "forced_by_hour_profile.csv"), index=False)
     mean = df.groupby("t").mean(numeric_only=True).drop(columns=["edges"]).round(2)
     with open(os.path.join(OUT, "forced_by_hour.md"), "w", encoding="utf-8") as f:
-        f.write(df.round(2).to_markdown(index=False))
+        f.write(md_table(df))
         f.write("\n\nMean over cities:\n\n")
-        f.write(mean.to_markdown())
+        f.write(md_table(mean.reset_index()))
     print("\nMean over cities:\n", mean.to_string())
 
 

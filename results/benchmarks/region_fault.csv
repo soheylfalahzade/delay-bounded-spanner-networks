@@ -1,0 +1,5 @@
+city,real_osm,nodes,edges,t,regions_train,regions_heldout,radius_fracs,nominal_retention_pct,nominal_forced_lb_pct,fault_forced_lb_pct,fault_tolerant_retention_pct,extra_edges_for_fault_tolerance_pct,nominal_fails_train_regions_pct,nominal_mean_violating_edge_pct,nominal_fails_heldout_regions_pct,ft_fails_train_regions_pct,ft_fails_heldout_regions_pct,ft_mean_violating_edge_heldout_pct
+Yazd,True,3093,6806,2.0,20,40,0.05/0.1/0.2,96.283,95.284,95.445,96.386,0.103,25.0,0.005,15.0,0.0,12.5,0.004
+Isfahan,True,3818,7302,2.0,20,40,0.05/0.1/0.2,98.247,98.028,98.083,98.288,0.041,10.0,0.002,5.0,0.0,5.0,0.001
+Manhattan,True,565,1110,2.0,20,40,0.05/0.1/0.2,90.09,88.649,90.18,91.532,1.441,55.0,0.079,55.0,0.0,52.5,0.065
+Tokyo,True,1561,3746,2.0,20,40,0.05/0.1/0.2,91.778,90.336,90.657,92.045,0.267,30.0,0.016,37.5,0.0,32.5,0.013

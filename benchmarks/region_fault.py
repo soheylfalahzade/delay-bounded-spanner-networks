@@ -60,6 +60,7 @@ sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "benchmarks"))
 import run_spanner_benchmark as core  # noqa: E402
 import retention_diagnostics as rd  # noqa: E402
+from common import md_table, load_city  # noqa: E402
 
 OUT = os.path.join(ROOT, "results", "benchmarks")
 H24 = list(range(24))
@@ -265,7 +266,9 @@ def fault_tolerant_greedy(G: nx.DiGraph, t: float, scenarios: Sequence[Dict]) ->
 # ------------------------------------------------------------------ driver
 def run_city(spec: Dict, t: float, n_regions: int, n_heldout: int, radius_fracs: Sequence[float],
              seed: int, synthetic: bool, grid_n: int) -> Dict:
-    G = core.build_city_network(spec, grid_n=grid_n, force_synthetic=synthetic)
+    G = load_city(spec, grid_n, synthetic)
+    if G is None:
+        return None
     m = G.number_of_edges()
     train = sample_scenarios(G, n_regions, radius_fracs, seed)
     held = sample_scenarios(G, n_heldout, radius_fracs, seed + 1000)
@@ -318,16 +321,20 @@ def main() -> None:
     for spec in specs:
         row = run_city(spec, args.t, args.regions, args.heldout, args.radius_fracs, args.seed,
                        args.synthetic, args.grid_n)
+        if row is None:
+            continue
         rows.append(row)
         print(f"[ok] {spec['name']}: nominal fails {row['nominal_fails_train_regions_pct']:.0f}% of regions; "
               f"retention {row['nominal_retention_pct']:.1f} -> {row['fault_tolerant_retention_pct']:.1f} "
               f"(fault lower bound {row['fault_forced_lb_pct']:.1f}); held-out failure of FT "
               f"{row['ft_fails_heldout_regions_pct']:.0f}%")
+    if not rows:
+        sys.exit("no network available; nothing written")
     df = pd.DataFrame(rows)
     os.makedirs(OUT, exist_ok=True)
     df.round(3).to_csv(os.path.join(OUT, "region_fault.csv"), index=False)
     with open(os.path.join(OUT, "region_fault.md"), "w", encoding="utf-8") as f:
-        f.write(df.round(2).to_markdown(index=False))
+        f.write(md_table(df))
     print(df.round(2).to_string(index=False))
 
 
