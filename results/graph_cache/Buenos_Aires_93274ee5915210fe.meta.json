@@ -1,0 +1,12 @@
+{
+  "cache_format_version": 2,
+  "fetched_utc": "2026-11-07T23:29:46Z",
+  "source": "osmnx",
+  "nodes": 654,
+  "edges": 1252,
+  "center": [
+    -34.6037,
+    -58.3816
+  ],
+  "dist": 1500
+}
