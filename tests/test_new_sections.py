@@ -110,7 +110,15 @@ class TestMoreSections(unittest.TestCase):
                                worst_violating_arcs=7, nominal_retention_pct=90.0, repaired_retention_pct=95.0,
                                added_arcs=5, nominal_forced_lb_pct=88.0, family_forced_lb_pct=93.0,
                                verified_failing_scenarios=0, seconds_enumeration=1.0, seconds_total=2.0)])
-        self.assertIn("| A | 100 | 150 | 300 | 30.0 | 7 | 90.0 | 95.0 | 5 | 88.0 | 93.0 |", mod.all_discs_section(a))
+        self.assertIn("| A | 100 | 150 | 2 | 300 | 30.0 | 7 | 90.0 | 95.0 | 5 | 88.0 | 93.0 |", mod.all_discs_section(a))
+        self.assertIn("In 0 of 1 rows with the strict definition (stretch after a fault equal to t) the arcs forced in some G-F cover every arc", mod.all_discs_section(a))
+        self.assertNotIn("whole network", mod.all_discs_section(a))
+        full = a.assign(family_forced_lb_pct=100.0, repaired_retention_pct=100.0)
+        self.assertIn("In 1 of 1 rows with the strict definition (stretch after a fault equal to t) the arcs forced in some G-F cover every arc", mod.all_discs_section(full))
+        relaxed = pd.concat([a, a.assign(t_fault=4.0, family_forced_lb_pct=92.0, repaired_retention_pct=94.0)])
+        s2 = mod.all_discs_section(relaxed)
+        self.assertIn("4: 92.0% and 94.0%", s2)
+        self.assertIn("Stretch after a fault", s2)
         with self.assertRaises(AssertionError):
             mod.all_discs_section(a.assign(verified_failing_scenarios=2))
         with self.assertRaises(AssertionError):

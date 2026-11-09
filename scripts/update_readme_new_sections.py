@@ -320,20 +320,43 @@ def all_discs_section(df: pd.DataFrame) -> str:
     real_only(df, "all_discs")
     assert (df.verified_failing_scenarios == 0).all(), "a repaired spanner failed re-verification: bug"
     assert (df.family_forced_lb_pct <= df.repaired_retention_pct + 1e-9).all()
-    rows = [[r.city, f"{r.arcs}", f"{r.radius_m:g}", f"{r.distinct_scenarios}", f"{r.nominal_fails_area_pct:.1f}",
+    df = df.copy()
+    if "t_fault" not in df.columns:
+        df["t_fault"] = df["t"]
+    df = df.sort_values(["city", "t_fault", "radius_m"]).reset_index(drop=True)
+    rows = [[r.city, f"{r.arcs}", f"{r.radius_m:g}", f"{r.t_fault:g}", f"{r.distinct_scenarios}", f"{r.nominal_fails_area_pct:.1f}",
              f"{int(r.worst_violating_arcs)}", f"{r.nominal_retention_pct:.1f}", f"{r.repaired_retention_pct:.1f}",
              f"{int(r.added_arcs)}", f"{r.nominal_forced_lb_pct:.1f}", f"{r.family_forced_lb_pct:.1f}"]
             for r in df.itertuples()]
-    table = md(["City", "Arcs", "Disc radius (m)", "Distinct fault scenarios", "Centres where the nominal spanner fails (% of area)",
+    table = md(["City", "Arcs", "Disc radius (m)", "Stretch after a fault", "Distinct fault scenarios", "Centres where the nominal spanner fails (% of area)",
                 "Worst scenario: violating arcs", "Nominal retention (%)", "Retention of the certified spanner (%)",
                 "Arcs added", "Nominal forced bound (%)", "Forced bound over all discs (%)"], rows)
     t = df.t.iloc[0]
+    strict = df[df.t_fault <= df.t + 1e-9]
+    relaxed = df[df.t_fault > df.t + 1e-9]
+    full = strict[strict.family_forced_lb_pct >= 99.995]
+    extra = ""
+    if len(relaxed):
+        per = relaxed.groupby("t_fault").agg(lb=("family_forced_lb_pct", "mean"), ret=("repaired_retention_pct", "mean"))
+        extra = (" With a larger stretch allowed after the fault, the mean forced bound and certified retention over the rows are "
+                 + "; ".join(f"{k:g}: {v.lb:.1f}% and {v.ret:.1f}%" for k, v in per.iterrows()) + ".")
+    df = strict if len(strict) else df
+    cover = (f"In {len(full)} of {len(df)} rows with the strict definition (stretch after a fault equal to t) the arcs forced in "
+             f"some G-F cover every arc")
+    cover += ("; for those rows no edge-subset spanner that is tolerant to all discs of the radius can omit any arc, so the "
+              "certified spanner is the whole network and the exact lower bound equals it." if len(full) else ".")
+    sentence = (cover + f" The spanner built for the intact network fails the bound for {df.nominal_fails_area_pct.min():.1f}% to "
+                f"{df.nominal_fails_area_pct.max():.1f}% of the centres (radii {df.radius_m.min():g} to {df.radius_m.max():g} m, "
+                f"{df.city.nunique()} cities), and the worst scenario leaves between {int(df.worst_violating_arcs.min())} and "
+                f"{int(df.worst_violating_arcs.max())} arcs without a detour." + extra)
     return f"""### 5v. All disc faults of one radius (exact)
 
 Section 5l samples faults. Here the family is every disc of radius r with its centre anywhere. The set of street segments removed by a disc depends only on which offset regions N_r(e) = {{c : dist(c, e) <= r}} contain its centre, so the continuous family has finitely many distinct scenarios, namely the distinct arc sets of the cells of the arrangement of these regions (computed with `shapely`). Three exact results follow at t = {t:g} (`benchmarks/all_discs.py`): (1) the area of centres for which the spanner built for the intact network fails the delay bound in G-F, and the worst scenario; (2) a spanner obtained by adding every violating arc of every scenario, which is a t-spanner of G-F at all 24 hours for every disc of the radius (adding arcs never breaks a satisfied pair, so one pass suffices; the result is re-verified from scratch); (3) the union over all scenarios of the arcs forced in G-F, a lower bound for any edge-subset spanner that is fault tolerant for the family.
 
 <!-- BEGIN:all_discs -->
 {table}
+
+{sentence}
 <!-- END:all_discs -->
 
 Scope: discs of one radius per row (other radii and other shapes are separate families); a segment is removed if its stored polyline touches the disc; the guarantee holds for all centres except a set of measure zero (discs tangent to a polyline) and up to the polygonal approximation of the offset regions (relative error of the radius below 1e-3); area percentages assume a uniformly distributed centre over the filled footprint of the offset regions; the traffic profile is the parametric model.

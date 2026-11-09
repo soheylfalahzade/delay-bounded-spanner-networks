@@ -522,18 +522,36 @@ The greedy construction depends on the order in which arcs are examined. Six ord
 Section 5l samples faults. Here the family is every disc of radius r with its centre anywhere. The set of street segments removed by a disc depends only on which offset regions N_r(e) = {c : dist(c, e) <= r} contain its centre, so the continuous family has finitely many distinct scenarios, namely the distinct arc sets of the cells of the arrangement of these regions (computed with `shapely`). Three exact results follow at t = 2 (`benchmarks/all_discs.py`): (1) the area of centres for which the spanner built for the intact network fails the delay bound in G-F, and the worst scenario; (2) a spanner obtained by adding every violating arc of every scenario, which is a t-spanner of G-F at all 24 hours for every disc of the radius (adding arcs never breaks a satisfied pair, so one pass suffices; the result is re-verified from scratch); (3) the union over all scenarios of the arcs forced in G-F, a lower bound for any edge-subset spanner that is fault tolerant for the family.
 
 <!-- BEGIN:all_discs -->
-| City | Arcs | Disc radius (m) | Distinct fault scenarios | Centres where the nominal spanner fails (% of area) | Worst scenario: violating arcs | Nominal retention (%) | Retention of the certified spanner (%) | Arcs added | Nominal forced bound (%) | Forced bound over all discs (%) |
-|---|---|---|---|---|---|---|---|---|---|---|
-| Yazd | 6806 | 75 | 239005 | 13.7 | 8 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
-| Yazd | 6806 | 150 | 698938 | 18.6 | 10 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
-| Isfahan | 7302 | 75 | 335341 | 5.3 | 5 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
-| Isfahan | 7302 | 150 | 996419 | 7.1 | 6 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
-| Manhattan | 1110 | 75 | 25794 | 42.2 | 4 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
-| Manhattan | 1110 | 150 | 79714 | 54.0 | 6 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
-| Manhattan | 1110 | 300 | 219813 | 59.5 | 7 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
-| Tokyo | 3746 | 75 | 130527 | 23.6 | 11 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
-| Tokyo | 3746 | 150 | 365886 | 30.2 | 10 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
-| Tokyo | 3746 | 300 | 993159 | 38.9 | 13 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
+| City | Arcs | Disc radius (m) | Stretch after a fault | Distinct fault scenarios | Centres where the nominal spanner fails (% of area) | Worst scenario: violating arcs | Nominal retention (%) | Retention of the certified spanner (%) | Arcs added | Nominal forced bound (%) | Forced bound over all discs (%) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Isfahan | 7302 | 5 | 2 | 19630 | 1.2 | 4 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
+| Isfahan | 7302 | 10 | 2 | 28094 | 2.0 | 4 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
+| Isfahan | 7302 | 20 | 2 | 49841 | 2.9 | 4 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
+| Isfahan | 7302 | 40 | 2 | 126171 | 4.1 | 4 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
+| Isfahan | 7302 | 75 | 2 | 335341 | 5.3 | 5 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
+| Isfahan | 7302 | 150 | 2 | 996419 | 7.1 | 6 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
+| Manhattan | 1110 | 5 | 2 | 5934 | 5.4 | 4 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
+| Manhattan | 1110 | 10 | 2 | 7053 | 10.2 | 4 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
+| Manhattan | 1110 | 20 | 2 | 7686 | 18.7 | 4 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
+| Manhattan | 1110 | 40 | 2 | 15071 | 31.3 | 4 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
+| Manhattan | 1110 | 75 | 2 | 25794 | 42.2 | 4 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
+| Manhattan | 1110 | 150 | 2 | 79714 | 54.0 | 6 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
+| Manhattan | 1110 | 300 | 2 | 219813 | 59.5 | 7 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
+| Tokyo | 3746 | 5 | 2 | 12824 | 5.0 | 9 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
+| Tokyo | 3746 | 10 | 2 | 16840 | 8.9 | 9 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
+| Tokyo | 3746 | 20 | 2 | 24678 | 14.3 | 12 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
+| Tokyo | 3746 | 40 | 2 | 54691 | 19.4 | 12 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
+| Tokyo | 3746 | 75 | 2 | 130527 | 23.6 | 11 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
+| Tokyo | 3746 | 150 | 2 | 365886 | 30.2 | 10 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
+| Tokyo | 3746 | 300 | 2 | 993159 | 38.9 | 13 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
+| Yazd | 6806 | 5 | 2 | 14708 | 2.8 | 6 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
+| Yazd | 6806 | 10 | 2 | 19328 | 5.0 | 6 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
+| Yazd | 6806 | 20 | 2 | 35659 | 8.0 | 6 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
+| Yazd | 6806 | 40 | 2 | 92625 | 10.9 | 6 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
+| Yazd | 6806 | 75 | 2 | 239005 | 13.7 | 8 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
+| Yazd | 6806 | 150 | 2 | 698938 | 18.6 | 10 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
+
+In 26 of 26 rows with the strict definition (stretch after a fault equal to t) the arcs forced in some G-F cover every arc; for those rows no edge-subset spanner that is tolerant to all discs of the radius can omit any arc, so the certified spanner is the whole network and the exact lower bound equals it. The spanner built for the intact network fails the bound for 1.2% to 59.5% of the centres (radii 5 to 300 m, 4 cities), and the worst scenario leaves between 4 and 13 arcs without a detour.
 <!-- END:all_discs -->
 
 Scope: discs of one radius per row (other radii and other shapes are separate families); a segment is removed if its stored polyline touches the disc; the guarantee holds for all centres except a set of measure zero (discs tangent to a polyline) and up to the polygonal approximation of the offset regions (relative error of the radius below 1e-3); area percentages assume a uniformly distributed centre over the filled footprint of the offset regions; the traffic profile is the parametric model.

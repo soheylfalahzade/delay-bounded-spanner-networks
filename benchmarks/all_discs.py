@@ -16,6 +16,10 @@ many distinct fault scenarios (the distinct edge sets of the cells), and everyth
   3. Lower bound.  The arcs forced in some G-F (detour ratio above t in G-F) must be in every edge-subset spanner that is
      fault tolerant for the family; their union is therefore a lower bound on the size of any such spanner.
 
+Graceful degradation.  With --t-fault the stretch allowed AFTER a fault may exceed the nominal stretch t (H-F must be a
+t_fault-spanner of G-F, with t_fault >= t); t_fault = t is the strict definition above.  The curves of retention and of
+the lower bound against t_fault show how much slack makes tolerance non-trivial.
+
 Exactness is up to the polygonal approximation of the offset regions (relative error of the radius below 1e-3 with
 quad_segs=32) and to the model of section 5l (a segment touches the disc if its stored polyline does).  The weights of the
 area statistics assume the fault centre is uniform over the filled footprint of the offset regions.
@@ -152,8 +156,10 @@ def enumerate_scenarios(G, net: Net, r: float, quad_segs: int = 32, max_faces: i
 class SpannerState:
     """Spanner as a set of arc ids with adjacency and the witnesses (paths in H) of every arc outside H."""
 
-    def __init__(self, net: Net, H_ids: Set[int], t: float):
+    def __init__(self, net: Net, H_ids: Set[int], t: float, t_fault: float = None):
         self.net, self.t = net, t
+        self.t_fault = t if t_fault is None else t_fault
+        assert self.t_fault >= t - 1e-12, "the stretch allowed after a fault cannot be below the nominal stretch"
         self.H = set(H_ids)
         self.adj = net.adjacency(self.H)
         self.index: Dict[int, List[Tuple[int, int]]] = {}
@@ -174,7 +180,7 @@ class SpannerState:
 
     def violations(self, S: FrozenSet[int]) -> Set[int]:
         """Arcs of G-S that lack a detour within t * w in H-S at some hour."""
-        net, t = self.net, self.t
+        net, t = self.net, self.t_fault
         todo = set()
         for h in S:
             lst = self.index.get(h)
@@ -190,8 +196,9 @@ class SpannerState:
         return bad
 
 
-def run_family(net: Net, H_ids: Set[int], scenarios: Dict[FrozenSet[int], float], t: float, repair: bool):
-    st = SpannerState(net, H_ids, t)
+def run_family(net: Net, H_ids: Set[int], scenarios: Dict[FrozenSet[int], float], t: float, repair: bool,
+               t_fault: float = None):
+    st = SpannerState(net, H_ids, t, t_fault)
     total = sum(scenarios.values())
     failing = 0
     area_fail = 0.0
@@ -217,26 +224,34 @@ def run_family(net: Net, H_ids: Set[int], scenarios: Dict[FrozenSet[int], float]
 
 
 # ------------------------------------------------------------------ lower bound
-def forced_union(net: Net, scenarios, t: float) -> Tuple[Set[int], Set[int]]:
-    """(nominal forced arcs, union of arcs forced in some G-S).  Detour witnesses in G avoid re-searching: an arc whose
-    witness path survives S keeps its detour, so only pairs whose witness is hit are searched again."""
+def forced_union(net: Net, scenarios, t: float, t_fault: float = None) -> Tuple[Set[int], Set[int]]:
+    """(arcs forced at the nominal stretch t, union of those and the arcs forced at the post-fault stretch t_fault in some
+    G-S).  Detour witnesses in G avoid re-searching: an arc whose witness path survives S keeps its detour, so only pairs
+    whose witness is hit are searched again."""
+    tf = t if t_fault is None else t_fault
     adj = net.adjacency(range(net.m))
     nominal: Set[int] = set()
+    for e in range(net.m):
+        for tau in H24:
+            b = t * net.tt[e][tau]
+            if search(adj, net.tt, net.u[e], net.v[e], tau, b, frozenset(), banned=e) is None:
+                nominal.add(e)
+                break
+    union = set(nominal)
     index: Dict[int, List[Tuple[int, int]]] = {}
     for e in range(net.m):
         wit = []
         for tau in H24:
-            b = t * net.tt[e][tau]
+            b = tf * net.tt[e][tau]
             path = search(adj, net.tt, net.u[e], net.v[e], tau, b, frozenset(), banned=e)
             if path is None:
-                nominal.add(e)
+                union.add(e)                      # forced at t_fault even without a fault
                 wit = []
                 break
             wit.append((tau, path))
         for tau, path in wit:
             for h in path:
                 index.setdefault(h, []).append((e, tau))
-    union = set(nominal)
     for S in scenarios:
         todo = set()
         for h in S:
@@ -246,7 +261,7 @@ def forced_union(net: Net, scenarios, t: float) -> Tuple[Set[int], Set[int]]:
         for e, tau in todo:
             if e in S or e in union:
                 continue
-            b = t * net.tt[e][tau]
+            b = tf * net.tt[e][tau]
             if search(adj, net.tt, net.u[e], net.v[e], tau, b, S, banned=e) is None:
                 union.add(e)
     return nominal, union
@@ -254,7 +269,7 @@ def forced_union(net: Net, scenarios, t: float) -> Tuple[Set[int], Set[int]]:
 
 # ------------------------------------------------------------------------ driver
 def run_city(spec, t: float, radius_fracs: Sequence[float], synthetic: bool, grid_n: int, quad_segs: int,
-             max_faces: int) -> List[Dict]:
+             max_faces: int, t_faults: Sequence[float] = (None,)) -> List[Dict]:
     G = load_city(spec, grid_n, synthetic)
     if G is None:
         return []
@@ -266,56 +281,79 @@ def run_city(spec, t: float, radius_fracs: Sequence[float], synthetic: bool, gri
     for frac in radius_fracs:
         r = frac * dist
         t0 = time.time()
+        print(f"[start] {spec['name']} r={r:.1f} m", flush=True)
         try:
             scen, n_faces, n_dist, _ = enumerate_scenarios(G, net, r, quad_segs, max_faces)
         except RuntimeError as exc:
-            print(f"[skip] {spec['name']} r={r:.0f} m: {exc}")
+            print(f"[skip] {spec['name']} r={r:.0f} m: {exc}", flush=True)
             continue
         t1 = time.time()
-        st0, _, _ = run_family(net, H0_ids, scen, t, repair=False)
-        st1, repaired, _ = run_family(net, H0_ids, scen, t, repair=True)
-        st2, _, _ = run_family(net, repaired.H, scen, t, repair=False)
-        assert st2["failing_scenarios"] == 0, "repaired spanner still violates a scenario: bug"
-        nominal, union = forced_union(net, scen.keys(), t)
-        Hs = repaired.H
-        assert union <= Hs, "a fault-forced arc is missing from a certified spanner: bug"
-        assert len(union) <= len(Hs) and len(nominal) <= len(union)
-        m = net.m
-        rows.append(dict(city=spec["name"], real_osm=bool(G.graph.get("used_real_osm")), arcs=m, t=t,
-                         radius_m=round(r, 1), radius_frac=frac, faces=n_faces, distinct_scenarios=n_dist,
-                         nominal_fails_scenarios_pct=st0["failing_scenarios_pct"],
-                         nominal_fails_area_pct=st0["failing_area_pct"],
-                         worst_violating_arcs=st0["worst_violating_arcs"],
-                         nominal_retention_pct=100.0 * len(H0_ids) / m,
-                         repaired_retention_pct=100.0 * len(Hs) / m,
-                         added_arcs=len(Hs) - len(H0_ids),
-                         nominal_forced_lb_pct=100.0 * len(nominal) / m,
-                         family_forced_lb_pct=100.0 * len(union) / m,
-                         verified_failing_scenarios=st2["failing_scenarios"],
-                         seconds_enumeration=round(t1 - t0, 1), seconds_total=round(time.time() - t0, 1)))
-        print(f"[ok] {spec['name']} r={r:.0f} m: {n_dist} scenarios, nominal fails {st0['failing_area_pct']:.1f}% of centres, "
-              f"+{len(Hs) - len(H0_ids)} arcs for a certified spanner")
+        for tf in t_faults:
+            tfv = t if tf is None else float(tf)
+            st0, _, _ = run_family(net, H0_ids, scen, t, repair=False, t_fault=tfv)
+            st1, repaired, _ = run_family(net, H0_ids, scen, t, repair=True, t_fault=tfv)
+            st2, _, _ = run_family(net, repaired.H, scen, t, repair=False, t_fault=tfv)
+            assert st2["failing_scenarios"] == 0, "repaired spanner still violates a scenario: bug"
+            nominal, union = forced_union(net, scen.keys(), t, tfv)
+            Hs = repaired.H
+            assert union <= Hs, "a fault-forced arc is missing from a certified spanner: bug"
+            assert len(union) <= len(Hs) and len(nominal) <= len(union)
+            m = net.m
+            rows.append(dict(city=spec["name"], real_osm=bool(G.graph.get("used_real_osm")), arcs=m, t=t, t_fault=tfv,
+                             radius_m=round(r, 1), radius_frac=frac, faces=n_faces, distinct_scenarios=n_dist,
+                             nominal_fails_scenarios_pct=st0["failing_scenarios_pct"],
+                             nominal_fails_area_pct=st0["failing_area_pct"],
+                             worst_violating_arcs=st0["worst_violating_arcs"],
+                             nominal_retention_pct=100.0 * len(H0_ids) / m,
+                             repaired_retention_pct=100.0 * len(Hs) / m,
+                             added_arcs=len(Hs) - len(H0_ids),
+                             nominal_forced_lb_pct=100.0 * len(nominal) / m,
+                             family_forced_lb_pct=100.0 * len(union) / m,
+                             verified_failing_scenarios=st2["failing_scenarios"],
+                             seconds_enumeration=round(t1 - t0, 1), seconds_total=round(time.time() - t0, 1)))
+            print(f"[ok] {spec['name']} r={r:.0f} m t_fault={tfv:g}: {n_dist} scenarios, nominal fails {st0['failing_area_pct']:.1f}% "
+                  f"of centres, +{len(Hs) - len(H0_ids)} arcs for a certified spanner", flush=True)
     return rows
+
+
+def merge_rows(old: pd.DataFrame, new: pd.DataFrame) -> pd.DataFrame:
+    """Rows of `new` replace rows of `old` with the same (city, radius_m, t); other rows of `old` are kept."""
+    old, new = old.copy(), new.copy()
+    for d in (old, new):
+        if "t_fault" not in d.columns:
+            d["t_fault"] = d["t"]
+    key = ["city", "radius_m", "t", "t_fault"]
+    new_keys = set(map(tuple, new[key].round(3).to_numpy().tolist()))
+    keep = old[[tuple(r) not in new_keys for r in old[key].round(3).to_numpy().tolist()]]
+    return pd.concat([keep, new], ignore_index=True).sort_values(["city", "t", "t_fault", "radius_m"]).reset_index(drop=True)
 
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--cities", nargs="*", default=["Yazd", "Isfahan", "Manhattan", "Tokyo"])
     ap.add_argument("--t", type=float, default=2.0)
+    ap.add_argument("--t-fault", type=float, nargs="+", default=None,
+                    help="stretch allowed after a fault (>= t); several values give a degradation curve; default: same as t")
     ap.add_argument("--radius-fracs", type=float, nargs="+", default=[0.05, 0.10, 0.20])
     ap.add_argument("--quad-segs", type=int, default=32)
     ap.add_argument("--max-faces", type=int, default=2000000)
     ap.add_argument("--grid-n", type=int, default=15)
     ap.add_argument("--synthetic", action="store_true")
+    ap.add_argument("--append", action="store_true",
+                    help="merge the new rows into an existing all_discs.csv instead of overwriting it")
     a = ap.parse_args()
     rows: List[Dict] = []
     for spec in [c for c in core.CITY_REGISTRY if c["name"] in a.cities]:
-        rows += run_city(spec, a.t, a.radius_fracs, a.synthetic, a.grid_n, a.quad_segs, a.max_faces)
+        rows += run_city(spec, a.t, a.radius_fracs, a.synthetic, a.grid_n, a.quad_segs, a.max_faces,
+                         tuple(a.t_fault) if a.t_fault else (None,))
     if not rows:
         sys.exit("no network available; nothing written")
     df = pd.DataFrame(rows)
     os.makedirs(OUT, exist_ok=True)
-    df.round(4).to_csv(os.path.join(OUT, "all_discs.csv"), index=False)
+    path = os.path.join(OUT, "all_discs.csv")
+    if a.append and os.path.exists(path):
+        df = merge_rows(pd.read_csv(path), df.round(4))
+    df.round(4).to_csv(path, index=False)
     with open(os.path.join(OUT, "all_discs.md"), "w", encoding="utf-8") as f:
         f.write(md_table(df))
     print(md_table(df))

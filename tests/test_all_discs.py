@@ -105,11 +105,61 @@ class TestAllDiscs(unittest.TestCase):
         _, st, _ = ad.run_family(self.net, self.H0, self.scen, self.T, repair=True)
         self.assertTrue(union <= st.H)
 
+    def test_relaxed_stretch_after_a_fault_matches_brute_force(self):
+        tf = 3.0
+        st = ad.SpannerState(self.net, self.H0, self.T, tf)
+        H_edges = {(self.net.u[i], self.net.v[i]) for i in self.H0}
+        keys = sorted(self.scen, key=lambda s: (len(s), sorted(s)))
+        for S in keys[:: max(1, len(keys) // 100)]:
+            ref, _ = rf.count_violations(self.G, H_edges, as_scenario(self.net, S), tf)
+            self.assertEqual(len(st.violations(S)), ref)
+
+    def test_relaxed_repair_is_certified_and_monotone_in_the_post_fault_stretch(self):
+        sizes, areas, bounds = [], [], []
+        for tf in (2.0, 3.0, 5.0):
+            stats, st, _ = ad.run_family(self.net, self.H0, self.scen, self.T, repair=True, t_fault=tf)
+            again, _, _ = ad.run_family(self.net, st.H, self.scen, self.T, repair=False, t_fault=tf)
+            self.assertEqual(again["failing_scenarios"], 0)
+            nominal, union = ad.forced_union(self.net, list(self.scen), self.T, tf)
+            self.assertTrue(union <= st.H)
+            sizes.append(len(st.H))
+            areas.append(ad.run_family(self.net, self.H0, self.scen, self.T, repair=False, t_fault=tf)[0]["failing_area_pct"])
+            bounds.append(len(union))
+        self.assertTrue(sizes[0] >= sizes[1] >= sizes[2])
+        self.assertTrue(areas[0] >= areas[1] >= areas[2])
+        self.assertTrue(bounds[0] >= bounds[1] >= bounds[2])
+
+    def test_relaxed_lower_bound_against_brute_force(self):
+        tf = 3.0
+        nominal_t, union = ad.forced_union(self.net, list(self.scen), self.T, tf)
+        nom_tf = rf.forced_edges_nominal(self.G, tf)
+        ref = set(nom_tf)
+        for S in self.scen:
+            ref |= rf.forced_edges_under_fault(self.G, as_scenario(self.net, S) | {"removed_nodes": set()}, tf, nom_tf)
+        got = {(self.net.u[i], self.net.v[i]) for i in union}
+        nom_t = {(self.net.u[i], self.net.v[i]) for i in nominal_t}
+        self.assertTrue(ref <= got)
+        self.assertTrue(got - ref <= nom_t)                            # extra arcs are exactly those forced at the nominal stretch
+
     def test_failing_area_is_a_share_of_the_total_area(self):
         st, _, _ = ad.run_family(self.net, self.H0, self.scen, self.T, repair=False)
         self.assertTrue(0.0 <= st["failing_area_pct"] <= 100.0)
         self.assertEqual(st["scenarios"], self.distinct)
         self.assertAlmostEqual(sum(self.scen.values()), sum(self.scen.values()))
+
+
+class TestMergeRows(unittest.TestCase):
+    def test_new_rows_replace_old_rows_with_the_same_key(self):
+        import pandas as pd
+        old = pd.DataFrame([dict(city="A", radius_m=75.0, t=2.0, v=1), dict(city="A", radius_m=150.0, t=2.0, v=2),
+                            dict(city="B", radius_m=75.0, t=2.0, v=3)])
+        new = pd.DataFrame([dict(city="A", radius_m=5.0, t=2.0, v=9), dict(city="A", radius_m=150.0, t=2.0, v=7)])
+        out = ad.merge_rows(old, new)
+        self.assertEqual(len(out), 4)
+        self.assertEqual(int(out[(out.city == "A") & (out.radius_m == 150.0)].v.iloc[0]), 7)
+        self.assertEqual(int(out[(out.city == "B")].v.iloc[0]), 3)
+        self.assertEqual(list(out[out.city == "A"].radius_m), [5.0, 75.0, 150.0])
+        self.assertIn("t_fault", out.columns)                          # files written before the column get t_fault = t
 
 
 if __name__ == "__main__":
