@@ -49,6 +49,12 @@ else
   run lightness       python benchmarks/lightness.py --t 2 3 --max-cities "$ADDED"
 fi
 run edge_order        python benchmarks/edge_order.py --cities $CITIES --t 2 3 --seeds 5
+run all_discs         python benchmarks/all_discs.py --cities $CITIES --t 2
+if [ "$ADDED" = "0" ]; then
+  run oneway_dose     python benchmarks/oneway_dose.py --t 2 3
+else
+  run oneway_dose     python benchmarks/oneway_dose.py --t 2 3 --max-cities "$ADDED"
+fi
 run region_fault      python benchmarks/region_fault.py --cities $CITIES --t 2 --regions "$REGIONS" --heldout "$HELDOUT"
 run forced_by_hour    python benchmarks/forced_by_hour.py --t 1.5 2 3
 wait

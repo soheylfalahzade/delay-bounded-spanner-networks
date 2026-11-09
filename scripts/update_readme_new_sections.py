@@ -315,6 +315,62 @@ The greedy construction depends on the order in which arcs are examined. Six ord
 """
 
 
+
+def all_discs_section(df: pd.DataFrame) -> str:
+    real_only(df, "all_discs")
+    assert (df.verified_failing_scenarios == 0).all(), "a repaired spanner failed re-verification: bug"
+    assert (df.family_forced_lb_pct <= df.repaired_retention_pct + 1e-9).all()
+    rows = [[r.city, f"{r.arcs}", f"{r.radius_m:g}", f"{r.distinct_scenarios}", f"{r.nominal_fails_area_pct:.1f}",
+             f"{int(r.worst_violating_arcs)}", f"{r.nominal_retention_pct:.1f}", f"{r.repaired_retention_pct:.1f}",
+             f"{int(r.added_arcs)}", f"{r.nominal_forced_lb_pct:.1f}", f"{r.family_forced_lb_pct:.1f}"]
+            for r in df.itertuples()]
+    table = md(["City", "Arcs", "Disc radius (m)", "Distinct fault scenarios", "Centres where the nominal spanner fails (% of area)",
+                "Worst scenario: violating arcs", "Nominal retention (%)", "Retention of the certified spanner (%)",
+                "Arcs added", "Nominal forced bound (%)", "Forced bound over all discs (%)"], rows)
+    t = df.t.iloc[0]
+    return f"""### 5v. All disc faults of one radius (exact)
+
+Section 5l samples faults. Here the family is every disc of radius r with its centre anywhere. The set of street segments removed by a disc depends only on which offset regions N_r(e) = {{c : dist(c, e) <= r}} contain its centre, so the continuous family has finitely many distinct scenarios, namely the distinct arc sets of the cells of the arrangement of these regions (computed with `shapely`). Three exact results follow at t = {t:g} (`benchmarks/all_discs.py`): (1) the area of centres for which the spanner built for the intact network fails the delay bound in G-F, and the worst scenario; (2) a spanner obtained by adding every violating arc of every scenario, which is a t-spanner of G-F at all 24 hours for every disc of the radius (adding arcs never breaks a satisfied pair, so one pass suffices; the result is re-verified from scratch); (3) the union over all scenarios of the arcs forced in G-F, a lower bound for any edge-subset spanner that is fault tolerant for the family.
+
+<!-- BEGIN:all_discs -->
+{table}
+<!-- END:all_discs -->
+
+Scope: discs of one radius per row (other radii and other shapes are separate families); a segment is removed if its stored polyline touches the disc; the guarantee holds for all centres except a set of measure zero (discs tangent to a polyline) and up to the polygonal approximation of the offset regions (relative error of the radius below 1e-3); area percentages assume a uniformly distributed centre over the filled footprint of the offset regions; the traffic profile is the parametric model.
+
+"""
+
+
+def oneway_dose_section(df: pd.DataFrame) -> str:
+    real_only(df, "oneway_dose")
+    g = df.groupby(["t", "dose"]).mean(numeric_only=True).reset_index()
+    rows = [[f"{r.t:g}", f"{100 * r.dose:.0f}%", f"{r.forced_original_pct:.1f}", f"{r.retention_original_pct:.1f}",
+             f"{r.forced_all_pct:.1f}", f"{r.retention_all_pct:.1f}"] for r in g.itertuples()]
+    table = md(["t", "One-way arcs made two-way", "Forced, original arcs (%)", "Retention, original arcs (%)",
+                "Forced, all arcs (%)", "Retention, all arcs (%)"], rows)
+    mono = []
+    for t, d in df.groupby("t"):
+        ok = tot = 0
+        for _, c in d.groupby("city"):
+            c = c.sort_values("dose")
+            tot += 1
+            ok += int((c.forced_original_pct.diff().dropna() <= 1e-9).all())
+        mono.append(f"at t = {t:g} the forced share of the original arcs never increases with the dose in {ok} of {tot} cities")
+    return f"""### 5w. Dose-response for one-way streets
+
+One-way arcs are made two-way gradually, in a fixed random order that is nested across doses, and the forced share and the retention are recomputed at each dose, over the original arcs (fixed denominator) and over all arcs. `benchmarks/oneway_dose.py`. Mean over {df.city.nunique()} cities.
+
+<!-- BEGIN:oneway_dose -->
+{table}
+
+{'; '.join(mono)}.
+<!-- END:oneway_dose -->
+
+Scope: a counterfactual (the reverse arc gets the same hourly travel times), one random order per city.
+
+"""
+
+
 def metro_frame():
     frames = []
     for f in sorted(glob.glob(os.path.join(BEN, "large_scale_*m.csv"))):
@@ -344,7 +400,8 @@ def render(text: str) -> str:
             ("minimality", "minimality.csv", minimality_section), ("road_exact", "road_exact_raw.csv", road_exact_section),
             ("emergency", "emergency_response.csv", emergency_section), ("more_cities", "more_cities.csv", more_cities_section),
             ("directedness", "directedness.csv", directedness_section), ("lightness", "lightness.csv", lightness_section),
-            ("edge_order", "edge_order.csv", edge_order_section), ("metro", None, metro_section)]
+            ("edge_order", "edge_order.csv", edge_order_section), ("all_discs", "all_discs.csv", all_discs_section), ("oneway_dose", "oneway_dose.csv", oneway_dose_section),
+            ("metro", None, metro_section)]
     for name, csv, fn in jobs:
         if name == "metro":
             frame = metro_frame()

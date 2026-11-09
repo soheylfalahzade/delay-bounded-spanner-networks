@@ -103,6 +103,29 @@ class TestMoreSections(unittest.TestCase):
         self.assertIn("+2.00", s)
         self.assertIn("+0.00", s)
 
+    def test_all_discs_and_dose_sections(self):
+        mod = load()
+        a = pd.DataFrame([dict(city="A", real_osm=True, arcs=100, t=2.0, radius_m=150.0, radius_frac=0.1, faces=500,
+                               distinct_scenarios=300, nominal_fails_scenarios_pct=40.0, nominal_fails_area_pct=30.0,
+                               worst_violating_arcs=7, nominal_retention_pct=90.0, repaired_retention_pct=95.0,
+                               added_arcs=5, nominal_forced_lb_pct=88.0, family_forced_lb_pct=93.0,
+                               verified_failing_scenarios=0, seconds_enumeration=1.0, seconds_total=2.0)])
+        self.assertIn("| A | 100 | 150 | 300 | 30.0 | 7 | 90.0 | 95.0 | 5 | 88.0 | 93.0 |", mod.all_discs_section(a))
+        with self.assertRaises(AssertionError):
+            mod.all_discs_section(a.assign(verified_failing_scenarios=2))
+        with self.assertRaises(AssertionError):
+            mod.all_discs_section(a.assign(family_forced_lb_pct=99.0))
+        rows = []
+        for city in ("A", "B"):
+            for dose, f in zip((0.0, 0.25, 0.5, 0.75, 1.0), (90.0, 88.0, 86.0, 85.0, 84.0)):
+                rows.append(dict(city=city, real_osm=True, dose=dose, t=2.0, forced_original_pct=f, retention_original_pct=f + 1,
+                                 forced_all_pct=f - 1, retention_all_pct=f))
+        s = mod.oneway_dose_section(pd.DataFrame(rows))
+        self.assertIn("never increases with the dose in 2 of 2 cities", s)
+        bad = pd.DataFrame(rows)
+        bad.loc[(bad.city == "A") & (bad.dose == 0.5), "forced_original_pct"] = 99.0
+        self.assertIn("in 1 of 2 cities", mod.oneway_dose_section(bad))
+
     def test_sections_are_skipped_without_files_and_inserted_in_order(self):
         mod = load()
         with tempfile.TemporaryDirectory() as d:

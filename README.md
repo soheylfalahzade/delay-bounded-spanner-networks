@@ -517,6 +517,50 @@ The greedy construction depends on the order in which arcs are examined. Six ord
 | 3 | temporal_mean | 4 | 90.02 | -0.34 | -0.99 to +0.01 | 89.01 |
 <!-- END:edge_order -->
 
+### 5v. All disc faults of one radius (exact)
+
+Section 5l samples faults. Here the family is every disc of radius r with its centre anywhere. The set of street segments removed by a disc depends only on which offset regions N_r(e) = {c : dist(c, e) <= r} contain its centre, so the continuous family has finitely many distinct scenarios, namely the distinct arc sets of the cells of the arrangement of these regions (computed with `shapely`). Three exact results follow at t = 2 (`benchmarks/all_discs.py`): (1) the area of centres for which the spanner built for the intact network fails the delay bound in G-F, and the worst scenario; (2) a spanner obtained by adding every violating arc of every scenario, which is a t-spanner of G-F at all 24 hours for every disc of the radius (adding arcs never breaks a satisfied pair, so one pass suffices; the result is re-verified from scratch); (3) the union over all scenarios of the arcs forced in G-F, a lower bound for any edge-subset spanner that is fault tolerant for the family.
+
+<!-- BEGIN:all_discs -->
+| City | Arcs | Disc radius (m) | Distinct fault scenarios | Centres where the nominal spanner fails (% of area) | Worst scenario: violating arcs | Nominal retention (%) | Retention of the certified spanner (%) | Arcs added | Nominal forced bound (%) | Forced bound over all discs (%) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Yazd | 6806 | 75 | 239005 | 13.7 | 8 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
+| Yazd | 6806 | 150 | 698938 | 18.6 | 10 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
+| Isfahan | 7302 | 75 | 335341 | 5.3 | 5 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
+| Isfahan | 7302 | 150 | 996419 | 7.1 | 6 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
+| Manhattan | 1110 | 75 | 25794 | 42.2 | 4 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
+| Manhattan | 1110 | 150 | 79714 | 54.0 | 6 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
+| Manhattan | 1110 | 300 | 219813 | 59.5 | 7 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
+| Tokyo | 3746 | 75 | 130527 | 23.6 | 11 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
+| Tokyo | 3746 | 150 | 365886 | 30.2 | 10 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
+| Tokyo | 3746 | 300 | 993159 | 38.9 | 13 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
+<!-- END:all_discs -->
+
+Scope: discs of one radius per row (other radii and other shapes are separate families); a segment is removed if its stored polyline touches the disc; the guarantee holds for all centres except a set of measure zero (discs tangent to a polyline) and up to the polygonal approximation of the offset regions (relative error of the radius below 1e-3); area percentages assume a uniformly distributed centre over the filled footprint of the offset regions; the traffic profile is the parametric model.
+
+### 5w. Dose-response for one-way streets
+
+One-way arcs are made two-way gradually, in a fixed random order that is nested across doses, and the forced share and the retention are recomputed at each dose, over the original arcs (fixed denominator) and over all arcs. `benchmarks/oneway_dose.py`. Mean over 38 cities.
+
+<!-- BEGIN:oneway_dose -->
+| t | One-way arcs made two-way | Forced, original arcs (%) | Retention, original arcs (%) | Forced, all arcs (%) | Retention, all arcs (%) |
+|---|---|---|---|---|---|
+| 2 | 0% | 91.7 | 93.4 | 91.7 | 93.4 |
+| 2 | 25% | 89.9 | 92.2 | 89.5 | 91.9 |
+| 2 | 50% | 88.0 | 90.8 | 87.1 | 90.3 |
+| 2 | 75% | 85.6 | 89.1 | 84.3 | 88.4 |
+| 2 | 100% | 82.7 | 87.0 | 81.1 | 85.9 |
+| 3 | 0% | 82.9 | 89.1 | 82.9 | 89.1 |
+| 3 | 25% | 80.1 | 87.4 | 79.2 | 87.0 |
+| 3 | 50% | 76.7 | 85.4 | 75.2 | 84.6 |
+| 3 | 75% | 72.4 | 82.7 | 70.5 | 81.7 |
+| 3 | 100% | 67.5 | 79.7 | 65.3 | 78.4 |
+
+at t = 2 the forced share of the original arcs never increases with the dose in 38 of 38 cities; at t = 3 the forced share of the original arcs never increases with the dose in 38 of 38 cities.
+<!-- END:oneway_dose -->
+
+Scope: a counterfactual (the reverse arc gets the same hourly travel times), one random order per city.
+
 ---
 
 ## 5e. Figures
