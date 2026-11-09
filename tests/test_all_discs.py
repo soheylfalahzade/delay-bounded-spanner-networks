@@ -148,6 +148,22 @@ class TestAllDiscs(unittest.TestCase):
         self.assertAlmostEqual(sum(self.scen.values()), sum(self.scen.values()))
 
 
+@unittest.skipUnless(ad.HAVE_SHAPELY, "shapely not installed")
+class TestSink(unittest.TestCase):
+    def test_every_result_is_handed_to_the_sink_when_it_exists(self):
+        calls = []
+        original = ad.load_city
+        ad.load_city = lambda spec, grid_n, synthetic: city(5)
+        try:
+            spec = [c for c in core.CITY_REGISTRY if c["name"] == "Manhattan"][0]
+            rows = ad.run_city(spec, 2.0, [0.05], True, 5, 32, 1000000, (None, 3.0), sink=lambda r: calls.append(list(r)))
+        finally:
+            ad.load_city = original
+        self.assertEqual(len(calls), 2)
+        self.assertEqual([c[0]["t_fault"] for c in calls], [2.0, 3.0])
+        self.assertEqual(len(rows), 2)
+
+
 class TestMergeRows(unittest.TestCase):
     def test_new_rows_replace_old_rows_with_the_same_key(self):
         import pandas as pd

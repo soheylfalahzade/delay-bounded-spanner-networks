@@ -269,7 +269,9 @@ def forced_union(net: Net, scenarios, t: float, t_fault: float = None) -> Tuple[
 
 # ------------------------------------------------------------------------ driver
 def run_city(spec, t: float, radius_fracs: Sequence[float], synthetic: bool, grid_n: int, quad_segs: int,
-             max_faces: int, t_faults: Sequence[float] = (None,)) -> List[Dict]:
+             max_faces: int, t_faults: Sequence[float] = (None,), sink=None) -> List[Dict]:
+    """`sink(rows)` is called with the new rows of each (radius, post-fault stretch) as soon as they exist, so that a long run
+    that is interrupted keeps what it has computed."""
     G = load_city(spec, grid_n, synthetic)
     if G is None:
         return []
@@ -311,6 +313,8 @@ def run_city(spec, t: float, radius_fracs: Sequence[float], synthetic: bool, gri
                              family_forced_lb_pct=100.0 * len(union) / m,
                              verified_failing_scenarios=st2["failing_scenarios"],
                              seconds_enumeration=round(t1 - t0, 1), seconds_total=round(time.time() - t0, 1)))
+            if sink is not None:
+                sink(rows[-1:])
             print(f"[ok] {spec['name']} r={r:.0f} m t_fault={tfv:g}: {n_dist} scenarios, nominal fails {st0['failing_area_pct']:.1f}% "
                   f"of centres, +{len(Hs) - len(H0_ids)} arcs for a certified spanner", flush=True)
     return rows
@@ -343,17 +347,22 @@ def main() -> None:
                     help="merge the new rows into an existing all_discs.csv instead of overwriting it")
     a = ap.parse_args()
     rows: List[Dict] = []
-    for spec in [c for c in core.CITY_REGISTRY if c["name"] in a.cities]:
-        rows += run_city(spec, a.t, a.radius_fracs, a.synthetic, a.grid_n, a.quad_segs, a.max_faces,
-                         tuple(a.t_fault) if a.t_fault else (None,))
-    if not rows:
-        sys.exit("no network available; nothing written")
-    df = pd.DataFrame(rows)
     os.makedirs(OUT, exist_ok=True)
     path = os.path.join(OUT, "all_discs.csv")
-    if a.append and os.path.exists(path):
-        df = merge_rows(pd.read_csv(path), df.round(4))
-    df.round(4).to_csv(path, index=False)
+    base = pd.read_csv(path) if (a.append and os.path.exists(path)) else None
+
+    def sink(new_rows):
+        nonlocal base
+        new = pd.DataFrame(new_rows).round(4)
+        base = new if base is None else merge_rows(base, new)
+        base.round(4).to_csv(path, index=False)          # written after every result: an interruption loses nothing
+
+    for spec in [c for c in core.CITY_REGISTRY if c["name"] in a.cities]:
+        rows += run_city(spec, a.t, a.radius_fracs, a.synthetic, a.grid_n, a.quad_segs, a.max_faces,
+                         tuple(a.t_fault) if a.t_fault else (None,), sink)
+    if not rows:
+        sys.exit("no network available; nothing written")
+    df = base
     with open(os.path.join(OUT, "all_discs.md"), "w", encoding="utf-8") as f:
         f.write(md_table(df))
     print(md_table(df))
