@@ -51,6 +51,7 @@ fi
 run edge_order        python benchmarks/edge_order.py --cities $CITIES --t 2 3 --seeds 5
 run all_discs         python benchmarks/all_discs.py --cities $CITIES --t 2
 run cut_structure     python benchmarks/cut_structure.py --cities $CITIES
+run coverage          python benchmarks/coverage_curve.py --cities $CITIES --t 2 --radius-fracs 0.05 0.10
 if [ "$ADDED" = "0" ]; then
   run oneway_dose     python benchmarks/oneway_dose.py --t 2 3
 else

@@ -613,15 +613,15 @@ Scope: a counterfactual (the reverse arc gets the same hourly travel times), one
 
 ### 5x. Disconnection or stretch? Single failures
 
-For an arc e = (u, v), is there one street or one intersection whose removal leaves no directed u-to-v path in G-e? Such an arc is in every fault-tolerant spanner for any allowed stretch. (The two arcs of a two-way street fail together.) `benchmarks/cut_structure.py`.
+For an arc e = (u, v), is there one street or one intersection whose removal leaves no directed u-to-v path in G-e? Such an arc is in every fault-tolerant spanner for any allowed stretch. Bridges have no alternative path at all; an intersection cut is an intersection that lies on every alternative path (a street that lies on every alternative path always implies such an intersection, so no separate street category is needed). `benchmarks/cut_structure.py`.
 
 <!-- BEGIN:cut_structure -->
-| City | Arcs | Bridges (%) | Intersection cut (%) | Street cut (%) | Robust (%) | Lose every path after some single failure (%) |
-|---|---|---|---|---|---|---|
-| Yazd | 6806 | 40.2 | 41.9 | 0.0 | 17.8 | 82.2 |
-| Isfahan | 7302 | 65.7 | 31.6 | 0.0 | 2.8 | 97.2 |
-| Manhattan | 1110 | 13.9 | 78.8 | 0.0 | 7.3 | 92.7 |
-| Tokyo | 3746 | 15.7 | 48.9 | 0.0 | 35.4 | 64.6 |
+| City | Arcs | Bridges (%) | Intersection cut (%) | Robust (%) | Lose every path after some single failure (%) |
+|---|---|---|---|---|---|
+| Yazd | 6806 | 40.2 | 41.9 | 17.8 | 82.2 |
+| Isfahan | 7302 | 65.7 | 31.6 | 2.8 | 97.2 |
+| Manhattan | 1110 | 13.9 | 78.8 | 7.3 | 92.7 |
+| Tokyo | 3746 | 15.7 | 48.9 | 35.4 | 64.6 |
 
 Across 4 cities, 64.6% to 97.2% of the arcs lose every path after some single street or intersection failure; the other 2.8% to 35.4% keep a path after any single failure. For the robust arcs, being forced under a fault (section 5v) can only come from path length, not from disconnection.
 <!-- END:cut_structure -->

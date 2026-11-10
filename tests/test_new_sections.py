@@ -136,13 +136,24 @@ class TestMoreSections(unittest.TestCase):
 
     def test_cut_structure_section(self):
         mod = load()
-        c = pd.DataFrame([dict(city="A", real_osm=True, arcs=100, bridge_pct=1.0, vertex_cut_pct=4.0, street_cut_pct=2.0,
+        c = pd.DataFrame([dict(city="A", real_osm=True, arcs=100, bridge_pct=1.0, vertex_cut_pct=6.0, street_cut_pct=0.0,
                                robust_pct=93.0, in_some_single_failure_cut_pct=7.0, nominal_forced_pct=90.0, t=2.0)])
         s = mod.cut_structure_section(c)
-        self.assertIn("| A | 100 | 1.0 | 4.0 | 2.0 | 93.0 | 7.0 |", s)
+        self.assertIn("| A | 100 | 1.0 | 6.0 | 93.0 | 7.0 |", s)
         self.assertIn("7.0% to 7.0% of the arcs lose every path", s)
         with self.assertRaises(AssertionError):
             mod.cut_structure_section(c.assign(robust_pct=50.0))
+
+    def test_coverage_section(self):
+        mod = load()
+        rows = [dict(city="A", real_osm=True, arcs=100, t=2.0, t_fault=2.0, radius_m=75.0, distinct_scenarios=10,
+                     covered_by_intact_spanner_pct=70.0, coverage_level_pct=lv, arcs_to_add=k, added_pct_of_arcs=float(k),
+                     retention_pct=90.0 + k, nominal_retention_pct=90.0)
+                for lv, k in ((50.0, 0), (75.0, 1), (90.0, 3), (95.0, 4), (99.0, 6), (100.0, 9))]
+        s = mod.coverage_section(pd.DataFrame(rows))
+        self.assertIn("| A | 75 | 2 | 70.0 | 90.0 | 0.00 | 1.00 | 3.00 | 4.00 | 6.00 | 9.00 |", s)
+        with self.assertRaises(AssertionError):
+            mod.coverage_section(pd.DataFrame(rows).assign(real_osm=False))
 
     def test_sections_are_skipped_without_files_and_inserted_in_order(self):
         mod = load()

@@ -49,7 +49,8 @@ jobs:
           python benchmarks/all_discs.py --synthetic --cities Yazd --radius-fracs 0.05
           python benchmarks/oneway_dose.py --synthetic --registry-only --t 2
           python benchmarks/cut_structure.py --synthetic --cities Yazd
-          rm -f results/benchmarks/forced_by_hour*.csv results/benchmarks/forced_by_hour.md results/benchmarks/region_fault.* results/benchmarks/minimality.* results/benchmarks/road_exact* results/benchmarks/emergency_response.* results/benchmarks/more_cities* results/benchmarks/directedness* results/benchmarks/lightness* results/benchmarks/edge_order* results/benchmarks/all_discs* results/benchmarks/oneway_dose* results/benchmarks/cut_structure*
+          python benchmarks/coverage_curve.py --synthetic --cities Yazd --radius-fracs 0.05
+          rm -f results/benchmarks/forced_by_hour*.csv results/benchmarks/forced_by_hour.md results/benchmarks/region_fault.* results/benchmarks/minimality.* results/benchmarks/road_exact* results/benchmarks/emergency_response.* results/benchmarks/more_cities* results/benchmarks/directedness* results/benchmarks/lightness* results/benchmarks/edge_order* results/benchmarks/all_discs* results/benchmarks/oneway_dose* results/benchmarks/cut_structure* results/benchmarks/coverage_curve*
 
       - name: Independent verification of the smoke-test results
         run: python verify_results.py
