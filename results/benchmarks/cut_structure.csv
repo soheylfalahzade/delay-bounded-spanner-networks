@@ -1,0 +1,5 @@
+city,real_osm,arcs,bridge_pct,vertex_cut_pct,street_cut_pct,robust_pct,in_some_single_failure_cut_pct,nominal_forced_pct,t
+Yazd,True,6806,40.2292,41.9483,0.0,17.8225,82.1775,95.2836,2.0
+Isfahan,True,7302,65.6532,31.5667,0.0,2.7801,97.2199,98.0279,2.0
+Manhattan,True,1110,13.8739,78.8288,0.0,7.2973,92.7027,88.6486,2.0
+Tokyo,True,3746,15.67,48.9055,0.0,35.4245,64.5755,90.3364,2.0
