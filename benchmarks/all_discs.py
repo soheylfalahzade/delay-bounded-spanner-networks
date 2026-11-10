@@ -269,7 +269,7 @@ def forced_union(net: Net, scenarios, t: float, t_fault: float = None) -> Tuple[
 
 # ------------------------------------------------------------------------ driver
 def run_city(spec, t: float, radius_fracs: Sequence[float], synthetic: bool, grid_n: int, quad_segs: int,
-             max_faces: int, t_faults: Sequence[float] = (None,), sink=None) -> List[Dict]:
+             max_faces: int, t_faults: Sequence[float] = (None,), sink=None, done=frozenset()) -> List[Dict]:
     """`sink(rows)` is called with the new rows of each (radius, post-fault stretch) as soon as they exist, so that a long run
     that is interrupted keeps what it has computed."""
     G = load_city(spec, grid_n, synthetic)
@@ -282,6 +282,12 @@ def run_city(spec, t: float, radius_fracs: Sequence[float], synthetic: bool, gri
     rows = []
     for frac in radius_fracs:
         r = frac * dist
+        todo = [tf for tf in t_faults
+                if (spec["name"], round(r, 1), float(t), float(t if tf is None else tf)) not in done]
+        if not todo:
+            print(f"[done-already] {spec['name']} r={r:.1f} m", flush=True)
+            continue
+        t_faults_here = tuple(todo)
         t0 = time.time()
         print(f"[start] {spec['name']} r={r:.1f} m", flush=True)
         try:
@@ -290,7 +296,7 @@ def run_city(spec, t: float, radius_fracs: Sequence[float], synthetic: bool, gri
             print(f"[skip] {spec['name']} r={r:.0f} m: {exc}", flush=True)
             continue
         t1 = time.time()
-        for tf in t_faults:
+        for tf in t_faults_here:
             tfv = t if tf is None else float(tf)
             st0, _, _ = run_family(net, H0_ids, scen, t, repair=False, t_fault=tfv)
             st1, repaired, _ = run_family(net, H0_ids, scen, t, repair=True, t_fault=tfv)
@@ -343,6 +349,8 @@ def main() -> None:
     ap.add_argument("--max-faces", type=int, default=2000000)
     ap.add_argument("--grid-n", type=int, default=15)
     ap.add_argument("--synthetic", action="store_true")
+    ap.add_argument("--skip-done", action="store_true",
+                    help="with --append: do not recompute (city, radius, t, t_fault) rows that are already in all_discs.csv")
     ap.add_argument("--append", action="store_true",
                     help="merge the new rows into an existing all_discs.csv instead of overwriting it")
     a = ap.parse_args()
@@ -350,6 +358,12 @@ def main() -> None:
     os.makedirs(OUT, exist_ok=True)
     path = os.path.join(OUT, "all_discs.csv")
     base = pd.read_csv(path) if (a.append and os.path.exists(path)) else None
+    done = frozenset()
+    if a.skip_done and base is not None:
+        b = base.copy()
+        if "t_fault" not in b.columns:
+            b["t_fault"] = b["t"]
+        done = frozenset((r.city, round(float(r.radius_m), 1), float(r.t), float(r.t_fault)) for r in b.itertuples())
 
     def sink(new_rows):
         nonlocal base
@@ -359,8 +373,11 @@ def main() -> None:
 
     for spec in [c for c in core.CITY_REGISTRY if c["name"] in a.cities]:
         rows += run_city(spec, a.t, a.radius_fracs, a.synthetic, a.grid_n, a.quad_segs, a.max_faces,
-                         tuple(a.t_fault) if a.t_fault else (None,), sink)
+                         tuple(a.t_fault) if a.t_fault else (None,), sink, done)
     if not rows:
+        if done:
+            print("every requested row is already in all_discs.csv; nothing to do")
+            return
         sys.exit("no network available; nothing written")
     df = base
     with open(os.path.join(OUT, "all_discs.md"), "w", encoding="utf-8") as f:

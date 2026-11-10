@@ -530,6 +530,14 @@ Section 5l samples faults. Here the family is every disc of radius r with its ce
 | Isfahan | 7302 | 40 | 2 | 126171 | 4.1 | 4 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
 | Isfahan | 7302 | 75 | 2 | 335341 | 5.3 | 5 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
 | Isfahan | 7302 | 150 | 2 | 996419 | 7.1 | 6 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
+| Isfahan | 7302 | 75 | 3 | 335341 | 5.3 | 5 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
+| Isfahan | 7302 | 150 | 3 | 996419 | 7.1 | 6 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
+| Isfahan | 7302 | 75 | 4 | 335341 | 5.3 | 5 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
+| Isfahan | 7302 | 150 | 4 | 996419 | 7.1 | 6 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
+| Isfahan | 7302 | 75 | 6 | 335341 | 4.2 | 5 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
+| Isfahan | 7302 | 150 | 6 | 996419 | 6.1 | 6 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
+| Isfahan | 7302 | 75 | 10 | 335341 | 3.6 | 5 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
+| Isfahan | 7302 | 150 | 10 | 996419 | 5.6 | 6 | 98.2 | 100.0 | 128 | 98.0 | 100.0 |
 | Manhattan | 1110 | 5 | 2 | 5934 | 5.4 | 4 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
 | Manhattan | 1110 | 10 | 2 | 7053 | 10.2 | 4 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
 | Manhattan | 1110 | 20 | 2 | 7686 | 18.7 | 4 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
@@ -537,6 +545,14 @@ Section 5l samples faults. Here the family is every disc of radius r with its ce
 | Manhattan | 1110 | 75 | 2 | 25794 | 42.2 | 4 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
 | Manhattan | 1110 | 150 | 2 | 79714 | 54.0 | 6 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
 | Manhattan | 1110 | 300 | 2 | 219813 | 59.5 | 7 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
+| Manhattan | 1110 | 75 | 3 | 25794 | 37.6 | 4 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
+| Manhattan | 1110 | 150 | 3 | 79714 | 54.0 | 6 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
+| Manhattan | 1110 | 75 | 4 | 25794 | 33.3 | 4 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
+| Manhattan | 1110 | 150 | 4 | 79714 | 53.7 | 6 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
+| Manhattan | 1110 | 75 | 6 | 25794 | 28.6 | 4 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
+| Manhattan | 1110 | 150 | 6 | 79714 | 46.6 | 6 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
+| Manhattan | 1110 | 75 | 10 | 25794 | 26.2 | 4 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
+| Manhattan | 1110 | 150 | 10 | 79714 | 43.3 | 6 | 90.1 | 100.0 | 110 | 88.6 | 100.0 |
 | Tokyo | 3746 | 5 | 2 | 12824 | 5.0 | 9 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
 | Tokyo | 3746 | 10 | 2 | 16840 | 8.9 | 9 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
 | Tokyo | 3746 | 20 | 2 | 24678 | 14.3 | 12 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
@@ -544,14 +560,30 @@ Section 5l samples faults. Here the family is every disc of radius r with its ce
 | Tokyo | 3746 | 75 | 2 | 130527 | 23.6 | 11 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
 | Tokyo | 3746 | 150 | 2 | 365886 | 30.2 | 10 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
 | Tokyo | 3746 | 300 | 2 | 993159 | 38.9 | 13 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
+| Tokyo | 3746 | 75 | 3 | 130527 | 19.9 | 10 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
+| Tokyo | 3746 | 150 | 3 | 365886 | 26.2 | 10 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
+| Tokyo | 3746 | 75 | 4 | 130527 | 18.8 | 8 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
+| Tokyo | 3746 | 150 | 4 | 365886 | 25.2 | 9 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
+| Tokyo | 3746 | 75 | 6 | 130527 | 16.4 | 8 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
+| Tokyo | 3746 | 150 | 6 | 365886 | 22.6 | 8 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
+| Tokyo | 3746 | 75 | 10 | 130527 | 13.4 | 7 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
+| Tokyo | 3746 | 150 | 10 | 365886 | 20.2 | 8 | 91.8 | 100.0 | 308 | 90.3 | 100.0 |
 | Yazd | 6806 | 5 | 2 | 14708 | 2.8 | 6 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
 | Yazd | 6806 | 10 | 2 | 19328 | 5.0 | 6 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
 | Yazd | 6806 | 20 | 2 | 35659 | 8.0 | 6 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
 | Yazd | 6806 | 40 | 2 | 92625 | 10.9 | 6 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
 | Yazd | 6806 | 75 | 2 | 239005 | 13.7 | 8 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
 | Yazd | 6806 | 150 | 2 | 698938 | 18.6 | 10 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
+| Yazd | 6806 | 75 | 3 | 239005 | 11.6 | 6 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
+| Yazd | 6806 | 150 | 3 | 698938 | 16.0 | 10 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
+| Yazd | 6806 | 75 | 4 | 239005 | 10.6 | 6 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
+| Yazd | 6806 | 150 | 4 | 698938 | 14.7 | 10 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
+| Yazd | 6806 | 75 | 6 | 239005 | 9.0 | 6 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
+| Yazd | 6806 | 150 | 6 | 698938 | 13.0 | 8 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
+| Yazd | 6806 | 75 | 10 | 239005 | 7.0 | 6 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
+| Yazd | 6806 | 150 | 10 | 698938 | 11.1 | 8 | 96.3 | 100.0 | 253 | 95.3 | 100.0 |
 
-In 26 of 26 rows with the strict definition (stretch after a fault equal to t) the arcs forced in some G-F cover every arc; for those rows no edge-subset spanner that is tolerant to all discs of the radius can omit any arc, so the certified spanner is the whole network and the exact lower bound equals it. The spanner built for the intact network fails the bound for 1.2% to 59.5% of the centres (radii 5 to 300 m, 4 cities), and the worst scenario leaves between 4 and 13 arcs without a detour.
+In 26 of 26 rows with the strict definition (stretch after a fault equal to t) the arcs forced in some G-F cover every arc; for those rows no edge-subset spanner that is tolerant to all discs of the radius can omit any arc, so the certified spanner is the whole network and the exact lower bound equals it. The spanner built for the intact network fails the bound for 1.2% to 59.5% of the centres (radii 5 to 300 m, 4 cities), and the worst scenario leaves between 4 and 13 arcs without a detour. With a larger stretch allowed after the fault, the mean forced bound and certified retention over the rows are 3: 100.0% and 100.0%; 4: 100.0% and 100.0%; 6: 100.0% and 100.0%; 10: 100.0% and 100.0%.
 <!-- END:all_discs -->
 
 Scope: discs of one radius per row (other radii and other shapes are separate families); a segment is removed if its stored polyline touches the disc; the guarantee holds for all centres except a set of measure zero (discs tangent to a polyline) and up to the polygonal approximation of the offset regions (relative error of the radius below 1e-3); area percentages assume a uniformly distributed centre over the filled footprint of the offset regions; the traffic profile is the parametric model.

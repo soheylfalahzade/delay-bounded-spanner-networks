@@ -394,6 +394,28 @@ Scope: a counterfactual (the reverse arc gets the same hourly travel times), one
 """
 
 
+
+def cut_structure_section(df: pd.DataFrame) -> str:
+    real_only(df, "cut_structure")
+    cols = ["bridge_pct", "vertex_cut_pct", "street_cut_pct", "robust_pct"]
+    assert ((df[cols].sum(axis=1) - 100.0).abs() < 1e-6).all(), "categories must partition the arcs: bug"
+    rows = [[r.city, f"{r.arcs}", f"{r.bridge_pct:.1f}", f"{r.vertex_cut_pct:.1f}", f"{r.street_cut_pct:.1f}",
+             f"{r.robust_pct:.1f}", f"{r.in_some_single_failure_cut_pct:.1f}"] for r in df.itertuples()]
+    table = md(["City", "Arcs", "Bridges (%)", "Intersection cut (%)", "Street cut (%)", "Robust (%)",
+                "Lose every path after some single failure (%)"], rows)
+    return f"""### 5x. Disconnection or stretch? Single failures
+
+For an arc e = (u, v), is there one street or one intersection whose removal leaves no directed u-to-v path in G-e? Such an arc is in every fault-tolerant spanner for any allowed stretch. (The two arcs of a two-way street fail together.) `benchmarks/cut_structure.py`.
+
+<!-- BEGIN:cut_structure -->
+{table}
+
+Across {len(df)} cities, {df.in_some_single_failure_cut_pct.min():.1f}% to {df.in_some_single_failure_cut_pct.max():.1f}% of the arcs lose every path after some single street or intersection failure; the other {df.robust_pct.min():.1f}% to {df.robust_pct.max():.1f}% keep a path after any single failure. For the robust arcs, being forced under a fault (section 5v) can only come from path length, not from disconnection.
+<!-- END:cut_structure -->
+
+"""
+
+
 def metro_frame():
     frames = []
     for f in sorted(glob.glob(os.path.join(BEN, "large_scale_*m.csv"))):
@@ -424,6 +446,7 @@ def render(text: str) -> str:
             ("emergency", "emergency_response.csv", emergency_section), ("more_cities", "more_cities.csv", more_cities_section),
             ("directedness", "directedness.csv", directedness_section), ("lightness", "lightness.csv", lightness_section),
             ("edge_order", "edge_order.csv", edge_order_section), ("all_discs", "all_discs.csv", all_discs_section), ("oneway_dose", "oneway_dose.csv", oneway_dose_section),
+            ("cut_structure", "cut_structure.csv", cut_structure_section),
             ("metro", None, metro_section)]
     for name, csv, fn in jobs:
         if name == "metro":

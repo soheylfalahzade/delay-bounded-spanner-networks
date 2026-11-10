@@ -134,6 +134,16 @@ class TestMoreSections(unittest.TestCase):
         bad.loc[(bad.city == "A") & (bad.dose == 0.5), "forced_original_pct"] = 99.0
         self.assertIn("in 1 of 2 cities", mod.oneway_dose_section(bad))
 
+    def test_cut_structure_section(self):
+        mod = load()
+        c = pd.DataFrame([dict(city="A", real_osm=True, arcs=100, bridge_pct=1.0, vertex_cut_pct=4.0, street_cut_pct=2.0,
+                               robust_pct=93.0, in_some_single_failure_cut_pct=7.0, nominal_forced_pct=90.0, t=2.0)])
+        s = mod.cut_structure_section(c)
+        self.assertIn("| A | 100 | 1.0 | 4.0 | 2.0 | 93.0 | 7.0 |", s)
+        self.assertIn("7.0% to 7.0% of the arcs lose every path", s)
+        with self.assertRaises(AssertionError):
+            mod.cut_structure_section(c.assign(robust_pct=50.0))
+
     def test_sections_are_skipped_without_files_and_inserted_in_order(self):
         mod = load()
         with tempfile.TemporaryDirectory() as d:

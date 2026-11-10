@@ -164,6 +164,20 @@ class TestSink(unittest.TestCase):
         self.assertEqual(len(rows), 2)
 
 
+    def test_rows_already_done_are_skipped(self):
+        original = ad.load_city
+        ad.load_city = lambda spec, grid_n, synthetic: city(5)
+        try:
+            spec = [c for c in core.CITY_REGISTRY if c["name"] == "Manhattan"][0]
+            first = ad.run_city(spec, 2.0, [0.05], True, 5, 32, 1000000, (3.0,))
+            r = first[0]["radius_m"]
+            done = frozenset({("Manhattan", r, 2.0, 3.0)})
+            again = ad.run_city(spec, 2.0, [0.05], True, 5, 32, 1000000, (3.0, 4.0), done=done)
+        finally:
+            ad.load_city = original
+        self.assertEqual([x["t_fault"] for x in again], [4.0])
+
+
 class TestMergeRows(unittest.TestCase):
     def test_new_rows_replace_old_rows_with_the_same_key(self):
         import pandas as pd
