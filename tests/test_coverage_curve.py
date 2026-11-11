@@ -58,5 +58,23 @@ class TestCoverage(unittest.TestCase):
         self.assertEqual(cc.arcs_for_level(self.pts, 100.0), self.pts[-1][0])
 
 
+@unittest.skipUnless(ad.HAVE_SHAPELY, "shapely not installed")
+class TestResume(unittest.TestCase):
+    def test_sink_gets_rows_per_radius_and_done_radii_are_skipped(self):
+        original = cc.load_city
+        cc.load_city = lambda spec, grid_n, synthetic: city(5)
+        got = []
+        try:
+            spec = [c for c in core.CITY_REGISTRY if c["name"] == "Manhattan"][0]
+            first = cc.run_city(spec, 2.0, [0.05, 0.1], 2.0, True, 5, 32, 1000000, sink=lambda r: got.append(list(r)))
+            self.assertEqual(len(got), 2)
+            self.assertTrue(all(len(g) == len(cc.LEVELS) for g in got))
+            done = frozenset({("Manhattan", first[0]["radius_m"], 2.0, 2.0)})
+            again = cc.run_city(spec, 2.0, [0.05, 0.1], 2.0, True, 5, 32, 1000000, done=done)
+        finally:
+            cc.load_city = original
+        self.assertEqual({x["radius_m"] for x in again}, {first[-1]["radius_m"]})
+
+
 if __name__ == "__main__":
     unittest.main()

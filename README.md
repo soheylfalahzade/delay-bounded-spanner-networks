@@ -626,6 +626,25 @@ For an arc e = (u, v), is there one street or one intersection whose removal lea
 Across 4 cities, 64.6% to 97.2% of the arcs lose every path after some single street or intersection failure; the other 2.8% to 35.4% keep a path after any single failure. For the robust arcs, being forced under a fault (section 5v) can only come from path length, not from disconnection.
 <!-- END:cut_structure -->
 
+### 5y. Budget versus coverage
+
+Guaranteeing the delay bound for every disc fault of a radius forces the whole network (sections 5v and 5x), so the worst-case definition is vacuous here. The exact scenario enumeration supports an average-case alternative: the share of fault positions (area of disc centres, assuming a uniform centre over the footprint) for which H-F is a t-spanner of G-F, as a function of the arcs added to the intact-network spanner. Distinct repair sets are added in decreasing order of area per arc, which gives a feasible trade-off curve (a lower bound on coverage at each size, exact at 100%), not an optimal one. `benchmarks/coverage_curve.py`.
+
+<!-- BEGIN:coverage -->
+| City | Disc radius (m) | Stretch after a fault | Area covered by the intact-network spanner (%) | Nominal retention (%) | Arcs to add for 50% (% of arcs) | 75% | 90% | 95% | 99% | 100% |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Isfahan | 75 | 2 | 94.7 | 98.2 | 0.00 | 0.00 | 0.00 | 0.01 | 0.68 | 1.75 |
+| Isfahan | 150 | 2 | 92.9 | 98.2 | 0.00 | 0.00 | 0.00 | 0.07 | 0.93 | 1.75 |
+| Manhattan | 75 | 2 | 57.8 | 90.1 | 0.00 | 2.70 | 6.04 | 7.30 | 8.56 | 9.91 |
+| Manhattan | 150 | 2 | 46.0 | 90.1 | 0.45 | 4.05 | 6.85 | 7.66 | 8.56 | 9.91 |
+| Tokyo | 75 | 2 | 76.4 | 91.8 | 0.00 | 0.00 | 2.24 | 4.24 | 6.65 | 8.22 |
+| Tokyo | 150 | 2 | 69.8 | 91.8 | 0.00 | 0.40 | 3.10 | 4.86 | 6.75 | 8.22 |
+| Yazd | 75 | 2 | 86.3 | 96.3 | 0.00 | 0.00 | 0.24 | 1.06 | 2.64 | 3.72 |
+| Yazd | 150 | 2 | 81.4 | 96.3 | 0.00 | 0.00 | 0.65 | 1.45 | 2.95 | 3.72 |
+<!-- END:coverage -->
+
+Each cell is the share of all arcs (not of the spanner) that must be added to the intact-network spanner to reach the coverage level in the column heading; the 100% column is the exact sequential repair of section 5v.
+
 ---
 
 ## 5e. Figures

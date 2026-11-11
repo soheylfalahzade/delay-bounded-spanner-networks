@@ -88,7 +88,9 @@ def arcs_for_level(pts: Sequence[Tuple[int, float]], level: float) -> int:
 
 
 def run_city(spec, t: float, radius_fracs: Sequence[float], t_fault: float, synthetic: bool, grid_n: int,
-             quad_segs: int, max_faces: int) -> List[Dict]:
+             quad_segs: int, max_faces: int, sink=None, done=frozenset()) -> List[Dict]:
+    """`sink(rows)` receives the rows of each radius as soon as they exist; radii whose (city, radius, t, t_fault) key is in
+    `done` are skipped, so an interrupted run can be resumed."""
     G = load_city(spec, grid_n, synthetic)
     if G is None:
         return []
@@ -99,6 +101,10 @@ def run_city(spec, t: float, radius_fracs: Sequence[float], t_fault: float, synt
     rows = []
     for frac in radius_fracs:
         r = frac * dist
+        if (spec["name"], round(r, 1), float(t), float(t_fault)) in done:
+            print(f"[done-already] {spec['name']} r={r:.1f} m", flush=True)
+            continue
+        print(f"[start] {spec['name']} r={r:.1f} m", flush=True)
         try:
             scen, _, n_dist, _ = ad.enumerate_scenarios(G, net, r, quad_segs, max_faces)
         except RuntimeError as exc:
@@ -110,13 +116,17 @@ def run_city(spec, t: float, radius_fracs: Sequence[float], t_fault: float, synt
         _, repaired, _ = ad.run_family(net, H0_ids, scen, t, repair=True, t_fault=t_fault)
         full = len(repaired.H) - len(H0_ids)
         m = net.m
+        new_rows = []
         for level in LEVELS:
             k = full if level >= 100.0 else min(arcs_for_level(pts, level), full)
-            rows.append(dict(city=spec["name"], real_osm=bool(G.graph.get("used_real_osm")), arcs=m, t=t, t_fault=t_fault,
+            new_rows.append(dict(city=spec["name"], real_osm=bool(G.graph.get("used_real_osm")), arcs=m, t=t, t_fault=t_fault,
                              radius_m=round(r, 1), distinct_scenarios=n_dist, covered_by_intact_spanner_pct=pts[0][1],
                              coverage_level_pct=level, arcs_to_add=int(k), added_pct_of_arcs=100.0 * k / m,
                              retention_pct=100.0 * (len(H0_ids) + k) / m,
                              nominal_retention_pct=100.0 * len(H0_ids) / m))
+        rows += new_rows
+        if sink is not None:
+            sink(new_rows)
         print(f"[ok] {spec['name']} r={r:.0f} m: intact spanner covers {pts[0][1]:.1f}%; 99% needs "
               f"{min(arcs_for_level(pts, 99.0), full)} arcs, 100% needs {full}", flush=True)
     return rows
@@ -132,18 +142,38 @@ def main() -> None:
     ap.add_argument("--max-faces", type=int, default=2000000)
     ap.add_argument("--grid-n", type=int, default=15)
     ap.add_argument("--synthetic", action="store_true")
+    ap.add_argument("--append", action="store_true", help="merge new rows into an existing coverage_curve.csv")
+    ap.add_argument("--skip-done", action="store_true", help="with --append: skip radii already in the file")
     a = ap.parse_args()
     tf = a.t if a.t_fault is None else a.t_fault
     rows: List[Dict] = []
     path = os.path.join(OUT, "coverage_curve.csv")
     os.makedirs(OUT, exist_ok=True)
+    base = pd.read_csv(path) if (a.append and os.path.exists(path)) else None
+    done = frozenset()
+    if a.skip_done and base is not None:
+        done = frozenset((r.city, round(float(r.radius_m), 1), float(r.t), float(r.t_fault)) for r in base.itertuples())
+
+    def sink(new_rows):
+        nonlocal base
+        new = pd.DataFrame(new_rows).round(4)
+        if base is None:
+            base = new
+        else:
+            key = ["city", "radius_m", "t", "t_fault", "coverage_level_pct"]
+            kn = set(map(tuple, new[key].to_numpy().tolist()))
+            keep = base[[tuple(r) not in kn for r in base[key].to_numpy().tolist()]]
+            base = pd.concat([keep, new], ignore_index=True)
+        base.to_csv(path, index=False)                       # written after every radius: an interruption loses nothing
+
     for spec in [c for c in core.CITY_REGISTRY if c["name"] in a.cities]:
-        rows += run_city(spec, a.t, a.radius_fracs, tf, a.synthetic, a.grid_n, a.quad_segs, a.max_faces)
-        if rows:
-            pd.DataFrame(rows).round(4).to_csv(path, index=False)          # saved after every city
+        rows += run_city(spec, a.t, a.radius_fracs, tf, a.synthetic, a.grid_n, a.quad_segs, a.max_faces, sink, done)
     if not rows:
+        if done:
+            print("every requested row is already in coverage_curve.csv; nothing to do")
+            return
         sys.exit("no network available; nothing written")
-    df = pd.DataFrame(rows)
+    df = base
     with open(os.path.join(OUT, "coverage_curve.md"), "w", encoding="utf-8") as f:
         f.write(md_table(df))
     print(md_table(df))
